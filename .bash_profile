@@ -67,5 +67,11 @@ function rebmast(){
 }
 
 function gcomm(){
-	git commit -m "$1"
+	message="${@} ";
+	echo $message
+	git commit -m "${message}"
+}
+
+function test(){
+	echo "${@}";
 }
