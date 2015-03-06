@@ -1,24 +1,28 @@
 ### SHELL SETTINGS ###
 
-#iTerm 2 ANSI colors
-	# Set CLICOLOR if you want Ansi Colors in iTerm2 
+#Set CLICOLOR if you want Ansi Colors in iTerm2 
 export CLICOLOR=1
-	# Set colors to match iTerm2 Terminal Colors
+
+#Set colors to match iTerm2 Terminal Colors
 export TERM=xterm-256color
 
 #Vim-style history scrolling (j & k) 
 set -o vi
 
-
+#==========================
 #==========================
 
-
 ### ALIASES ###
+#Show hidden files
+alias lsa="ls -a"
 
-#Move to Development directory
+#Change Directory to ~/
+alias cdu="cd ~/"
+
+#Change Directory to Development directory
 alias cdd="cd ~/Development/"
 
-#Move to Hackerati directory
+#Change Directory to Hackerati directory
 alias cddh="cd ~/Development/Hackerati/"
 
 #Edit .bash_profile
@@ -31,7 +35,7 @@ alias vimrc="vim ~/.vimrc"
 alias vimt="vim ~/.tmux.conf"
 
 #==========================
-
+#==========================
 
 ### GIT SETTINGS & ALIASES ###
 
