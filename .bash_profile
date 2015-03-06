@@ -81,7 +81,7 @@ function gcomm(){
 
 # - Git push current branch to corresponding origin branch
 # - Pass 'f' as first argument in order to forcepush
-function gmpush(){
+function gpush(){
 	branch=$(git symbolic-ref --short -q HEAD)
 	if [ -z "$1" ]
 	then
