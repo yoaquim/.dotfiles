@@ -78,3 +78,21 @@ function gcomm(){
 	echo $message
 	git commit -m "${message}"
 }
+
+# - Git push current branch to corresponding origin branch
+# - Pass 'f' as first argument in order to forcepush
+function gmpush(){
+	branch=$(git symbolic-ref --short -q HEAD)
+	if [ -z "$1" ]
+	then
+		git push origin $branch
+		return
+	else
+		if [ $1 = "f" ]
+		then
+			git push origin "+${branch}"
+		else
+			echo "Do 'gpush f' to force push"
+		fi
+	fi
+}
