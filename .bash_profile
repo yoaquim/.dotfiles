@@ -22,11 +22,13 @@ alias cdd="cd ~/Development/"
 alias cddh="cd ~/Development/Hackerati/"
 
 #Edit .bash_profile
-alias vimbp="vim ~/.bash_profile"
+alias vimb="vim ~/.bash_profile"
 
 #Edit .vimrc
 alias vimrc="vim ~/.vimrc"
 
+#Edit .tmux.conf
+alias vimt="vim ~/.tmux.conf"
 
 #==========================
 
