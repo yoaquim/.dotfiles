@@ -56,6 +56,12 @@ alias gco="git checkout"
 #Git checkout new branch
 alias gcob="git checkout -b"
 
+#Git ammend last commit
+alias gam="git commit --amend"
+
+#Git pretty log (custom git alias)
+alias plog="git plog"
+
 # - Checkout master, pull from origin, checkout to previous branch, rebase off of master
 # - Used to quickly bring current branch up-to-date with origin/master
 function rebmast(){
@@ -66,12 +72,9 @@ function rebmast(){
 	git rebase master
 }
 
+#Git commit without having to enter quotes for message
 function gcomm(){
 	message="${@} ";
 	echo $message
 	git commit -m "${message}"
-}
-
-function test(){
-	echo "${@}";
 }
