@@ -16,6 +16,9 @@ set -o vi
 #Show hidden files
 alias lsa="ls -a"
 
+#Go to parent dir
+alias ..="cd .."
+
 #Change Directory to ~/
 alias cdu="cd ~/"
 
