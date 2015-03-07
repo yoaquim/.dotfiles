@@ -108,7 +108,7 @@ function gpush(){
 
 # - Rebase off of master, then push to current branch
 # - Always force pushes
-function rebpush(){
+function rebmpush(){
 	rebmast
 	gpush f
 }
