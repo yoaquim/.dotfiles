@@ -105,3 +105,9 @@ function gpush(){
 		fi
 	fi
 }
+
+# Rebase off of master, then push to current branch
+function rebpush(){
+	rebmast
+	gpush f
+}
