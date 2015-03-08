@@ -13,6 +13,10 @@ set -o vi
 #==========================
 
 ### ALIASES ###
+
+#Alis 'rm' so as to always ask permission to delete
+alias rm="rm -i"
+
 #Show hidden files
 alias lsa="ls -a"
 
