@@ -16,14 +16,23 @@ set -o vi
 #Show hidden files
 alias lsa="ls -a"
 
+#Long listing format
+alias lsl="ls -l"
+
+#Long listing format, including hidden files
+alias lsal="ls -a -l"
+
 #Go to parent dir
 alias ..="cd .."
 
 #Change Directory to ~/
 alias cdu="cd ~/"
 
+#Go to Desktop
+alias cdd="cd ~/Desktop/"
+
 #Change Directory to Development directory
-alias cdd="cd ~/Development/"
+alias cdev="cd ~/Development/"
 
 #Change Directory to Hackerati directory
 alias cddh="cd ~/Development/Hackerati/"
@@ -36,6 +45,9 @@ alias vimrc="vim ~/.vimrc"
 
 #Edit .tmux.conf
 alias vimt="vim ~/.tmux.conf"
+
+#Edit .gitconfig
+alias vimg="vim ~/.gitconfig"
 
 #==========================
 #==========================
@@ -109,6 +121,13 @@ function gpush(){
 # - Rebase off of master, then push to current branch
 # - Always force pushes
 function rebmpush(){
+	rebmast
+	gpush f
+}
+
+function gtrans(){
+	gall	
+	gcomm $@
 	rebmast
 	gpush f
 }
