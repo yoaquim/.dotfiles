@@ -29,9 +29,6 @@ alias lsal="ls -a -l"
 #Go to parent dir
 alias ..="cd .."
 
-#Change Directory to ~/
-alias cdu="cd ~/"
-
 #Go to Desktop
 alias cdd="cd ~/Desktop/"
 
