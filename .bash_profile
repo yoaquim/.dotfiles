@@ -26,6 +26,9 @@ alias lsl="ls -l"
 #Long listing format, including hidden files
 alias lsal="ls -a -l"
 
+#Go to previous dir
+alias .,="cd -"
+
 #Go to parent dir
 alias ..="cd .."
 
