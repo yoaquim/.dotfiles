@@ -103,7 +103,6 @@ function rebmast(){
 #Git commit without having to enter quotes for message
 function gcomm(){
 	message="${@} ";
-	echo $message
 	git commit -m "${message}"
 }
 
