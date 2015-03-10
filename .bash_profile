@@ -61,7 +61,7 @@ alias vimg="vim ~/.gitconfig"
 #Git coloring
 export LESS=-R
 
-#Git bash completion
+#Git bash completion (hombrew, mac only)
 if [ -f `brew --prefix`/etc/bash_completion ]; then
 	. `brew --prefix`/etc/bash_completion
 fi
@@ -76,16 +76,22 @@ alias gall="git add --all"
 alias gau="git add -u"
  
 #Git checkout
-alias gco="git checkout"
+alias gc="git checkout"
 
 #Git checkout new branch
-alias gcob="git checkout -b"
+alias gcb="git checkout -b"
 
 #Git ammend last commit
 alias gam="git commit --amend"
 
+#Git alias for git diff
+alias gd="git diff"
+
 #Git pretty log (custom git alias)
 alias plog="git plog"
+
+#Git Update all git submodules
+alias gsmu="git submodule foreach git pull origin master"
 
 # - Checkout master, pull from origin, checkout to previous branch, rebase off of master
 # - Used to quickly bring current branch up-to-date with origin/master
@@ -100,7 +106,6 @@ function rebmast(){
 #Git commit without having to enter quotes for message
 function gcomm(){
 	message="${@} ";
-	echo $message
 	git commit -m "${message}"
 }
 
