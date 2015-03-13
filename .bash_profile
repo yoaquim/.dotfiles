@@ -69,6 +69,12 @@ fi
 #Git status alias
 alias gs="git status"
 
+#Git add
+alias ga="git add"
+
+#Git reset
+alias gr="git reset"
+
 #Git add all
 alias gall="git add --all"
 
