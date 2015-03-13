@@ -17,14 +17,17 @@ set -o vi
 #Alis 'rm' so as to always ask permission to delete
 alias rm="rm -i"
 
+#Shorter ls
+alias l="ls"
+
 #Show hidden files
-alias lsa="ls -a"
+alias la="ls -a"
 
 #Long listing format
-alias lsl="ls -l"
+alias ll="ls -l"
 
 #Long listing format, including hidden files
-alias lsal="ls -a -l"
+alias lal="ls -a -l"
 
 #Go to previous dir
 alias .,="cd -"
