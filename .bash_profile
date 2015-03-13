@@ -17,9 +17,6 @@ set -o vi
 #Alis 'rm' so as to always ask permission to delete
 alias rm="rm -i"
 
-#Shorter ls
-alias l="ls"
-
 #Show hidden files
 alias la="ls -a"
 
