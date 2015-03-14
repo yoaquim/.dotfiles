@@ -149,6 +149,13 @@ function rebmpush(){
 	gpush f
 }
 
+#Commit, rebase off of master and force push to current branch
+function grup(){
+	gcomm $@
+	rebmast
+	gpush f
+}
+
 #Add all changes, commit using custom function, rebase off of master and force push to current branch
 function gtrans(){
 	gall	
