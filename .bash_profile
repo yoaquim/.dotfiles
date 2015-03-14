@@ -6,6 +6,10 @@ export CLICOLOR=1
 #Set colors to match iTerm2 Terminal Colors
 export TERM=xterm-256color
 
+# #Base16 Shell (so iTerm can work with Base16)
+BASE16_SHELL="$HOME/.config/base16-shell/base16-mocha.dark.sh"
+[[ -s $BASE16_SHELL ]] && source $BASE16_SHELL ]]
+
 #Vim-style history scrolling (j & k) 
 set -o vi
 
@@ -120,7 +124,7 @@ function gcom(){
 
 #Git commit, then push to origin current branch
 function gup(){
-	gcomm $@
+	gcom $@
 	gpush
 }
 
@@ -151,7 +155,7 @@ function rebmpush(){
 
 #Commit, rebase off of master and force push to current branch
 function grup(){
-	gcomm $@
+	gcom $@
 	rebmast
 	gpush f
 }
@@ -159,7 +163,7 @@ function grup(){
 #Add all changes, commit using custom function, rebase off of master and force push to current branch
 function gtrans(){
 	gall	
-	gcomm $@
+	gcom $@
 	rebmast
 	gpush f
 }
