@@ -75,6 +75,9 @@ alias ga="git add"
 #Git reset
 alias gr="git reset"
 
+#Git pull
+alias gp="git pull"
+
 #Git add all
 alias gall="git add --all"
 
@@ -110,9 +113,15 @@ function rebmast(){
 }
 
 #Git commit without having to enter quotes for message
-function gcomm(){
+function gcom(){
 	message="${@} ";
 	git commit -m "${message}"
+}
+
+#Git commit, then push to origin current branch
+function gup(){
+	gcomm $@
+	gpush
 }
 
 # - Git push current branch to corresponding origin branch
