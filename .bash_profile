@@ -85,6 +85,9 @@ alias gr="git reset"
 #Git pull
 alias gp="git pull"
 
+#Git fetch
+alias gf="git fetch"
+
 #Git add all
 alias gall="git add --all"
 
