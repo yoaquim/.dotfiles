@@ -18,7 +18,6 @@ set -o vi
 
 ### ALIASES ###
 
-
 #Vim alias
 alias v="vim"
 alias vi="vim"
