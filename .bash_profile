@@ -40,6 +40,12 @@ alias .,="cd -"
 #Go to parent dir
 alias ..="cd .."
 
+#Go to vim directory
+alias cdv="cd ~/.vim"
+
+#Go to dotfiles directory
+alias cd.="cd ~/.dotfiles"
+
 #Go to Desktop
 alias cdd="cd ~/Desktop/"
 
