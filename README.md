@@ -22,7 +22,7 @@ After that, make sure you initialize any git submodules:
 ```Shell
 cd ~/.dotfiles
 
-git submodule update --init --recursive`
+git submodule update --init --recursive
 ```
 
 If you ever need to update git submodules, just do:
