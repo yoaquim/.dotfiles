@@ -1,4 +1,5 @@
 ### SHELL SETTINGS ###
+#--------------------#
 
 #Set CLICOLOR if you want Ansi Colors in iTerm2 
 export CLICOLOR=1
@@ -17,6 +18,7 @@ set -o vi
 #==========================
 
 ### ALIASES ###
+#-------------#
 
 #Vim alias
 alias v="vim"
@@ -71,6 +73,7 @@ alias vimg="vim ~/.gitconfig"
 #==========================
 
 ### GIT SETTINGS & ALIASES ###
+#----------------------------#
 
 #Git coloring
 export LESS=-R
