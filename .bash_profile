@@ -122,8 +122,11 @@ alias gd="git diff"
 #Git pretty log (custom git alias)
 alias plog="git plog"
 
-#Git Update all git submodules
+#Git update all git submodules
 alias gsmu="git submodule foreach git pull origin master"
+
+#Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
+alias gsmu="git submodule update --init --recursive"
 
 # - Checkout master, pull from origin, checkout to previous branch, rebase off of master
 # - Used to quickly bring current branch up-to-date with origin/master
