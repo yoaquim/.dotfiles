@@ -8,7 +8,7 @@ export CLICOLOR=1
 export TERM=xterm-256color
 
 # #Base16 Shell (so iTerm can work with Base16)
-BASE16_SHELL="$HOME/.config/base16-shell/base16-mocha.dark.sh"
+BASE16_SHELL="$HOME/.config/base16-shell/base16-monokai.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL ]]
 
 #Vim-style history scrolling (j & k) 
@@ -122,8 +122,11 @@ alias gd="git diff"
 #Git pretty log (custom git alias)
 alias plog="git plog"
 
-#Git Update all git submodules
+#Git update all git submodules
 alias gsmu="git submodule foreach git pull origin master"
+
+#Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
+alias gsmi="git submodule update --init --recursive"
 
 # - Stash changes, checkout master, pull from origin, checkout to previous branch, rebase off of master, then pop stashed changes
 # - Used to quickly bring current branch up-to-date with origin/master
@@ -188,3 +191,15 @@ function gtrans(){
 	rebmast
 	gpush f
 }
+
+#==========================
+#==========================
+
+### HEROKU SETTINGS ###
+#----------------------------#
+
+#Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
+
+export NVM_DIR="/Users/Asgard/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
