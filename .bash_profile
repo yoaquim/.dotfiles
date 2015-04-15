@@ -125,14 +125,16 @@ alias plog="git plog"
 #Git Update all git submodules
 alias gsmu="git submodule foreach git pull origin master"
 
-# - Checkout master, pull from origin, checkout to previous branch, rebase off of master
+# - Stash changes, checkout master, pull from origin, checkout to previous branch, rebase off of master, then pop stashed changes
 # - Used to quickly bring current branch up-to-date with origin/master
 function rebmast(){
+        git stash
 	branch=$(git symbolic-ref --short -q HEAD)
 	git checkout master
 	git pull
 	git checkout $branch
 	git rebase master
+        git stash pop
 }
 
 #Git commit without having to enter quotes for message
