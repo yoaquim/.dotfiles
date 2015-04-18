@@ -1,7 +1,7 @@
 ### SHELL SETTINGS ###
 #--------------------#
 
-#Set CLICOLOR if you want Ansi Colors in iTerm2 
+#Set CLICOLOR if you want Ansi Colors in iTerm2
 export CLICOLOR=1
 
 #Set colors to match iTerm2 Terminal Colors
@@ -11,7 +11,7 @@ export TERM=xterm-256color
 BASE16_SHELL="$HOME/.config/base16-shell/base16-monokai.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL ]]
 
-#Vim-style history scrolling (j & k) 
+#Vim-style history scrolling (j & k)
 set -o vi
 
 #==========================
@@ -72,6 +72,15 @@ alias vimg="vim ~/.gitconfig"
 #==========================
 #==========================
 
+### TOOLS SETTINGS & ALIASES ###
+#----------------------------#
+
+#fuck is a python tool that tries to fix your last unsuccessful command: https://github.com/nvbn/thefuck
+alias fuck='$(thefuck $(fc -ln -1))'
+
+#==========================
+#==========================
+
 ### GIT SETTINGS & ALIASES ###
 #----------------------------#
 
@@ -106,7 +115,7 @@ alias gall="git add --all"
 
 #Git add untracked
 alias gau="git add -u"
- 
+
 #Git checkout
 alias gc="git checkout"
 
@@ -186,7 +195,7 @@ function grup(){
 
 #Add all changes, commit using custom function, rebase off of master and force push to current branch
 function gtrans(){
-	gall	
+	gall
 	gcom $@
 	rebmast
 	gpush f
