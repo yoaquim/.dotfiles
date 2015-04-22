@@ -128,6 +128,9 @@ alias gam="git commit --amend"
 #Git alias for git diff
 alias gd="git diff"
 
+#Git alias for git diff --staged
+alias gds="git diff --staged"
+
 #Git pretty log (custom git alias)
 alias plog="git plog"
 
