@@ -122,6 +122,9 @@ alias gc="git checkout"
 #Git checkout new branch
 alias gcb="git checkout -b"
 
+#Git branch alias
+alias gb="git branch"
+
 #Git ammend last commit
 alias gam="git commit --amend"
 
