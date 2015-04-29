@@ -31,6 +31,7 @@ alias rm="rm -i"
 alias la="ls -a"
 
 #Long listing format
+alias l="ls -l"
 alias ll="ls -l"
 
 #Long listing format, including hidden files
