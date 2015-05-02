@@ -72,6 +72,16 @@ alias vimt="vim ~/.tmux.conf"
 #Edit .gitconfig
 alias vimg="vim ~/.gitconfig"
 
+#Go to previous dir as many times as input parameter
+function ff(){
+    counter=$1;
+    while [ $counter -gt 0 ] 
+    do
+        ..
+        counter=$[$counter-1]
+    done
+}
+
 #==========================
 #==========================
 
