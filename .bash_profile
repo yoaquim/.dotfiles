@@ -25,7 +25,6 @@ alias c="clear"
 
 #Vim alias
 alias v="vim"
-alias vi="vim"
 
 #Alias 'rm' so as to always ask permission to delete
 alias rm="rm -i"
