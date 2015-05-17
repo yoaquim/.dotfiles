@@ -25,6 +25,7 @@ alias c="clear"
 
 #Vim alias
 alias v="vim"
+alias vi="vim"
 
 #Alias 'rm' so as to always ask permission to delete
 alias rm="rm -i"
@@ -73,8 +74,13 @@ alias vimt="vim ~/.tmux.conf"
 alias vimg="vim ~/.gitconfig"
 
 #Go to previous dir as many times as input parameter
+#if no input parameter, then just go back
 function ff(){
     counter=$1;
+    if [ -z "$1" ]; then
+        ..
+        return
+    fi
     while [ $counter -gt 0 ] 
     do
         ..
