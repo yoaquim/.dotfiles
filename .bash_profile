@@ -30,6 +30,9 @@ alias vi="vim"
 #Alias 'rm' so as to always ask permission to delete
 alias rm="rm -i"
 
+#Alias remove dir ('rm -rf') to 'rmd'
+alias rmd = "rm -rf"
+
 #Show hidden files
 alias la="ls -a"
 
