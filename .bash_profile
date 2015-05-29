@@ -31,7 +31,7 @@ alias vi="vim"
 alias rm="rm -i"
 
 #Alias remove dir ('rm -rf') to 'rmd'
-alias rmd = "rm -rf"
+alias rmd="rm -rf"
 
 #Show hidden files
 alias la="ls -a"
