@@ -65,16 +65,16 @@ alias cdev="cd ~/Development/"
 alias cddh="cd ~/Development/Hackerati/"
 
 #Edit .bash_profile
-alias vimb="vim ~/.bash_profile"
+alias vb="vim ~/.bash_profile"
 
 #Edit .vimrc
-alias vimrc="vim ~/.vimrc"
+alias vrc="vim ~/.vimrc"
 
 #Edit .tmux.conf
-alias vimt="vim ~/.tmux.conf"
+alias vt="vim ~/.tmux.conf"
 
 #Edit .gitconfig
-alias vimg="vim ~/.gitconfig"
+alias vg="vim ~/.gitconfig"
 
 #Go to previous dir as many times as input parameter
 #if no input parameter, then just go back
