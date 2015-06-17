@@ -64,6 +64,9 @@ alias cdev="cd ~/Development/"
 #Change Directory to Hackerati directory
 alias cddh="cd ~/Development/Hackerati/"
 
+#`touch` alias (create new file)
+alias t="touch"
+
 #Edit .bash_profile
 alias vb="vim ~/.bash_profile"
 
