@@ -87,7 +87,7 @@ function ff(){
         ..
         return
     fi
-    while [ $counter -gt 0 ] 
+    while [ $counter -gt 0 ]
     do
         ..
         counter=$[$counter-1]
