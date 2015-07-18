@@ -8,7 +8,7 @@ export CLICOLOR=1
 export TERM=xterm-256color
 
 # Base16 Shell (so iTerm can work with Base16)
-BASE16_SHELL="$HOME/.config/base16-shell/base16-ocean.dark.sh"
+BASE16_SHELL="$HOME/.config/base16-shell/base16-paraiso.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL ]]
 
 #Vim-style history scrolling (j & k)
@@ -79,6 +79,9 @@ alias vt="vim ~/.tmux.conf"
 #Edit .gitconfig
 alias vg="vim ~/.gitconfig"
 
+#Source bash file
+alias sb=". ~/.bash_profile"
+
 #Go to previous dir as many times as input parameter
 #if no input parameter, then just go back
 function ff(){
@@ -128,6 +131,9 @@ alias ga="git add"
 
 #Git reset
 alias gr="git reset"
+
+#Git reset hard
+alias grh="git reset --hard"
 
 #Git pull
 alias gp="git pull"
