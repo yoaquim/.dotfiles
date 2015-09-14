@@ -82,6 +82,9 @@ alias vg="vim ~/.gitconfig"
 #Source bash file
 alias sb=". ~/.bash_profile"
 
+#Flush IP cache
+alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
+
 #Go to previous dir as many times as input parameter
 #if no input parameter, then just go back
 function ff(){
@@ -169,7 +172,7 @@ alias gd="git diff"
 alias gds="git diff --staged"
 
 #Git pretty log (custom git alias)
-alias plog="git plog"
+alias glog="git plog"
 
 #Git update all git submodules
 alias gsmu="git submodule foreach git pull origin master"
