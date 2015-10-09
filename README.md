@@ -37,7 +37,7 @@ git submodule foreach git pull origin master
 
 Symlink all dirs and files to your `~/` directory, either manually, or by running `setup.sh`:
 
-``
+```
 cd  ~/.dotfiles
 ./setup.sh
 ```
