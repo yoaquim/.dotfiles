@@ -42,4 +42,4 @@ cd  ~/.dotfiles
 ./setup.sh
 ```
 
-When symlinking dirs manually, use absolute paths - don't use relative paths.
+When symlinking dirs manually, use absolute paths, don't use relative paths.
