@@ -35,18 +35,11 @@ git submodule foreach git pull origin master
 
 ##Setup
 
-Symlink all dirs and files to your `~/` directory:
+Symlink all dirs and files to your `~/` directory, either manually, or by running `setup.sh`:
 
-```
-ln -s [full-path-to-your-home-dir]/.dotfiles/.bash_profile ~/.bash_profile
-
-ln -s [full-path-to-your-home-dir]/.dotfiles/.bash_profile ~/.bashrc
-
-ln -s [full-path-to-your-home-dir]/.dotfiles/.gitconfig ~/.gitconfig
-
-ln -s [full-path-to-your-home-dir]/.dotfiles/.tmux.conf ~/.tmux.conf
-
-ln -s [full-path-to-your-home-dir]/.dotfiles/.config [full-path-to-your-home-dir]/.config
+``
+cd  ~/.dotfiles
+./setup.sh
 ```
 
-When symlinking dirs, use absolute paths - don't use relative paths.
+When symlinking dirs manually, use absolute paths - don't use relative paths.
