@@ -38,6 +38,7 @@ function getNextScreen () {
         }
     }
 }
+
 // Resizing/Pushing functions
 var maximize = function (screen) {
     screen = screen || focusedScreen;
