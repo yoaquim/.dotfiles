@@ -6,6 +6,7 @@ Contains all my personal dotfiles and dirs:
 
  - Bash Profile
  - Git Configuration
+ - Slate Configuration
  - Config Directory (where some applications set configuration)
  - Tmux Configuration
 
