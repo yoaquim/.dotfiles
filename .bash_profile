@@ -130,6 +130,16 @@ function marks {
     ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
 
+# Tab completion for marks
+# NOT WORKINGJ !!!!
+# _completemarks() {
+#   local curw=${COMP_WORDS[COMP_CWORD]}
+#   local wordlist=$(find $MARKPATH -type l -printf "%f\n")
+#   COMPREPLY=($(compgen -W '${wordlist[@]}' -- "$curw"))
+#   return 0
+# }
+
+complete -F _completemarks jump unmark
 #==========================
 # TOOLS SETTINGS & ALIASES
 #==========================
