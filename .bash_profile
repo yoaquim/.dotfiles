@@ -98,7 +98,7 @@ alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say ca
 
 #Go to previous dir as many times as input parameter
 #if no input parameter, then just go back
-function ff(){
+function up(){
     counter=$1;
     if [ -z "$1" ]; then
         ..
