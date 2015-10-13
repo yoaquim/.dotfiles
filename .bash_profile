@@ -1,11 +1,20 @@
-### SHELL SETTINGS ###
-#--------------------#
+#==================
+# EXPORTS
+#==================
+
+# Dir for marking functions
+export MARKPATH=$HOME/.marks
 
 #Set CLICOLOR if you want Ansi Colors in iTerm2
 export CLICOLOR=1
 
 #Set colors to match iTerm2 Terminal Colors
 export TERM=xterm-256color
+
+
+#=====================
+# SHELL SETTINGS
+#=====================
 
 # Base16 Shell (so iTerm can work with Base16)
 BASE16_SHELL="$HOME/.config/base16-shell/base16-monokai.dark.sh"
@@ -14,11 +23,9 @@ BASE16_SHELL="$HOME/.config/base16-shell/base16-monokai.dark.sh"
 #Vim-style history scrolling (j & k)
 set -o vi
 
-#==========================
-#==========================
-
-### ALIASES ###
-#-------------#
+#==================
+# ALIASES
+#==================
 
 #Alias for clear
 alias c="clear"
@@ -85,6 +92,10 @@ alias sb=". ~/.bash_profile"
 #Flush IP cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
 
+#==========================
+# HELPER FUNCTIONS
+#==========================
+
 #Go to previous dir as many times as input parameter
 #if no input parameter, then just go back
 function ff(){
@@ -98,22 +109,37 @@ function ff(){
         ..
         counter=$[$counter-1]
     done
+
+}
+
+# Bookmark dirs, unmarks them, and jump to them
+# http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
+function jump {
+    cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
+}
+
+function mark { 
+    mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
+}
+
+function unmark {
+    rm -i "$MARKPATH/$1"
+}
+
+function marks {
+    ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
 
 #==========================
+# TOOLS SETTINGS & ALIASES
 #==========================
-
-### TOOLS SETTINGS & ALIASES ###
-#----------------------------#
 
 #fuck is a python tool that tries to fix your last unsuccessful command: https://github.com/nvbn/thefuck
 alias fuck='$(thefuck $(fc -ln -1))'
 
 #==========================
+# GIT SETTINGS & ALIASES
 #==========================
-
-### GIT SETTINGS & ALIASES ###
-#----------------------------#
 
 #Show current Git branch on bash prompt
 PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
@@ -244,14 +270,11 @@ function gtrans(){
 	gpush f
 }
 
-#==========================
-#==========================
-
-### HEROKU SETTINGS ###
-#----------------------------#
+#=====================
+# HEROKU SETTINGS
+#=====================
 
 #Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"
-
 export NVM_DIR="/Users/Asgard/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
