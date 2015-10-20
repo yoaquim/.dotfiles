@@ -178,7 +178,7 @@ alias grh="git reset --hard"
 alias gp="git pull"
 
 #Git pull with rebase
-alias gp="git pull --rebase"
+alias gpr="git pull --rebase"
 
 #Git fetch
 alias gf="git fetch"
