@@ -1,0 +1,23 @@
+"make search incremental
+set incsearch
+
+"change tab settings to insert 4 spaces
+set softtabstop=4
+set shiftwidth=4
+set expandtab
+
+"map Alt+j, Alt+k to move up/down 10 lines nnoremap ∆ 10j
+nnoremap ∆ 5j
+nnoremap ˚ 5k
+vnoremap ∆ 5j
+vnoremap ˚ 5k
+
+"map Shift+Alt+j, Shift+Alt+k to move up/down 20 lines
+nnoremap Ô 15j
+nnoremap  15k
+vnoremap Ô 15j
+vnoremap  15k
+
+"placed at bottom so no comments will be interpreted after <Esc>
+"remaps <Esc> key to jk (need to be typed quickly)
+inoremap jk <Esc>

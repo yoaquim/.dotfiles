@@ -10,3 +10,5 @@ ln -s "~/.dotfiles/.tmux.conf ~/.tmux.conf"
 ln -s "~/.dotfiles/.config ~/.config"
 
 ln -s "~/.dotfiles/.slate.js ~/.slate.js"
+
+ln -s "~/.dotfiles/.ideavimrc ~/.ideavimrc"
