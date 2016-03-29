@@ -5,10 +5,10 @@
 # Dir for marking functions
 export MARKPATH=$HOME/.marks
 
-#Set CLICOLOR if you want Ansi Colors in iTerm2
+# Set CLICOLOR if you want Ansi Colors in iTerm2
 export CLICOLOR=1
 
-#Set colors to match iTerm2 Terminal Colors
+# Set colors to match iTerm2 Terminal Colors
 export TERM=xterm-256color
 
 
@@ -20,84 +20,85 @@ export TERM=xterm-256color
 BASE16_SHELL="$HOME/.config/base16-shell/base16-monokai.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL ]]
 
-#Vim-style history scrolling (j & k)
+# Vim-style history scrolling (j & k)
 set -o vi
+
 
 #==================
 # ALIASES
 #==================
 
-#Alias for clear
+# Alias for clear
 alias c="clear"
 
-#Vim alias
+# Vim alias
 alias v="vim"
-alias vi="vim"
 
-#Alias 'rm' so as to always ask permission to delete
+# Alias 'rm' so as to always ask permission to delete
 alias rm="rm -i"
 
-#Alias remove dir ('rm -rf') to 'rmd'
+# Alias remove dir ('rm -rf') to 'rmd'
 alias rmd="rm -rf"
 
-#Show hidden files
+# Show hidden files
 alias la="ls -a"
 
-#Long listing format
+# Long listing format
 alias l="ls -l"
 alias ll="ls -l"
 
-#Long listing format, including hidden files
+# Long listing format, including hidden files
 alias lal="ls -a -l"
 
-#Go to previous dir
+# Go to previous dir
 alias .,="cd -"
 
-#Go to parent dir
+# Go to parent dir
 alias ..="cd .."
 
-#Go to vim directory
+# Go to vim directory
 alias cdv="cd ~/.vim"
 
-#Go to dotfiles directory
+# Go to dotfiles directory
 alias cd.="cd ~/.dotfiles"
 
-#Go to Desktop
+# Go to Desktop
 alias cdd="cd ~/Desktop/"
 
-#Change Directory to Development directory
+# Change Directory to Development directory
 alias cdev="cd ~/Development/"
 
-#Change Directory to Hackerati directory
+# Change Directory to Hackerati directory
 alias cddh="cd ~/Development/Hackerati/"
 
-#`touch` alias (create new file)
+# `touch` alias (create new file)
 alias t="touch"
 
-#Edit .bash_profile
+# Edit .bash_profile
 alias vb="vim ~/.bash_profile"
 
-#Edit .vimrc
+# Edit .vimrc
 alias vrc="vim ~/.vimrc"
 
-#Edit .tmux.conf
+# Edit .tmux.conf
 alias vt="vim ~/.tmux.conf"
 
-#Edit .gitconfig
+# Edit .gitconfig
 alias vg="vim ~/.gitconfig"
 
-#Source bash file
+# Source bash file
 alias sb=". ~/.bash_profile"
 
-#Flush IP cache
+# Flush IP cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
 
 #==========================
 # HELPER FUNCTIONS
 #==========================
 
-#Go to previous dir as many times as input parameter
-#if no input parameter, then just go back
+# Go to previous dir as many times as input parameter
+# if no input parameter, then just go back
+# also ad "up" as an alias
 function up(){
     counter=$1;
     if [ -z "$1" ]; then
@@ -111,6 +112,7 @@ function up(){
     done
 
 }
+alias ff="up"
 
 # Bookmark dirs, unmarks them, and jump to them
 # http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
@@ -130,8 +132,12 @@ function marks {
     ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
 
+#----!!!!!!!!!!!!-----
+# NOT WORKING 
+#----!!!!!!!!!!!!-----
+
 # Tab completion for marks
-# NOT WORKINGJ !!!!
+#--------------------
 # _completemarks() {
 #   local curw=${COMP_WORDS[COMP_CWORD]}
 #   local wordlist=$(find $MARKPATH -type l -printf "%f\n")
@@ -141,86 +147,95 @@ function marks {
 #complete -F _completemarks jump unmark
 
 #==========================
-# TOOLS SETTINGS & ALIASES
-#==========================
-
-#fuck is a python tool that tries to fix your last unsuccessful command: https://github.com/nvbn/thefuck
-alias fuck='$(thefuck $(fc -ln -1))'
-
-#==========================
 # GIT SETTINGS & ALIASES
 #==========================
 
-#Show current Git branch on bash prompt
+# Show current Git branch on bash prompt
 PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
 
-#Git coloring
+# Git coloring
 export LESS=-R
 
-#Git bash completion (hombrew, mac only)
+# Git bash completion (hombrew, mac only)
 if [ -f `brew --prefix`/etc/bash_completion ]; then
 	. `brew --prefix`/etc/bash_completion
 fi
 
-#Git status alias
+# Git status alias
 alias gs="git status"
 
-#Git add
+# Git add
 alias ga="git add"
 
-#Git reset
+# Git reset
 alias gr="git reset"
 
-#Git reset hard
+# Git reset hard
 alias grh="git reset --hard"
 
-#Git pull
+# Git pull
 alias gp="git pull"
 
-#Git pull with rebase
+# Git push
+alias gpush="git push"
+
+# Git pull with rebase
 alias gpr="git pull --rebase"
 
-#Git fetch
+# Git fetch
 alias gf="git fetch"
 
-#Git log
+# Git log
 alias gl="git log"
 
-#Git add all
+# Git add all
 alias gall="git add --all"
 
-#Git add untracked
+# Git add untracked
 alias gau="git add -u"
 
-#Git checkout
+# Git checkout
 alias gc="git checkout"
 
-#Git checkout new branch
+# Git checkout new branch
 alias gcb="git checkout -b"
 
-#Git branch alias
+# Git branch alias
 alias gb="git branch"
 
-#Git ammend last commit
+# Git ammend last commit
 alias gam="git commit --amend"
 
-#Git alias for git diff
+# Git alias for git diff
 alias gd="git diff"
 
-#Git alias for git diff --staged
+# Git alias for git diff --staged
 alias gds="git diff --staged"
 
-#Git pretty log (custom git alias)
+# Git pretty log (custom git alias)
 alias glog="git plog"
 
-#Git update all git submodules
+# Git update all git submodules
 alias gsmu="git submodule foreach git pull origin master"
 
-#Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
+# Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
 alias gsmi="git submodule update --init --recursive"
 
-# - Stash changes, checkout master, pull from origin, checkout to previous branch, rebase off of master, then pop stashed changes
-# - Used to quickly bring current branch up-to-date with origin/master
+
+# Git commit without having to enter quotes for message
+function gcom(){
+	message="${@} ";
+	git commit -m "${message}"
+}
+
+# Git commit, then push to origin current branch
+function gup(){
+	gcom $@
+	gpush
+}
+
+# Stash changes, checkout master, pull from origin, checkout to previous branch, rebase off of master, then pop stashed changes
+# Used to quickly bring current branch up-to-date with origin/master
 function rebmast(){
         git stash
 	branch=$(git symbolic-ref --short -q HEAD)
@@ -231,63 +246,13 @@ function rebmast(){
         git stash pop
 }
 
-#Git commit without having to enter quotes for message
-function gcom(){
-	message="${@} ";
-	git commit -m "${message}"
-}
 
-#Git commit, then push to origin current branch
-function gup(){
-	gcom $@
-	gpush
-}
 
-# - Git push current branch to corresponding origin branch
-# - Pass 'f' as first argument in order to forcepush
-function gpush(){
-	branch=$(git symbolic-ref --short -q HEAD)
-	if [ -z "$1" ]
-	then
-		git push origin $branch
-		return
-	else
-		if [ $1 = "f" ]
-		then
-			git push origin "+${branch}"
-		else
-			echo "Do 'gpush f' to force push"
-		fi
-	fi
-}
+#==================
+# BASH FILES
+#==================
 
-# - Rebase off of master, then push to current branch
-# - Always force pushes
-function rebmpush(){
-	rebmast
-	gpush f
-}
-
-#Commit, rebase off of master and force push to current branch
-function grup(){
-	gcom $@
-	rebmast
-	gpush f
-}
-
-#Add all changes, commit using custom function, rebase off of master and force push to current branch
-function gtrans(){
-	gall
-	gcom $@
-	rebmast
-	gpush f
-}
-
-#=====================
-# HEROKU SETTINGS
-#=====================
-
-#Added by the Heroku Toolbelt
-export PATH="/usr/local/heroku/bin:$PATH"
-export NVM_DIR="/Users/Asgard/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+# Source local bash file
+if [ -f ~/.bash_local ]; then
+    source ~/.bash_local
+fi
