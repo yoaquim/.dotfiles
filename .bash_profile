@@ -77,6 +77,9 @@ alias t="touch"
 # Edit .bash_profile
 alias vb="vim ~/.bash_profile"
 
+# Edit .bash)local
+alias vl="vim ~/.bash_local"
+
 # Edit .vimrc
 alias vrc="vim ~/.vimrc"
 
