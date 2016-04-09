@@ -69,11 +69,8 @@ alias cd.="cd ~/.dotfiles"
 # Go to Desktop
 alias cdd="cd ~/Desktop/"
 
-# Change Directory to Development directory
-alias cdev="cd ~/Development/"
-
-# Change Directory to Hackerati directory
-alias cddh="cd ~/Development/Hackerati/"
+# Change Directory to Projects directory
+alias cdp="cd ~/Projects/"
 
 # `touch` alias (create new file)
 alias t="touch"
@@ -200,6 +197,9 @@ alias gall="git add --all"
 
 # Git add untracked
 alias gau="git add -u"
+
+# Git add patch mode
+alias gap="git add -p"
 
 # Git checkout
 alias gc="git checkout"
