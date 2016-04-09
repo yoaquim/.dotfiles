@@ -40,15 +40,19 @@ alias rm="rm -i"
 # Alias remove dir ('rm -rf') to 'rmd'
 alias rmd="rm -rf"
 
-# Show hidden files
-alias la="ls -a"
+# Show hidden files, long listing format
+alias la="ls -la"
 
 # Long listing format
 alias l="ls -l"
 alias ll="ls -l"
 
-# Long listing format, including hidden files
-alias lal="ls -a -l"
+# Human readable, long listing format
+alias lh="ls -lh"
+
+# Human readable, show hidden files, long listing format
+alias lah="ls -lah"
+alias lha="ls -lah"
 
 # Go to previous dir
 alias .,="cd -"
