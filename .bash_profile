@@ -210,6 +210,9 @@ alias gcb="git checkout -b"
 # Git branch alias
 alias gb="git branch"
 
+# Copy branch name
+alias gbcp="git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ' | pbcopy"
+
 # Git ammend last commit
 alias gam="git commit --amend"
 
@@ -244,6 +247,7 @@ function gup(){
 # Stash changes, checkout master, pull from origin, checkout to previous branch, rebase off of master, then pop stashed changes
 # Used to quickly bring current branch up-to-date with origin/master
 function rebmast(){
+        git stash drop
         git stash
 	branch=$(git symbolic-ref --short -q HEAD)
 	git checkout master
