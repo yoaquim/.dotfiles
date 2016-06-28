@@ -11,7 +11,6 @@ export CLICOLOR=1
 # Set colors to match iTerm2 Terminal Colors
 export TERM=xterm-256color
 
-
 #=====================
 # SHELL SETTINGS
 #=====================
@@ -22,7 +21,6 @@ BASE16_SHELL="$HOME/.config/base16-shell/base16-monokai.dark.sh"
 
 # Vim-style history scrolling (j & k)
 set -o vi
-
 
 #==================
 # ALIASES
@@ -137,6 +135,19 @@ function marks {
     ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
 
+function toggle-hidden {
+    TOGGLE=$HOME/.hidden-files-shown
+    if [ ! -e $TOGGLE ]; then
+        touch $TOGGLE
+        defaults write com.apple.finder AppleShowAllFiles YES
+    else
+        rm -f $TOGGLE
+        defaults write com.apple.finder AppleShowAllFiles NO
+    fi
+
+    killall Finder
+}
+
 #----!!!!!!!!!!!!-----
 # NOT WORKING 
 #----!!!!!!!!!!!!-----
@@ -151,114 +162,6 @@ function marks {
 # }
 #complete -F _completemarks jump unmark
 
-#==========================
-# GIT SETTINGS & ALIASES
-#==========================
-
-# Show current Git branch on bash prompt
-PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
-
-# Git coloring
-export LESS=-R
-
-# Git bash completion (hombrew, mac only)
-if [ -f `brew --prefix`/etc/bash_completion ]; then
-	. `brew --prefix`/etc/bash_completion
-fi
-
-# Git status alias
-alias gs="git status"
-
-# Git add
-alias ga="git add"
-
-# Git reset
-alias gr="git reset"
-
-# Git reset hard
-alias grh="git reset --hard"
-
-# Git pull
-alias gp="git pull"
-
-# Git push
-alias gpush="git push"
-
-# Git pull with rebase
-alias gpr="git pull --rebase"
-
-# Git fetch
-alias gf="git fetch"
-
-# Git log
-alias gl="git log"
-
-# Git add all
-alias gall="git add --all"
-
-# Git add untracked
-alias gau="git add -u"
-
-# Git add patch mode
-alias gap="git add -p"
-
-# Git checkout
-alias gc="git checkout"
-
-# Git checkout new branch
-alias gcb="git checkout -b"
-
-# Git branch alias
-alias gb="git branch"
-
-# Copy branch name
-alias gbcp="git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ' | pbcopy"
-
-# Git ammend last commit
-alias gam="git commit --amend"
-
-# Git alias for git diff
-alias gd="git diff"
-
-# Git alias for git diff --staged
-alias gds="git diff --staged"
-
-# Git pretty log (custom git alias)
-alias glog="git plog"
-
-# Git update all git submodules
-alias gsmu="git submodule foreach git pull origin master"
-
-# Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
-alias gsmi="git submodule update --init --recursive"
-
-
-# Git commit without having to enter quotes for message
-function gcom(){
-	message="${@} ";
-	git commit -m "${message}"
-}
-
-# Git commit, then push to origin current branch
-function gup(){
-	gcom $@
-	gpush
-}
-
-# Stash changes, checkout master, pull from origin, checkout to previous branch, rebase off of master, then pop stashed changes
-# Used to quickly bring current branch up-to-date with origin/master
-function rebmast(){
-        git stash drop
-        git stash
-	branch=$(git symbolic-ref --short -q HEAD)
-	git checkout master
-	git pull
-	git checkout $branch
-	git rebase master
-        git stash pop
-}
-
-
 #==================
 # BASH FILES
 #==================
@@ -267,3 +170,14 @@ function rebmast(){
 if [ -f ~/.bash_local ]; then
     source ~/.bash_local
 fi
+
+if [ -f ~/.bash_git ]; then
+    source ~/.bash_git
+fi
+
+#====================================
+# APPENDS BY TOOLS FOR SYSTEM ENV
+#====================================
+
+export NVM_DIR="/Users/Asgard/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
