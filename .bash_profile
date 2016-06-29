@@ -104,6 +104,7 @@ alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say ca
 # Go to previous dir as many times as input parameter
 # if no input parameter, then just go back
 # also ad "up" as an alias
+alias ff="up"
 function up(){
     counter=$1;
     if [ -z "$1" ]; then
@@ -117,14 +118,12 @@ function up(){
     done
 
 }
-alias ff="up"
 
 # Bookmark dirs, unmarks them, and jump to them
 # http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
 function jump {
     cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
 }
-alias j="jump"
 
 function mark { 
     mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
@@ -151,19 +150,18 @@ function toggle-hidden {
     killall Finder
 }
 
-#----!!!!!!!!!!!!-----
-# NOT WORKING 
-#----!!!!!!!!!!!!-----
-
+#------------------------------
 # Tab completion for marks
-#--------------------
-# _completemarks() {
-#   local curw=${COMP_WORDS[COMP_CWORD]}
-#   local wordlist=$(find $MARKPATH -type l -printf "%f\n")
-#   COMPREPLY=($(compgen -W '${wordlist[@]}' -- "$curw"))
-#   return 0
-# }
-#complete -F _completemarks jump unmark
+#------------------------------
+# taken from https://news.ycombinator.com/item?id=6229001 (comment by beders) 
+function _completemarks {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local marks=$(find $MARKPATH -type l | awk -F '/' '{print $NF}')
+    COMPREPLY=($(compgen -W '${marks[@]}' -- "$cur"))
+    return 0
+}
+
+complete -o default -o nospace -F _completemarks jump unmark
 
 #==================
 # BASH FILES
