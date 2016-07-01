@@ -172,6 +172,7 @@ if [ -f ~/.bash_local ]; then
     source ~/.bash_local
 fi
 
+# Source git bash shortcuts
 if [ -f ~/.bash_git ]; then
     source ~/.bash_git
 fi
