@@ -120,7 +120,7 @@ function up(){
 }
 
 # Bookmark dirs, unmarks them, and jump to them
-# http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
+# (http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html)
 function jump {
     cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
 }
