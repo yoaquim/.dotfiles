@@ -14,3 +14,5 @@ ln -s ~/.dotfiles/.config ~/.config
 ln -s ~/.dotfiles/.slate.js ~/.slate.js
 
 ln -s ~/.dotfiles/.ideavimrc ~/.ideavimrc
+
+ln -s ~/.dotfiles/.spacemacs ~/.spacemacs
