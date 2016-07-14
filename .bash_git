@@ -95,12 +95,9 @@ function gup(){
 # Stash changes, checkout master, pull from origin, checkout to previous branch, rebase off of master, then pop stashed changes
 # Used to quickly bring current branch up-to-date with origin/master
 function rebmast(){
-        git stash drop
-        git stash
 	branch=$(git symbolic-ref --short -q HEAD)
 	git checkout master
 	git pull
 	git checkout $branch
 	git rebase master
-        git stash pop
 }

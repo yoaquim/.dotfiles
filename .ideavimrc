@@ -6,6 +6,9 @@ set softtabstop=4
 set shiftwidth=4
 set expandtab
 
+"allow vim surround
+set surround
+
 "map Alt+j, Alt+k to move up/down 10 lines nnoremap ∆ 10j
 nnoremap ∆ 5j
 nnoremap ˚ 5k
