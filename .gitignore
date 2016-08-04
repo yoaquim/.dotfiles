@@ -1,2 +1,2 @@
-.config/configstore/*
-.config/deluge
+config/configstore/*
+config/deluge
