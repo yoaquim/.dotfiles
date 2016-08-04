@@ -43,4 +43,6 @@ cd  ~/.dotfiles
 ./setup.sh
 ```
 
+If you pass the `f` flag to setup (`./setup.sh -f`), it'll first delete all relevant symlinks before symlinking.
+
 When symlinking dirs manually, use absolute paths, don't use relative paths.
