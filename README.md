@@ -19,25 +19,9 @@ cd ~/
 
 git clone https://github.com/yoaquim/.dotfiles.git
 ```
-
-After that, make sure you initialize any git submodules:
-```Shell
-cd ~/.dotfiles
-
-git submodule update --init --recursive
-```
-
-If you ever need to update git submodules, just do:
-
-```Shell
-cd ~/.dotfiles
-
-git submodule foreach git pull origin master
-```
-
 ##Setup
 
-Symlink all dirs and files to your `~/` directory, either manually, or by running `setup.sh`:
+Run `setup.sh` (will symlink into home dir):
 
 ```
 cd  ~/.dotfiles
@@ -45,5 +29,3 @@ cd  ~/.dotfiles
 ```
 
 If you pass the `f` flag to setup (`./setup.sh -f`), it'll first delete all relevant symlinks before symlinking.
-
-When symlinking dirs manually, use absolute paths, don't use relative paths.
