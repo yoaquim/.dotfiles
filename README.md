@@ -9,6 +9,7 @@ Contains all my personal dotfiles and dirs:
  - Slate Configuration
  - Config Directory (where some applications set configuration)
  - Tmux Configuration
+ - IntelliJ vimrc settings and CLI launcher
 
 ##Installation
 
