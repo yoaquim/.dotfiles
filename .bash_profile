@@ -97,6 +97,8 @@ alias sb=". ~/.bash_profile"
 # Flush IP cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
 
+alias idea="sudo sh ~/.scripts/idea.sh"
+
 #==========================
 # HELPER FUNCTIONS
 #==========================
@@ -152,8 +154,8 @@ function toggle-hidden {
 
 #------------------------------
 # Tab completion for marks
-#------------------------------
 # taken from https://news.ycombinator.com/item?id=6229001 (comment by beders) 
+#------------------------------
 function _completemarks {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local marks=$(find $MARKPATH -type l | awk -F '/' '{print $NF}')
@@ -162,6 +164,7 @@ function _completemarks {
 }
 
 complete -o default -o nospace -F _completemarks jump unmark
+#------------------------------
 
 #==================
 # BASH FILES
