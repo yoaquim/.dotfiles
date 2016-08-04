@@ -1,4 +1,6 @@
 #!/bin/sh
+
+#TAKEN FROM: https://gist.github.com/chrisdarroch/7018927
  
 # check for where the latest version of IDEA is installed
 IDEA=`ls -1d /Applications/IntelliJ\ * | tail -n1`
