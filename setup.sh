@@ -35,7 +35,7 @@ function link_symlinks {
 
     ln -s ~/.dotfiles/config ~/.config
 
-    ln -s ~/.dotfiles/cripts ~/.scripts
+    ln -s ~/.dotfiles/scripts ~/.scripts
 
     ln -s ~/.dotfiles/slate.js ~/.slate.js
 
