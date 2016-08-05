@@ -11,7 +11,7 @@ Contains all my personal dotfiles and dirs:
  - Tmux Configuration
  - IntelliJ vimrc settings and CLI launcher
 
-##Installation
+##Setup
 
 Just clone this repo into your `~/` directory:
 ```Shell
@@ -19,9 +19,7 @@ cd ~/
 
 git clone https://github.com/yoaquim/.dotfiles.git
 ```
-##Setup
-
-Run `setup.sh` (will symlink into home dir):
+Then run `setup.sh` (will symlink into home dir):
 
 ```
 cd  ~/.dotfiles
