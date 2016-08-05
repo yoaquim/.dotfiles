@@ -79,8 +79,8 @@ alias vb="vim ~/.bash_profile"
 # Edit .bash_git 
 alias vbg="vim ~/.bash_git"
 
-# Edit .bash)local
-alias vl="vim ~/.bash_local"
+# Edit .bash_local
+alias vbl="vim ~/.bash_local"
 
 # Edit .vimrc
 alias vrc="vim ~/.vimrc"
@@ -97,6 +97,7 @@ alias sb=". ~/.bash_profile"
 # Flush IP cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
 
+# Alias to call idea script (launch IntelliJ from terminal)
 alias idea="sudo sh ~/.scripts/idea.sh"
 
 #==========================
@@ -121,24 +122,7 @@ function up(){
 
 }
 
-# Bookmark dirs, unmarks them, and jump to them
-# (http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html)
-function jump {
-    cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
-}
-
-function mark { 
-    mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
-}
-
-function unmark {
-    rm -i "$MARKPATH/$1"
-}
-
-function marks {
-    ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
-}
-
+# Toggles if hidden (dotfiles) arew shown on Finder
 function toggle-hidden {
     TOGGLE=$HOME/.hidden-files-shown
     if [ ! -e $TOGGLE ]; then
@@ -152,19 +136,40 @@ function toggle-hidden {
     killall Finder
 }
 
-#------------------------------
+#--------------------------------
+# Next section taken from:
+# http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html)
+# https://news.ycombinator.com/item?id=6229001 (comment by beders) 
+#--------------------------------
+
+# Mark a dir so you can easily jump to it later
+function mark { 
+    mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
+}
+
+# Unmark  a marked dir
+function unmark {
+    rm -i "$MARKPATH/$1"
+}
+
+# Jump to bookmarked location
+function jump {
+    cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
+}
+
+# Print out current marked dirs
+function marks {
+    ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
+}
+
 # Tab completion for marks
-# taken from https://news.ycombinator.com/item?id=6229001 (comment by beders) 
-#------------------------------
 function _completemarks {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local marks=$(find $MARKPATH -type l | awk -F '/' '{print $NF}')
     COMPREPLY=($(compgen -W '${marks[@]}' -- "$cur"))
     return 0
 }
-
 complete -o default -o nospace -F _completemarks jump unmark
-#------------------------------
 
 #==================
 # BASH FILES
@@ -180,9 +185,3 @@ if [ -f ~/.bash_git ]; then
     source ~/.bash_git
 fi
 
-#====================================
-# APPENDS BY TOOLS FOR SYSTEM ENV
-#====================================
-
-export NVM_DIR="/Users/Asgard/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
