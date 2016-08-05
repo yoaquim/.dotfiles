@@ -122,7 +122,7 @@ function up(){
 
 }
 
-# Toggles if hidden (dotfiles) arew shown on Finder
+# Toggles if hidden (dotfiles) are shown on Finder
 function toggle-hidden {
     TOGGLE=$HOME/.hidden-files-shown
     if [ ! -e $TOGGLE ]; then
@@ -138,7 +138,7 @@ function toggle-hidden {
 
 #--------------------------------
 # Next section taken from:
-# http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html)
+# http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
 # https://news.ycombinator.com/item?id=6229001 (comment by beders) 
 #--------------------------------
 
