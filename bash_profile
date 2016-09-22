@@ -22,12 +22,16 @@ BASE16_SHELL="$HOME/.config/base16-shell/scripts/base16-ocean.sh"
 # Vim-style history scrolling (j & k)
 set -o vi
 
+# Navigate to dirs by typing their name (no cd)
+shopt -s autocd
+
 #==================
 # ALIASES
 #==================
 
 # Alias for clear
 alias c="clear"
+alias cl="clear"
 
 # Vim alias
 alias v="vim"
