@@ -141,10 +141,10 @@ function toggle-hidden {
 }
 
 #--------------------------------
-# Next section taken from:
+#--------------------------------
+# This section taken from:
 # http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
 # https://news.ycombinator.com/item?id=6229001 (comment by beders) 
-#--------------------------------
 
 # Mark a dir so you can easily jump to it later
 function mark { 
@@ -174,6 +174,8 @@ function _completemarks {
     return 0
 }
 complete -o default -o nospace -F _completemarks jump unmark
+#--------------------------------
+#--------------------------------
 
 #==================
 # BASH FILES
