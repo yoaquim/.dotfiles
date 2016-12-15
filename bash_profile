@@ -101,8 +101,8 @@ alias sb=". ~/.bash_profile"
 # Flush IP cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
 
-# Alias to call idea script (launch IntelliJ from terminal)
-alias idea="sudo sh ~/.scripts/idea.sh"
+# Alias to build scala project from scratch with passed parameter as project name
+alias scb="sh ~/.scripts/scala_build.sh"
 
 #==========================
 # HELPER FUNCTIONS
