@@ -57,7 +57,7 @@ alias lah="ls -lah"
 alias lha="ls -lah"
 
 # Go to previous dir
-alias .,="cd -"
+alias ...="cd -"
 
 # Go to parent dir
 alias ..="cd .."
@@ -190,4 +190,3 @@ fi
 if [ -f ~/.bash_git ]; then
     source ~/.bash_git
 fi
-

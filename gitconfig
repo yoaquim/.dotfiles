@@ -8,6 +8,7 @@
 [core]
 	editor = /usr/bin/vim
 	pager = less -R
+	autocrlf = input
 [color]
 	ui = true
 [alias]
