@@ -39,7 +39,7 @@ alias v="vim"
 # Alias 'rm' so as to always ask permission to delete
 alias rm="rm -i"
 
-# Alias remove dir ('rm -rf') to 'rmd'
+# Alias remove dir ('rmdir') to 'rmd'
 alias rmd="rm -rf"
 
 # Show hidden files, long listing format
