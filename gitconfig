@@ -7,7 +7,7 @@
 	email = yoaquim@outlook.com
 [core]
 	editor = /usr/bin/vim
-	pager = less -R
+	pager = diff-so-fancy | less --tabs=4 -RFX
 	autocrlf = input
 [color]
 	ui = true
