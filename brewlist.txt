@@ -15,7 +15,7 @@ docker-compose
 docker-machine
 elixir
 elm
-emacs-plus
+emacs
 erlang
 fontconfig
 freetype
@@ -51,6 +51,7 @@ libspatialite
 libtasn1
 libtiff
 libtool
+libunistring
 libxml2
 libyaml
 lynx
@@ -61,8 +62,10 @@ mysql
 nettle
 node
 openssl
+p11-kit
 pango
 pcre
+perl
 pixman
 pkg-config
 postgis
@@ -71,10 +74,12 @@ proj
 python
 rbenv
 readline
+ruby
 ruby-build
 s3cmd
 sbt
 sfcgal
+shared-mime-info
 sqlite
 the_silver_searcher
 vim
