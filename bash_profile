@@ -71,6 +71,9 @@ alias cd.="cd ~/.dotfiles"
 # Go to Desktop
 alias cdd="cd ~/Desktop/"
 
+# Change Directory to Dropbox directory
+alias cdb="cd ~/Dropbox/"
+
 # Change Directory to Projects directory
 alias cdp="cd ~/Projects/"
 
