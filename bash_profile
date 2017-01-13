@@ -16,7 +16,7 @@ export TERM=xterm-256color
 #=====================
 
 # Base16 Shell (so iTerm can work with Base16)
-BASE16_SHELL="$HOME/.config/base16-shell/scripts/base16-ocean.sh"
+BASE16_SHELL="$HOME/.config/base16-shell/scripts/base16-materia.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL ]]
 
 # Vim-style history scrolling (j & k)
