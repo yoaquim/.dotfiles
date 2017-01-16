@@ -83,7 +83,7 @@ alias t="touch"
 # Edit .bash_profile
 alias vb="vim ~/.bash_profile"
 
-# Edit .bash_git 
+# Edit .bash_git
 alias vbg="vim ~/.bash_git"
 
 # Edit .bash_local
@@ -103,9 +103,7 @@ alias sb=". ~/.bash_profile"
 
 # Flush IP cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
-
-# Alias to build scala project from scratch with passed parameter as project name
-alias scb="sh ~/.scripts/scala_build.sh"
+# Alias to build scala project from scratch with passed parameter as project name alias scb="sh ~/.scripts/scala_build.sh"
 
 #==========================
 # HELPER FUNCTIONS
@@ -113,7 +111,7 @@ alias scb="sh ~/.scripts/scala_build.sh"
 
 # Go to previous dir as many times as input parameter
 # if no input parameter, then just go back
-# also ad "up" as an alias
+# also add "ff" as an alias to function
 alias ff="up"
 function up(){
     counter=$1;
@@ -144,13 +142,12 @@ function toggle-hidden {
 }
 
 #--------------------------------
-#--------------------------------
 # This section taken from:
 # http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
-# https://news.ycombinator.com/item?id=6229001 (comment by beders) 
+# https://news.ycombinator.com/item?id=6229001 (comment by beders)
 
 # Mark a dir so you can easily jump to it later
-function mark { 
+function mark {
     mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
 }
 
@@ -177,8 +174,6 @@ function _completemarks {
     return 0
 }
 complete -o default -o nospace -F _completemarks jump unmark
-#--------------------------------
-#--------------------------------
 
 #==================
 # BASH FILES
