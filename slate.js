@@ -2,12 +2,16 @@
 // (not slate.screen() default, since you want to have reference
 // to latest screen where window was thrown)
 var focusedScreen = slate.screen();
+var screens = getAllScreens();
 
 // Get all screens
-var screens = [];
-slate.eachScreen(function (screen) {
-    screens.push(screen);
-});
+function getAllScreens() {
+    var screens = [];
+    slate.eachScreen(function (screen) {
+        screens.push(screen);
+    });
+    return screens;
+}
 
 function getPreviousScreen () {
     for (var i=0; i < screens.length; i++) {
@@ -41,7 +45,7 @@ function getNextScreen () {
 
 // Resizing/Pushing functions
 var maximize = function (screen) {
-    screen = screen || focusedScreen;
+    screen = screen || slate.screen();
     var rect = screen.visibleRect();
     return slate.operation('move', {
         x : rect.x,
@@ -138,6 +142,7 @@ slate.bind('l:ctrl,alt,cmd', function (window) {
 
 // Throw left and maximize
 slate.bind('h:ctrl,alt,cmd,shift', function(window) {
+    screens = getAllScreens();
     var previousScreen = getPreviousScreen();
     if (previousScreen) {
         window.doOperation(throwToScreenMax(previousScreen));
@@ -147,6 +152,7 @@ slate.bind('h:ctrl,alt,cmd,shift', function(window) {
 
 // Throw right and maximize
 slate.bind('l:ctrl,alt,cmd,shift', function(window) {
+    screens = getAllScreens();
     var nextScreen = getNextScreen();
     if (nextScreen) {
         window.doOperation(throwToScreenMax(nextScreen));
