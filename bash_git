@@ -28,9 +28,6 @@ alias grh="git reset --hard"
 # Git pull
 alias gp="git pull"
 
-# Git push
-alias gpush="git push"
-
 # Git pull with rebase
 alias gpr="git pull --rebase"
 
@@ -79,6 +76,17 @@ alias gsmu="git submodule foreach git pull origin master"
 # Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
 alias gsmi="git submodule update --init --recursive"
 
+#Git push
+function gpush() {
+    branch=$(git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ')
+    git push origin "${branch}:${branch}"
+}
+
+#Git push with remote-run prefix
+function rgpush() {
+    branch=$(git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ')
+    git push origin "${branch}:remote-run/${branch}"
+}
 
 # Git commit without having to enter quotes for message
 function gcom(){
