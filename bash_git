@@ -79,13 +79,21 @@ alias gsmi="git submodule update --init --recursive"
 #Git push
 function gpush() {
     branch=$(git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ')
-    git push origin "${branch}:${branch}"
+    if [ -z "$1" ]; then
+        git push origin "${branch}:${branch}"
+    else
+        git push origin "${branch}:${branch}" "${1}"
+    fi
 }
 
 #Git push with remote-run prefix
 function rgpush() {
     branch=$(git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ')
-    git push origin "${branch}:remote-run/${branch}"
+    if [ -z "$1" ]; then
+        git push origin "${branch}:remote-run/${branch}"
+    else 
+        git push origin "${branch}:remote-run/${branch}" "${1}"
+    fi
 }
 
 # Git commit without having to enter quotes for message
