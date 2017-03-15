@@ -195,3 +195,6 @@ fi
 # ITERM2 SHELL INTEGRATION
 #============================
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+
+# added by travis gem
+[ -f /Users/Asgard/.travis/travis.sh ] && source /Users/Asgard/.travis/travis.sh
