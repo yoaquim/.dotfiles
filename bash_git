@@ -76,6 +76,11 @@ alias gsmu="git submodule foreach git pull origin master"
 # Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
 alias gsmi="git submodule update --init --recursive"
 
+# Git checkout new branch with remote-run/ prefix
+function gcrb(){
+    git checkout -b "remote-run/${1}"
+}
+
 #Git push
 function gpush() {
     branch=$(git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ')
