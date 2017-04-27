@@ -24,3 +24,6 @@ vnoremap  15k
 "placed at bottom so no comments will be interpreted after <Esc>
 "remaps <Esc> key to jk (need to be typed quickly)
 inoremap jk <Esc>
+
+"set vim surround
+set surround
