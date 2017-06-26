@@ -107,6 +107,9 @@ alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say ca
 # Alias to build scala project from scratch with passed parameter as project name
 alias scb="sh ~/.scripts/scala_build.sh"
 
+# NPM alias so you can run npm scripts on silent mode
+alias npms="npm -s"
+
 #==========================
 # HELPER FUNCTIONS
 #==========================
