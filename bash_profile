@@ -16,7 +16,7 @@ export TERM=xterm-256color
 #=====================
 
 # Base16 Shell (so iTerm can work with Base16)
-BASE16_SHELL="$HOME/.config/base16-shell/scripts/base16-materia.sh"
+BASE16_SHELL="$HOME/.config/base16-shell/scripts/base16-ocean.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL ]]
 
 # Vim-style history scrolling (j & k)
@@ -109,6 +109,12 @@ alias scb="sh ~/.scripts/scala_build.sh"
 
 # NPM alias so you can run npm scripts on silent mode
 alias npms="npm -s"
+
+# Docker remove all container
+#alias drm="docker rm `$(docker ps -a -q)`"
+
+# Docker remove all container
+#alias drmi="docker rmi -f `$(docker images -q)`"
 
 #==========================
 # HELPER FUNCTIONS
