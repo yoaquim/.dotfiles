@@ -36,7 +36,7 @@ If you pass the `f` flag to setup (`./setup.sh -f`), it'll first delete all rele
 `brewlist.txt` is a list a of installed brew formulae. Running the `install_brew_list.sh` script will install said list. **Java should be installed _beforehand_, otherwise some installs (**`maven`**,** `sbt`**, etc) will fail**:
 
 ```
-brew install java
+brew cask install java
 ```
 ### Bash
 
