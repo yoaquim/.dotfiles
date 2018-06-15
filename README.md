@@ -1,6 +1,6 @@
-#Dotfiles
+# Dotfiles
 
-##Intro
+## Intro
 
 Contains all my personal dotfiles and dirs:
 
@@ -11,7 +11,7 @@ Contains all my personal dotfiles and dirs:
  - Tmux Configuration
  - IntelliJ vimrc settings and CLI launcher
 
-##Setup
+## Setup
 
 - Clone this repo into your `~/` directory:
  ```Shell
