@@ -117,7 +117,8 @@ alias scb="sh ~/.scripts/scala_build.sh"
 alias npms="npm -s"
 
 # Docker remove all container
-#alias drm="docker rm `$(docker ps -a -q)`"
+x="docker rm \$(docker ps -a -q)"
+alias drm="echo ${x}"
 
 # Docker remove all container
 #alias drmi="docker rmi -f `$(docker images -q)`"
@@ -213,3 +214,11 @@ test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shel
 
 # added by travis gem
 [ -f /Users/Asgard/.travis/travis.sh ] && source /Users/Asgard/.travis/travis.sh
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
+
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+
+# added by travis gem
+[ -f /Users/yoaquim/.travis/travis.sh ] && source /Users/yoaquim/.travis/travis.sh
