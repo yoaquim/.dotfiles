@@ -42,4 +42,16 @@ brew cask install java
 
 **Bash** is among the formulae in `brewlist`, and so installs an updated version of bash and must be linked. Running `link_bash.sh` will partly accomplish this, but the command spits out a URL that must be followed in order to finish linking. Afer installing from the brew list, or loading the custom bash profile, some errors might arise if you aren't using the latest bash.
 
-You might also need to run `ln -s "$(which greadlink)" "$(dirname "$(which greadlink)")/readlink"` in order to fix a readlink error.
+You might also need to run either: 
+```
+ln -s "$(which greadlink)" "$(dirname "$(which greadlink)")/readlink"
+``` 
+
+or
+
+```
+brew install coreutils
+brew link coreutils
+```
+
+in order to fix a readlink error.
