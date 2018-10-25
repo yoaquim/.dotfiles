@@ -115,13 +115,6 @@ alias scb="sh ~/.scripts/scala_build.sh"
 # NPM alias so you can run npm scripts on silent mode
 alias npms="npm -s"
 
-# Docker remove all container
-x="docker rm \$(docker ps -a -q)"
-alias drm="echo ${x}"
-
-# Docker remove all container
-#alias drmi="docker rmi -f `$(docker images -q)`"
-
 #==========================
 # HELPER FUNCTIONS
 #==========================
