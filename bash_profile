@@ -237,14 +237,3 @@ fi
 # ITERM2 SHELL INTEGRATION
 #============================
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
-
-# added by travis gem
-[ -f /Users/Asgard/.travis/travis.sh ] && source /Users/Asgard/.travis/travis.sh
-
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
-
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-
-# added by travis gem
-[ -f /Users/yoaquim/.travis/travis.sh ] && source /Users/yoaquim/.travis/travis.sh
