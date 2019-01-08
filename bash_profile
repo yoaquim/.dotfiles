@@ -115,6 +115,14 @@ alias scb="sh ~/.scripts/scala_build.sh"
 # NPM alias so you can run npm scripts on silent mode
 alias npms="npm -s"
 
+# Delete all docker containers
+dr="docker rm \$(docker ps -a -q)"
+alias dkrm='eval ${dr}'
+
+# Delete all docker images
+dri="docker rmi \$(docker images -q)"
+alias dkrmi='eval ${dri}'
+
 #==========================
 # HELPER FUNCTIONS
 #==========================
@@ -159,14 +167,14 @@ function toggle-hidden {
 function durge {
 # options:
 # remove stopped containers and untagged images
-#   $ dkcleanup 
+#   $ durge 
 # remove all stopped|running containers and untagged images
-#   $ dkcleanup --reset
+#   $ durge --reset
 # remove containers|images|tags matching {repository|image|repository\image|tag|image:tag}
 # pattern and untagged images
-#   $ dkcleanup --purge {image}
+#   $ durge --purge {image}
 # everything
-#   $ dkcleanup --nuclear
+#   $ durge --nuke
 
 if [ "$1" == "--reset" ]; then
     # Remove all containers regardless of state
@@ -237,3 +245,11 @@ fi
 # ITERM2 SHELL INTEGRATION
 #============================
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+
+#============================
+# ADDED BY EXTERNAL TOOLS
+#============================
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+eval "$(jenv init -)"
