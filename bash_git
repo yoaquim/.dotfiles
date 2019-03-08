@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 #==========================
 # GIT SETTINGS & ALIASES
 #==========================
@@ -63,6 +65,9 @@ alias gam="git commit --amend"
 
 # Git alias for git diff
 alias gd="git diff"
+#
+# Git alias view all files updated in latest commit
+alias gfd="git diff-tree --no-commit-id --name-only -r $(git rev-parse --short HEAD)"
 
 # Git alias for git diff --staged
 alias gds="git diff --staged"
@@ -75,6 +80,14 @@ alias gsmu="git submodule foreach git pull origin master"
 
 # Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
 alias gsmi="git submodule update --init --recursive"
+
+
+# Git checkout branch that first matches grep query
+function gcg() {
+    branch=$(git branch | grep "${1}" | head -1)
+    git checkout ${branch}
+}
+
 
 # Git checkout new branch with remote-run/ prefix
 function gcrb(){
@@ -91,25 +104,16 @@ function gpush() {
     fi
 }
 
-#Git push with remote-run prefix
-function rgpush() {
-    branch=$(git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ')
-    if [ -z "$1" ]; then
-        git push origin "${branch}:remote-run/${branch}"
-    else 
-        git push origin "${branch}:remote-run/${branch}" "${1}"
-    fi
-}
 
 # Git commit without having to enter quotes for message
 function gcom(){
-	message="${@} ";
+	message="${@}";
 	git commit -m "${message}"
 }
 
 # Git commit, then push to origin current branch
 function gup(){
-	gcom $@
+	gcom "$@"
 	gpush
 }
 
@@ -121,4 +125,14 @@ function rebmast(){
 	git pull
 	git checkout $branch
 	git rebase master
+}
+#
+# Stash changes, checkout development, pull from origin, checkout to previous branch, rebase off of development, then pop stashed changes
+# Used to quickly bring current branch up-to-date with origin/development
+function rebdev(){
+	branch=$(git symbolic-ref --short -q HEAD)
+	git checkout development
+	git pull
+	git checkout $branch
+	git rebase development
 }
