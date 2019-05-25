@@ -15,6 +15,10 @@ export TERM=xterm-256color
 # SHELL SETTINGS
 #=====================
 
+# Custom bash prompt; shows git branch
+# PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
+PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
+
 # Base16 Shell (so iTerm can work with Base16)
 BASE16_SHELL="$HOME/.config/base16-shell/"
 [ -n "$PS1" ] && \
@@ -100,6 +104,9 @@ alias vt="vim ~/.tmux.conf"
 # Edit .gitconfig
 alias vg="vim ~/.gitconfig"
 
+# Edit /etc/hosts
+alias vetc="sudo vim /etc/hosts"
+
 # Coreutils so "sb" alias can work
 alias readlink=greadlink
 
@@ -108,9 +115,6 @@ alias sb=". ~/.bash_profile"
 
 # Flush IP cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
-
-# Alias to build scala project from scratch with passed parameter as project name
-alias scb="sh ~/.scripts/scala_build.sh"
 
 # NPM alias so you can run npm scripts on silent mode
 alias npms="npm -s"
@@ -123,13 +127,18 @@ alias dkrm='eval ${dr}'
 dri="docker rmi \$(docker images -q)"
 alias dkrmi='eval ${dri}'
 
+# Bash into a docker image 
+alias drun="docker run -it --entrypoint /bin/bash"
+
 #==========================
 # HELPER FUNCTIONS
 #==========================
 
+# --------------------------
 # Go to previous dir as many times as input parameter
 # if no input parameter, then just go back
 # also add "ff" as an alias to function
+
 alias ff="up"
 function up(){
     counter=$1;
@@ -145,7 +154,9 @@ function up(){
 
 }
 
+# --------------------------
 # Toggles if hidden (dotfiles) are shown on Finder
+
 function toggle-hidden {
     TOGGLE=$HOME/.hidden-files-shown
     if [ ! -e $TOGGLE ]; then
@@ -159,66 +170,47 @@ function toggle-hidden {
     killall Finder
 }
 
-#--------------------------------
-# This section taken from:
-# http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
-# https://news.ycombinator.com/item?id=6229001 (comment by beders)
+# --------------------------
+# Change extension for all files in a dir
 
-function durge {
-# options:
-# remove stopped containers and untagged images
-#   $ durge 
-# remove all stopped|running containers and untagged images
-#   $ durge --reset
-# remove containers|images|tags matching {repository|image|repository\image|tag|image:tag}
-# pattern and untagged images
-#   $ durge --purge {image}
-# everything
-#   $ durge --nuke
-
-if [ "$1" == "--reset" ]; then
-    # Remove all containers regardless of state
-    docker rm -vf $(docker ps -a -q) 2>/dev/null || echo "No more containers to remove."
-elif [ "$1" == "--purge" ]; then
-    # Attempt to remove running containers that are using the images we're trying to purge first.
-    (docker rm -vf $(docker ps -a | grep "$2/\|/$2 \| $2 \|:$2\|$2-\|$2:\|$2_" | awk '{print $1}') 2>/dev/null || echo "No containers using the \"$2\" image, continuing purge.") &&\
-    # Remove all images matching arg given after "--purge"
-    docker rmi $(docker images | grep "$2/\|/$2 \| $2 \|$2 \|$2-\|$2_" | awk '{print $3}') 2>/dev/null || echo "No images matching \"$2\" to purge."
-else
-    # This alternate only removes "stopped" containers
-    docker rm -vf $(docker ps -a | grep "Exited" | awk '{print $1}') 2>/dev/null || echo "No stopped containers to remove."
-fi
-
-if [ "$1" == "--nuke" ]; then
-    docker rm -vf $(docker ps -a -q) 2>/dev/null || echo "No more containers to remove."
-    docker rmi $(docker images -q) 2>/dev/null || echo "No more images to remove."
-else
-    # Always remove untagged images
-    docker rmi $(docker images | grep "<none>" | awk '{print $3}') 2>/dev/null || echo "No untagged images to delete."
-fi
+function update_ext {
+    for f in *.${1}; do 
+        mv -- "$f" "${f%.${1}}.${2}"
+    done
 }
 
+# --------------------------
 # Mark a dir so you can easily jump to it later
+
 function mark {
     mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
 }
 
+# --------------------------
 # Unmark  a marked dir
+
 function unmark {
     rm -i "$MARKPATH/$1"
 }
 
+# --------------------------
 # Jump to bookmarked location
+
+alias j="jump"
 function jump {
     cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
 }
 
+# --------------------------
 # Print out current marked dirs
+
 function marks {
     ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
 
+# --------------------------
 # Tab completion for marks
+
 function _completemarks {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local marks=$(find $MARKPATH -type l | awk -F '/' '{print $NF}')
@@ -226,6 +218,23 @@ function _completemarks {
     return 0
 }
 complete -o default -o nospace -F _completemarks jump unmark
+
+# --------------------------
+# Switch between AWS_PROFILES
+
+function sawsp {
+    export AWS_DEFAULT_PROFILE="${1}"
+}
+
+# --------------------------
+# Get current AWS_PROFILE
+
+function wawsp {
+    local account_num=$(aws sts get-caller-identity --output text --query 'Account')
+    echo -e "\tProfile: ${AWS_DEFAULT_PROFILE}"
+    echo -e "\tAccount: ${account_num}"
+}
+
 
 #==================
 # BASH FILES
