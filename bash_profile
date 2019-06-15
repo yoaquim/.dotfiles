@@ -16,7 +16,6 @@ export TERM=xterm-256color
 #=====================
 
 # Custom bash prompt; shows git branch
-# PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
 PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
 
 # Base16 Shell (so iTerm can work with Base16)
@@ -135,6 +134,8 @@ alias drun="docker run -it --entrypoint /bin/bash"
 #==========================
 
 # --------------------------
+# UP/FF
+# --------------------------
 # Go to previous dir as many times as input parameter
 # if no input parameter, then just go back
 # also add "ff" as an alias to function
@@ -155,9 +156,11 @@ function up(){
 }
 
 # --------------------------
+# TOGGLE_HIDDEN
+# --------------------------
 # Toggles if hidden (dotfiles) are shown on Finder
 
-function toggle-hidden {
+function toggle_hidden {
     TOGGLE=$HOME/.hidden-files-shown
     if [ ! -e $TOGGLE ]; then
         touch $TOGGLE
@@ -171,14 +174,18 @@ function toggle-hidden {
 }
 
 # --------------------------
-# Change extension for all files in a dir
+# RENAME_EXTENSION
+# --------------------------
+# Rename extension for all files in a dir
 
-function update_ext {
+function rename_extension {
     for f in *.${1}; do 
         mv -- "$f" "${f%.${1}}.${2}"
     done
 }
 
+# --------------------------
+# MARK
 # --------------------------
 # Mark a dir so you can easily jump to it later
 
@@ -187,20 +194,24 @@ function mark {
 }
 
 # --------------------------
+# UNMARK
+# --------------------------
 # Unmark  a marked dir
-
 function unmark {
     rm -i "$MARKPATH/$1"
 }
 
 # --------------------------
+# JUMP/J
+# --------------------------
 # Jump to bookmarked location
-
 alias j="jump"
 function jump {
     cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
 }
 
+# --------------------------
+# MARKS
 # --------------------------
 # Print out current marked dirs
 
@@ -208,6 +219,8 @@ function marks {
     ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
 
+# --------------------------
+# TAB COMPLETION: MARKS
 # --------------------------
 # Tab completion for marks
 
@@ -220,6 +233,8 @@ function _completemarks {
 complete -o default -o nospace -F _completemarks jump unmark
 
 # --------------------------
+# SAWSP
+# --------------------------
 # Switch between AWS_PROFILES
 
 function sawsp {
@@ -227,12 +242,58 @@ function sawsp {
 }
 
 # --------------------------
+# WAWSP
+# --------------------------
 # Get current AWS_PROFILE
 
 function wawsp {
     local account_num=$(aws sts get-caller-identity --output text --query 'Account')
     echo -e "\tProfile: ${AWS_DEFAULT_PROFILE}"
     echo -e "\tAccount: ${account_num}"
+}
+
+# --------------------------
+# RENAME_EXTENSION_SUBDIRS
+# --------------------------
+# Rename file extensions in subdirs localted in current dir up to 4 levels deep
+
+function rename_extension_subdirs {
+    old_extension=${1}
+    new_extension=${2}
+    for d in $(find ./ -maxdepth 4 -type d)
+    do
+        (
+            cd "${d}"
+            for i in *"${old_extension}"
+            do 
+                extension="${i#*.}"
+                if [ ".${extension}" == "${old_extension}" ]; then
+                    mv -v "${i}" `basename "${i}" "${old_extension}"`"${new_extension}"
+                fi
+            done
+        )
+    done
+}
+
+
+# --------------------------
+# RENAME_SUBDIRS
+# --------------------------
+# Rename subdirs in current dir
+
+function rename_subdirs {
+    old_name=${1}
+    new_name=${2}
+    for d in $(find ./ -maxdepth 4 -type d)
+    do
+        dir_to_rename="$(basename "${d}")"
+        if [ "${dir_to_rename}" == "${old_name}" ]; then
+            folder_name=$(dirname "${d}")
+            final_name="${folder_name}/${new_name}"
+            echo "${d} --> ${final_name}"
+            mv "${d}" "${final_name}"
+        fi
+    done
 }
 
 

@@ -9,7 +9,7 @@ export LESS=-R
 
 # Git bash completion (hombrew, mac only)
 if [ -f `brew --prefix`/etc/bash_completion ]; then
-	. `brew --prefix`/etc/bash_completion
+    . `brew --prefix`/etc/bash_completion
 fi
 
 # Git status alias
@@ -64,7 +64,7 @@ alias gam="git commit --amend"
 alias gd="git diff"
 #
 # Git alias view all files updated in latest commit
-alias gfd="git diff-tree --no-commit-id --name-only -r $(git rev-parse --short HEAD)"
+alias gfd="git diff-tree --no-commit-id --name-only -r \$(git rev-parse --short head)"
 
 # Git alias for git diff --staged
 alias gds="git diff --staged"
