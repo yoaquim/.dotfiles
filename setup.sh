@@ -11,6 +11,7 @@ remove_symlinks() {
     rm ~/.ideavimrc
     rm ~/.spacemacs
     rm ~/.yabairc
+    rm ~/.skhdrc
 }
 
 link_symlinks() {
@@ -24,6 +25,7 @@ link_symlinks() {
     ln -s ~/.dotfiles/ideavimrc ~/.ideavimrc
     ln -s ~/.dotfiles/spacemacs ~/.spacemacs
     ln -s ~/.dotfiles/yabairc ~/.yabairc
+    ln -s ~/.dotfiles/yabairc ~/.skhdrc
 }
 
 if [ -z  "$1" ]; then
