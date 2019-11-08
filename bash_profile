@@ -82,6 +82,9 @@ alias cdb="cd ~/Dropbox/"
 # Change Directory to Projects directory
 alias cdp="cd ~/Projects/"
 
+# Change Directory to Scratches directory
+alias cds="cd ~/Scratches/"
+
 # `touch` alias (create new file)
 alias t="touch"
 
@@ -118,6 +121,10 @@ alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say ca
 # NPM alias so you can run npm scripts on silent mode
 alias npms="npm -s"
 
+#==========================
+# DOCKER
+#==========================
+
 # Delete all docker containers
 dr="docker rm \$(docker ps -a -q)"
 alias dkrm='eval ${dr}'
@@ -128,6 +135,17 @@ alias dkrmi='eval ${dri}'
 
 # Bash into a docker image 
 alias drun="docker run -it --entrypoint /bin/bash"
+
+# Push docker image
+alias dpush="docker push"
+
+alias cinkali="drun cintron-kali"
+
+function update_cinkali(){
+    docker commit ${1} cintron-kali:latest
+    docker tag cintron-kali:latest  yoaquim/cintron:cintron-kali
+    docker push  yoaquim/cintron:cintron-kali
+}
 
 #==========================
 # HELPER FUNCTIONS
@@ -155,6 +173,7 @@ function up(){
 
 }
 
+
 # --------------------------
 # TOGGLE_HIDDEN
 # --------------------------
@@ -173,16 +192,6 @@ function toggle_hidden {
     killall Finder
 }
 
-# --------------------------
-# RENAME_EXTENSION
-# --------------------------
-# Rename extension for all files in a dir
-
-function rename_extension {
-    for f in *.${1}; do 
-        mv -- "$f" "${f%.${1}}.${2}"
-    done
-}
 
 # --------------------------
 # MARK
@@ -193,6 +202,7 @@ function mark {
     mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
 }
 
+
 # --------------------------
 # UNMARK
 # --------------------------
@@ -200,6 +210,7 @@ function mark {
 function unmark {
     rm -i "$MARKPATH/$1"
 }
+
 
 # --------------------------
 # JUMP/J
@@ -210,6 +221,7 @@ function jump {
     cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
 }
 
+
 # --------------------------
 # MARKS
 # --------------------------
@@ -218,6 +230,7 @@ function jump {
 function marks {
     ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
+
 
 # --------------------------
 # TAB COMPLETION: MARKS
@@ -232,6 +245,7 @@ function _completemarks {
 }
 complete -o default -o nospace -F _completemarks jump unmark
 
+
 # --------------------------
 # SAWSP
 # --------------------------
@@ -241,16 +255,31 @@ function sawsp {
     export AWS_DEFAULT_PROFILE="${1}"
 }
 
+
 # --------------------------
 # WAWSP
 # --------------------------
 # Get current AWS_PROFILE
 
 function wawsp {
-    local account_num=$(aws sts get-caller-identity --output text --query 'Account')
+    local account_num
+    account_num=$(aws sts get-caller-identity --output text --query 'Account')
     echo -e "\tProfile: ${AWS_DEFAULT_PROFILE}"
     echo -e "\tAccount: ${account_num}"
 }
+
+
+# --------------------------
+# RENAME_EXTENSION
+# --------------------------
+# Rename extension for all files in a dir
+
+function rename_extension {
+    for f in *."${1}"; do 
+        mv -- "$f" "${f%.${1}}.${2}"
+    done
+}
+
 
 # --------------------------
 # RENAME_EXTENSION_SUBDIRS
@@ -297,6 +326,16 @@ function rename_subdirs {
 }
 
 
+# --------------------------
+# CHECK_PORT
+# --------------------------
+# Print processes binded to specified port
+
+function check_port { 
+    lsof -nP -i4TCP:"${1}" | grep LISTEN
+}
+
+
 #==================
 # BASH FILES
 #==================
@@ -322,4 +361,3 @@ test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shel
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-eval "$(jenv init -)"

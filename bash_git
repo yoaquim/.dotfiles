@@ -78,6 +78,11 @@ alias gsmu="git submodule foreach git pull origin master"
 # Git initialize all plugins, recursively (sub-plugins); sometimes works better than 'gsmu' alias
 alias gsmi="git submodule update --init --recursive"
 
+alias gcsha="git rev-parse HEAD"
+
+alias rc-diff="git log --no-merges --pretty=\"%Cblue*%Creset %s, %b(%Cgreen%cn%Creset)\" --date=relative origin/master..origin/development"
+
+alias merges-diff="git log --merges --pretty=\"%Cblue*%Creset %s, %b(%Cgreen%cn%Creset)\" --date=relative origin/master..origin/development"
 
 # Git checkout branch that first matches grep query
 function gcg() {
