@@ -10,6 +10,7 @@ Contains all my personal dotfiles and dirs:
  - Config Directory (where some applications set configuration)
  - Tmux Configuration
  - IntelliJ vimrc settings and CLI launcher
+ - [`yabai`](https://github.com/koekeishiya/yabai) & [`skhd`](https://github.com/koekeishiya/skhd/) config files
 
 ## Setup
 
@@ -61,3 +62,11 @@ brew link coreutils
 ```
 
 in order to fix a readlink error.
+
+## Useful Commands
+
+To start `yabai` and it's hotkey counterpart, `skhd`, run:
+```bash
+brew services start koekeishiya/formulae/yabai
+brew services start koekeishiya/formulae/skhd
+```

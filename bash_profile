@@ -1,6 +1,30 @@
-#==================
-# EXPORTS
-#==================
+# ~~~~~~~~~~~~~~~~~
+# TABLE OF CONTENTS 
+# ~~~~~~~~~~~~~~~~~
+
+# I........EXPORTS
+
+# II.......SHELL SETTINGS
+
+# III......ALIASES
+
+# IV.......DOCKER
+
+# V........FUNCTIONS
+
+# VI.......BASH FILES
+
+# VII......ITERM2 SHELL INTEGRATION
+
+# VIII.....ADDED BY EXTERNAL TOOLS
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#=====================================================
+# I.    EXPORTS
+#=====================================================
 
 # Dir for marking functions
 export MARKPATH=$HOME/.marks
@@ -11,9 +35,9 @@ export CLICOLOR=1
 # Set colors to match iTerm2 Terminal Colors
 export TERM=xterm-256color
 
-#=====================
-# SHELL SETTINGS
-#=====================
+#=====================================================
+# II.   SHELL SETTINGS
+#=====================================================
 
 # Custom bash prompt; shows git branch
 PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
@@ -30,9 +54,9 @@ set -o vi
 # Navigate to dirs by typing their name (no cd)
 shopt -s autocd
 
-#==================
-# ALIASES
-#==================
+#=====================================================
+# III.  ALIASES
+#=====================================================
 
 # Alias for clear
 alias c="clear"
@@ -121,9 +145,9 @@ alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say ca
 # NPM alias so you can run npm scripts on silent mode
 alias npms="npm -s"
 
-#==========================
-# DOCKER
-#==========================
+#=====================================================
+# IV.   DOCKER
+#=====================================================
 
 # Delete all docker containers
 dr="docker rm \$(docker ps -a -q)"
@@ -141,17 +165,16 @@ alias dpush="docker push"
 
 alias cinkali="drun cintron-kali"
 
-function update_cinkali(){
+update_cinkali(){
     docker commit ${1} cintron-kali:latest
     docker tag cintron-kali:latest  yoaquim/cintron:cintron-kali
     docker push  yoaquim/cintron:cintron-kali
 }
 
-#==========================
-# HELPER FUNCTIONS
-#==========================
+#=====================================================
+# V.    HELPER FUNCTIONS
+#=====================================================
 
-# --------------------------
 # UP/FF
 # --------------------------
 # Go to previous dir as many times as input parameter
@@ -159,7 +182,7 @@ function update_cinkali(){
 # also add "ff" as an alias to function
 
 alias ff="up"
-function up(){
+up(){
     counter=$1;
     if [ -z "$1" ]; then
         ..
@@ -174,12 +197,11 @@ function up(){
 }
 
 
-# --------------------------
 # TOGGLE_HIDDEN
 # --------------------------
 # Toggles if hidden (dotfiles) are shown on Finder
 
-function toggle_hidden {
+toggle_hidden() {
     TOGGLE=$HOME/.hidden-files-shown
     if [ ! -e $TOGGLE ]; then
         touch $TOGGLE
@@ -193,51 +215,46 @@ function toggle_hidden {
 }
 
 
-# --------------------------
 # MARK
 # --------------------------
 # Mark a dir so you can easily jump to it later
 
-function mark {
+mark() {
     mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
 }
 
 
-# --------------------------
 # UNMARK
 # --------------------------
 # Unmark  a marked dir
-function unmark {
+unmark() {
     rm -i "$MARKPATH/$1"
 }
 
 
-# --------------------------
 # JUMP/J
 # --------------------------
 # Jump to bookmarked location
 alias j="jump"
-function jump {
+jump() {
     cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
 }
 
 
-# --------------------------
 # MARKS
 # --------------------------
 # Print out current marked dirs
 
-function marks {
+marks() {
     ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
 
 
-# --------------------------
 # TAB COMPLETION: MARKS
 # --------------------------
 # Tab completion for marks
 
-function _completemarks {
+_completemarks() {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local marks=$(find $MARKPATH -type l | awk -F '/' '{print $NF}')
     COMPREPLY=($(compgen -W '${marks[@]}' -- "$cur"))
@@ -246,22 +263,20 @@ function _completemarks {
 complete -o default -o nospace -F _completemarks jump unmark
 
 
-# --------------------------
 # SAWSP
 # --------------------------
 # Switch between AWS_PROFILES
 
-function sawsp {
+sawsp() {
     export AWS_DEFAULT_PROFILE="${1}"
 }
 
 
-# --------------------------
 # WAWSP
 # --------------------------
 # Get current AWS_PROFILE
 
-function wawsp {
+wawsp() {
     local account_num
     account_num=$(aws sts get-caller-identity --output text --query 'Account')
     echo -e "\tProfile: ${AWS_DEFAULT_PROFILE}"
@@ -269,24 +284,22 @@ function wawsp {
 }
 
 
-# --------------------------
 # RENAME_EXTENSION
 # --------------------------
 # Rename extension for all files in a dir
 
-function rename_extension {
+rename_extension() {
     for f in *."${1}"; do 
         mv -- "$f" "${f%.${1}}.${2}"
     done
 }
 
 
-# --------------------------
 # RENAME_EXTENSION_SUBDIRS
 # --------------------------
 # Rename file extensions in subdirs localted in current dir up to 4 levels deep
 
-function rename_extension_subdirs {
+rename_extension_subdirs() {
     old_extension=${1}
     new_extension=${2}
     for d in $(find ./ -maxdepth 4 -type d)
@@ -305,12 +318,11 @@ function rename_extension_subdirs {
 }
 
 
-# --------------------------
 # RENAME_SUBDIRS
 # --------------------------
 # Rename subdirs in current dir
 
-function rename_subdirs {
+rename_subdirs() {
     old_name=${1}
     new_name=${2}
     for d in $(find ./ -maxdepth 4 -type d)
@@ -326,19 +338,18 @@ function rename_subdirs {
 }
 
 
-# --------------------------
 # CHECK_PORT
 # --------------------------
 # Print processes binded to specified port
 
-function check_port { 
+check_port() { 
     lsof -nP -i4TCP:"${1}" | grep LISTEN
 }
 
 
-#==================
-# BASH FILES
-#==================
+#=====================================================
+# VI.   BASH FILES
+#=====================================================
 
 # Source local bash file
 if [ -f ~/.bash_local ]; then
@@ -350,14 +361,14 @@ if [ -f ~/.bash_git ]; then
     source ~/.bash_git
 fi
 
-#============================
-# ITERM2 SHELL INTEGRATION
-#============================
+#=====================================================
+# VII.  ITERM2 SHELL INTEGRATION
+#=====================================================
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 
-#============================
-# ADDED BY EXTERNAL TOOLS
-#============================
+#=====================================================
+# VIII. ADDED BY EXTERNAL TOOLS
+#=====================================================
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
