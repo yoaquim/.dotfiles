@@ -65,9 +65,6 @@ alias cl="clear"
 # Vim alias
 alias v="vim"
 
-# Alias 'rm' so as to always ask permission to delete
-alias rm="rm -i"
-
 # Alias remove dir ('rmdir') to 'rmd'
 alias rmd="rm -rf"
 
@@ -111,6 +108,11 @@ alias cds="cd ~/Scratches/"
 
 # `touch` alias (create new file)
 alias t="touch"
+
+# tmux alias
+alias tm="tmux"
+alias tml="tmux ls"
+alias tma="tmux attach -t"
 
 # Edit .bash_profile
 alias vb="vim ~/.bash_profile"
@@ -172,7 +174,7 @@ update_cinkali(){
 }
 
 #=====================================================
-# V.    HELPER FUNCTIONS
+# V.    FUNCTIONS
 #=====================================================
 
 # UP/FF
