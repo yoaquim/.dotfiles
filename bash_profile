@@ -54,6 +54,9 @@ set -o vi
 # Navigate to dirs by typing their name (no cd)
 shopt -s autocd
 
+# Allow globbing with ** ruby-style
+shopt -o globstar
+
 #=====================================================
 # III.  ALIASES
 #=====================================================
@@ -150,6 +153,9 @@ alias npms="npm -s"
 #=====================================================
 # IV.   DOCKER
 #=====================================================
+
+# Docker compose alias
+alias dkc="docker-compose"
 
 # Delete all docker containers
 dr="docker rm \$(docker ps -a -q)"
@@ -292,6 +298,7 @@ wawsp() {
 
 rename_extension() {
     for f in *."${1}"; do 
+        echo -e "\tRenaming ${f}..."
         mv -- "$f" "${f%.${1}}.${2}"
     done
 }
@@ -299,22 +306,15 @@ rename_extension() {
 
 # RENAME_EXTENSION_SUBDIRS
 # --------------------------
-# Rename file extensions in subdirs localted in current dir up to 4 levels deep
+# Rename file extensions in subdirs located in current dir up to 4 levels deep
 
 rename_extension_subdirs() {
     old_extension=${1}
     new_extension=${2}
-    for d in $(find ./ -maxdepth 4 -type d)
-    do
+    for d in $(find ./ -maxdepth 4 -type d); do 
         (
             cd "${d}"
-            for i in *"${old_extension}"
-            do 
-                extension="${i#*.}"
-                if [ ".${extension}" == "${old_extension}" ]; then
-                    mv -v "${i}" `basename "${i}" "${old_extension}"`"${new_extension}"
-                fi
-            done
+            rename_extension ${old_extension} ${new_extension}
         )
     done
 }
