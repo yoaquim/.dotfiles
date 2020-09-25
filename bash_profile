@@ -55,7 +55,7 @@ set -o vi
 shopt -s autocd
 
 # Allow globbing with ** ruby-style
-shopt -o globstar
+shopt -s globstar
 
 #=====================================================
 # III.  ALIASES
