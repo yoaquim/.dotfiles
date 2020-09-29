@@ -15,8 +15,6 @@ remove_symlinks() {
 }
 
 link_symlinks() {
-    ln -s ~/.dotfiles/bash_profile ~/.bash_profile
-    ln -s ~/.dotfiles/bash_profile ~/.bashrc
     ln -s ~/.dotfiles/bash_git ~/.bash_git
     ln -s ~/.dotfiles/bash_aliases ~/.bash_aliases
     ln -s ~/.dotfiles/gitconfig ~/.gitconfig

@@ -28,6 +28,13 @@ Contains all my personal dotfiles and dirs:
  ./setup.sh
  ```
 
+- Symlink the appropriate bash_profile, either bashrc_mac or bashrc_linux
+
+ ```
+ ln -s ~/.dotfiles/bash_mac ~/.bash_profile
+ ln -s ~/.dotfiles/bash_mac ~/.bashrc
+ ```
+
 If you pass the `f` flag to setup (`./setup.sh -f`), it'll first delete all relevant symlinks before symlinking.
 
 ## Post-setup
