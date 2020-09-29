@@ -14,9 +14,7 @@
 
 # VI.......BASH FILES
 
-# VII......ITERM2 SHELL INTEGRATION
-
-# VIII.....ADDED BY EXTERNAL TOOLS
+# VII......ADDED BY EXTERNAL TOOLS
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,24 +115,6 @@ up(){
         counter=$[$counter-1]
     done
 
-}
-
-
-# TOGGLE_HIDDEN
-# --------------------------
-# Toggles if hidden (dotfiles) are shown on Finder
-
-toggle_hidden() {
-    TOGGLE=$HOME/.hidden-files-shown
-    if [ ! -e $TOGGLE ]; then
-        touch $TOGGLE
-        defaults write com.apple.finder AppleShowAllFiles YES
-    else
-        rm -f $TOGGLE
-        defaults write com.apple.finder AppleShowAllFiles NO
-    fi
-
-    killall Finder
 }
 
 
@@ -279,13 +259,5 @@ if [ -f ~/.bash_git ]; then
 fi
 
 #=====================================================
-# VII.  ITERM2 SHELL INTEGRATION
+# VII. ADDED BY EXTERNAL TOOLS
 #=====================================================
-test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
-
-#=====================================================
-# VIII. ADDED BY EXTERNAL TOOLS
-#=====================================================
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
