@@ -1,0 +1,58 @@
+#BASED  ON: https://github.com/nixme/dotfiles/blob/master/.tmux.conf
+
+# keybinds
+set -g prefix `                   # use tilde key as prefix
+bind `     send-key `             # insert tilde by pressing twice
+bind ,     previous-window
+bind .     next-window
+bind h     select-pane -L
+bind l     select-pane -R
+bind k     select-pane -U
+bind j     select-pane -D
+bind \\     split-window -h
+bind -     split-window -v        # split into top and bottom panes
+bind o     rotate-window          # rotate panes around in current window
+bind Left  resize-pane -L 5
+bind Right resize-pane -R 5
+bind Up    resize-pane -U 5
+bind Down  resize-pane -D 5
+bind v     select-layout even-horizontal
+bind V     select-layout main-vertical
+bind b     select-layout even-vertical
+bind B     select-layout main-horizontal
+bind t     select-layout tiled
+bind n     command-prompt 'rename-window %%'
+bind N     command-prompt 'rename-session %%'
+bind x     kill-pane
+bind X     kill-window
+bind r     source-file ~/.tmux.conf \; display-message " * reloaded ~/.tmux.conf"
+
+# behavior
+set -g mouse on
+set  -g base-index 1          # start window numbering from 1 instead of 0
+setw -g automatic-rename on   # automatically name windows
+set  -g set-titles on         # auto set the terminal's window title
+
+
+######################
+### DESIGN CHANGES ###
+######################
+
+set -g visual-activity off
+set -g visual-bell off
+set -g visual-silence off
+setw -g monitor-activity off
+set -g bell-action none
+
+# statusbar
+set -g status-position bottom
+set -g status-justify left
+set -g status-left ' ' 
+set -g status-right '#[fg=colour16]%a,%b/%d/%Y #[bold]%I:%M%p #[fg=colour16 nobold]|| #[fg=colour16 bold]UTC #(TZ="UTC" date +%%H:%%M:%%S)'
+set -g status-right-length 50
+set -g status-left-length 20
+setw -g window-status-current-format '#I:#W#F'
+setw -g window-status-current-style 'fg=colour16 bold'
+
+setw -g window-status-format '#I:#W#F '
+setw -g window-status-style 'fg=colour16'
