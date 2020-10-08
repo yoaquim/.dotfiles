@@ -1,6 +1,7 @@
 #!/bin/sh
 
 remove_symlinks() {
+    cd ~
     rm ~/.bash_profile
     rm ~/.bashrc
     rm ~/.bash_git
@@ -35,7 +36,7 @@ link_linux_symlinks() {
     ln -s ~/.dotfiles/bashrc_linux ~/.bashrc
     ln -s ~/.dotfiles/bash_git_linux ~/.bash_git
     ln -s ~/.dotfiles/bash_aliases ~/.bash_aliases
-    ln -s ~/.dotfiles/gitconfig ~/.gitconfig
+    ln -s ~/.dotfiles/gitconfig.linux ~/.gitconfig
     ln -s ~/.dotfiles/tmux.conf.linux ~/.tmux.conf
     ln -s ~/.dotfiles/config ~/.config
     ln -s ~/.dotfiles/slate.js ~/.slate.js
