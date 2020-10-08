@@ -1,7 +1,7 @@
 #!/bin/sh
 
 remove_symlinks() {
-    cd ~
+    pushd ~
     rm ~/.bash_profile
     rm ~/.bashrc
     rm ~/.bash_git
@@ -14,6 +14,7 @@ remove_symlinks() {
     rm ~/.spacemacs
     rm ~/.yabairc
     rm ~/.skhdrc
+    popd
 }
 
 link_mac_symlinks() {
