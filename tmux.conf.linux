@@ -56,21 +56,16 @@ set -g pane-active-border-style 'bg=colour0 fg=colour9'
 set -g status-position bottom
 set -g status-justify left
 set -g status-left ' ' 
-set -g status-right '#[fg=colour16,bg=colour8] %a,%b/%d/%Y #[bold]%I:%M%p #[fg=colour16,bg=colour19 bold] UTC #(TZ="UTC" date +%%H:%%M:%%S) '
+set -g status-style 'bg=colour234 fg=colour254'
+set -g status-right '#[fg=colour233,bg=colour243] %a,%b/%d/%Y #[bold]%I:%M%p #[fg=colour16,bg=colour238 bold] UTC #(TZ="UTC" date +%%H:%%M:%%S) '
 
-# set -g status-right-length 50
-# set -g status-left-length 20
+setw -g window-status-current-style 'fg=colour1 bg=colour236 bold'
+setw -g window-status-current-format ' #I#[fg=colour249]:#[fg=colour255]#W#[fg=colour249]#F '
 
-setw -g window-status-current-style 'fg=colour1 bg=colour19 bold'
-setw -g window-status-current-format ' #I#[fg=colour7]:#[fg=colour15]#W#[fg=colour7]#F '
-
-setw -g window-status-current-format '#I:#W#F'
-setw -g window-status-current-style 'fg=colour16 bold'
-
-setw -g window-status-style 'fg=colour9 bg=colour18'
-setw -g window-status-format ' #I#[fg=colour15]:#[fg=colour8]#W#[fg=colour7]#F '
+setw -g window-status-style 'fg=colour254 bg=colour234'
+setw -g window-status-format ' #[fg=colour1]#I#[fg=colour234]:#[fg=colour250]#W#[fg=colour244]#F '
 
 setw -g window-status-bell-style 'fg=colour255 bg=colour1 bold'
 
 # messages
-set -g message-style 'fg=colour15 bg=colour16 bold'
+set -g message-style 'fg=colour254 bg=colour234 bold'
