@@ -9,7 +9,7 @@ bind h     select-pane -L
 bind l     select-pane -R
 bind k     select-pane -U
 bind j     select-pane -D
-bind \\     split-window -h
+bind =     split-window -h
 bind -     split-window -v        # split into top and bottom panes
 bind o     rotate-window          # rotate panes around in current window
 bind Left  resize-pane -L 5
