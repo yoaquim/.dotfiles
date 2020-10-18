@@ -67,6 +67,15 @@ alias vbg="vim ~/.bash_git"
 # Edit .bash_local
 alias vbl="vim ~/.bash_local"
 
+# Edit .bash_alias
+alias vbl="vim ~/.bash_local"
+
+# Edit i3 config
+alias vbi="vim ~/.config/i3/config"
+
+# Edit i3blocks config
+alias vbib="vim ~/.config/i3blocks/config"
+
 # Edit .vimrc
 alias vrc="vim ~/.vimrc"
 
