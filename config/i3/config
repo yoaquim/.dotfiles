@@ -265,12 +265,12 @@ bar {
     # COLORS
     # -------
     colors {
-        background #000000
-        statusline #ffffff
-        separator #666666
+        background #2d2d2d
+        statusline #eeeeee
+        separator #ffffff
 
                             #border  #background  #text
-        focused_workspace   #4c7899  #285577      #ffffff
+        focused_workspace   #4c7899  #eeeeee      #2d2d2d
         active_workspace    #333333  #5f676a      #ffffff
         inactive_workspace  #333333  #222222      #888888
         urgent_workspace    #2f343a  #900000      #ffffff

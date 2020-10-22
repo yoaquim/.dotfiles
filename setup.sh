@@ -8,7 +8,6 @@ remove_symlinks() {
     rm ~/.bash_aliases
     rm ~/.gitconfig
     rm ~/.tmux.conf
-    rm -rf ~/.config
     rm ~/.slate.js
     rm ~/.ideavimrc
     rm ~/.spacemacs
@@ -24,7 +23,6 @@ link_mac_symlinks() {
     ln -s ~/.dotfiles/bash_aliases ~/.bash_aliases
     ln -s ~/.dotfiles/gitconfig ~/.gitconfig
     ln -s ~/.dotfiles/tmux.conf ~/.tmux.conf
-    ln -s ~/.dotfiles/config ~/.config
     ln -s ~/.dotfiles/slate.js ~/.slate.js
     ln -s ~/.dotfiles/ideavimrc ~/.ideavimrc
     ln -s ~/.dotfiles/spacemacs ~/.spacemacs
@@ -39,7 +37,6 @@ link_linux_symlinks() {
     ln -s ~/.dotfiles/bash_aliases ~/.bash_aliases
     ln -s ~/.dotfiles/gitconfig.linux ~/.gitconfig
     ln -s ~/.dotfiles/tmux.conf.linux ~/.tmux.conf
-    ln -s ~/.dotfiles/config ~/.config
     ln -s ~/.dotfiles/slate.js ~/.slate.js
     ln -s ~/.dotfiles/ideavimrc ~/.ideavimrc
     ln -s ~/.dotfiles/spacemacs ~/.spacemacs

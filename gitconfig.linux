@@ -1,0 +1,19 @@
+[filter "media"]
+	required = true
+	clean = git media clean %f
+	smudge = git media smudge %f
+[user]
+	name = Yoaquim Cintrón
+	email = yoaquim@outlook.com
+[core]
+	editor = /usr/bin/vim
+	autocrlf = input
+[color]
+	ui = true
+[alias]
+	plog = log --graph --full-history --all --color --pretty=tformat:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s%x20%x1b[33m(%an)%x1b[0m"
+        fiff = diff-tree --no-commit-id --name-only -r
+[credential]
+	helper = osxkeychain
+[push]
+	default = matching
