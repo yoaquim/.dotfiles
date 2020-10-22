@@ -1,0 +1,218 @@
+# ===========================================================================
+# ---------------------------I3 BLOCKS CONFIG--------------------------------
+# ===========================================================================
+
+# Reference: `man i3blocks` or http://vivien.github.io/i3blocks
+
+
+# LIST OF VALID PROPERTIES:
+
+#   - align
+#   - color
+#   - command
+#   - full_text
+#   - instance
+#   - interval
+#   - label
+#   - min_width
+#   - name
+#   - separator
+#   - separator_block_width
+#   - short_text
+#   - signal
+#   - urgent
+
+
+#-----------------------------------------------
+# GLOBAL PROPERTIES
+#-----------------------------------------------
+# The top properties below are applied to every block, but can be overridden.
+# Each block command defaults to the script name to avoid boilerplate.
+# Change $SCRIPT_DIR to the location of your scripts!
+
+command=/usr/share/i3blocks/$BLOCK_NAME
+separator_block_width=50
+markup=none
+
+
+#-----------------------------------------------
+# VOLUME
+#-----------------------------------------------
+# Exposed format variables: ${SYMB}, ${VOL}, ${INDEX}, ${NAME}
+
+[volume-pulseaudio]
+interval=once
+signal=1
+# LONG_FORMAT="${SYMB} ${VOL}% [${INDEX}:${NAME}]"
+# SHORT_FORMAT="${SYMB} ${VOL}% [${INDEX}]"
+# AUDIO_HIGH_SYMBOL='  '
+# AUDIO_MED_THRESH=49
+# AUDIO_MED_SYMBOL='  '
+# AUDIO_LOW_THRESH=-2
+# AUDIO_LOW_SYMBOL='  '
+# AUDIO_DELTA=5
+# DEFAULT_COLOR="#ffffff"
+# MUTED_COLOR="#a0a0a0"
+# USE_ALSA_NAME=0
+# USE_DESCRIPTION=0
+# SUBSCRIBE=1 requires interval=persist and always uses LONG_FORMAT
+# SUBSCRIBE=0
+
+
+#-----------------------------------------------
+# MEMORY USAGE
+#-----------------------------------------------
+# The type defaults to "mem" if the instance is not specified.
+
+# [memory]
+# label=MEM
+# separator=false
+# interval=30
+
+# [memory]
+# label=SWAP
+# instance=swap
+# separator=false
+# interval=30
+
+
+#-----------------------------------------------
+# DISK USAGE
+#-----------------------------------------------
+# The directory defaults to $HOME if the instance is not specified.
+# The script may be called with a optional argument to set the alert
+# (defaults to 10 for 10%).
+
+# [disk]
+# label=HOME
+# interval=30
+
+
+#-----------------------------------------------
+# NETWORK INTERFACE MONITORING
+#-----------------------------------------------
+# If the instance is not specified, use the interface used for default route.
+# The address can be forced to IPv4 or IPv6 with -4 or -6 switches.
+
+# [iface]
+# #IFACE=wlan0
+# color=#00FF00
+# interval=10
+# separator=false
+
+
+#-----------------------------------------------
+# WIFI
+#-----------------------------------------------
+
+#[wifi]
+#INTERFACE=wlp3s0
+# label=WiFi
+# interval=10
+# separator=false
+
+#[bandwidth]
+#INTERFACE=eth0
+#interval=5
+
+
+#-----------------------------------------------
+# CPU USAGE
+#-----------------------------------------------
+# The script may be called with -w and -c switches to specify thresholds,
+# see the script for details.
+
+# [cpu_usage]
+# label=CPU
+# interval=10
+# min_width=CPU 100.00%
+# separator=false
+
+
+#-----------------------------------------------
+# LOAD AVERAGE
+#-----------------------------------------------
+
+#[load_average]
+#label=LOAD
+#interval=10
+
+
+#-----------------------------------------------
+# BATTERY
+#-----------------------------------------------
+# Battery indicator; the battery instance defaults to 0.
+
+# [battery]
+# label=⚡
+# interval=5
+
+#-----------------------------------------------
+# DATE & TIME
+#-----------------------------------------------
+[time]
+command=date '+%a, %b/%d/%Y'
+interval=5
+
+[time]
+command=date '+%I:%M %p'
+interval=5
+
+# [time]
+# label=UTC
+# command=date 'TZ="UTC" +%%H:%%:M:%%S'
+# interval=5
+
+#-----------------------------------------------
+# GENERIC MEDIA PLAYER
+#-----------------------------------------------
+# This displays "ARTIST - SONG" if a music is playing.
+# Supported players are: spotify, vlc, audacious, xmms2, mplayer, and others.
+
+#[mediaplayer]
+#instance=spotify
+#interval=5
+#signal=10
+
+#-----------------------------------------------
+# OPENVPN SUPPORT
+#-----------------------------------------------
+# Support multiple VPN, with colors.
+
+#[openvpn]
+#interval=20
+
+#-----------------------------------------------
+# TEMPERATURE
+#-----------------------------------------------
+# Support multiple chips, though lm-sensors.
+# The script may be called with -w and -c switches to specify thresholds,
+# see the script for details.
+
+#[temperature]
+#label=TEMP
+#interval=10
+
+#-----------------------------------------------
+# KEY INDICATORS
+#-----------------------------------------------
+# Add the following bindings to i3 config file:
+# "bindsym --release Caps_Lock exec pkill -SIGRTMIN+11 i3blocks"
+# "bindsym --release Num_Lock  exec pkill -SIGRTMIN+11 i3blocks"
+
+#[keyindicator]
+#KEY=CAPS
+#markup=pango
+#interval=once
+#signal=11
+
+#[keyindicator]
+#KEY=NUM
+#markup=pango
+#interval=once
+#signal=11
+
+
+# ===========================================================================
+# ----------------------------------END--------------------------------------
+# ===========================================================================
