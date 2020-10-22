@@ -10,6 +10,7 @@ Contains all my personal dotfiles and dirs:
  - Config Directory (where some applications set configuration)
  - Tmux Configuration
  - IntelliJ vimrc settings and CLI launcher
+ - i3wm & i3blocks for linux
  - [`yabai`](https://github.com/koekeishiya/yabai) & [`skhd`](https://github.com/koekeishiya/skhd/) config files
 
 ## Setup
@@ -21,23 +22,14 @@ Contains all my personal dotfiles and dirs:
  git clone https://github.com/yoaquim/.dotfiles.git
  ```
 
-- Run `setup.sh` (will symlink into home dir):
+- Run `setup.sh` to setup dotfiles. Need to specify for mac(m) or linux(l):
 
  ```
  cd  ~/.dotfiles
- ./setup.sh
+ ./setup.sh -l
  ```
 
-- Symlink the appropriate bash_profile, either bashrc_mac or bashrc_linux
-
- ```
- ln -s ~/.dotfiles/bashrc_mac ~/.bash_profile
- ln -s ~/.dotfiles/bashrc_mac ~/.bashrc
- ```
-
-If you pass the `f` flag to setup (`./setup.sh -f`), it'll first delete all relevant symlinks before symlinking.
-
-## Post-setup
+## Mac Post-setup
 
 ### Homebrew
 
@@ -70,10 +62,3 @@ brew link coreutils
 
 in order to fix a readlink error.
 
-## Useful Commands
-
-To start `yabai` and it's hotkey counterpart, `skhd`, run:
-```bash
-brew services start koekeishiya/formulae/yabai
-brew services start koekeishiya/formulae/skhd
-```

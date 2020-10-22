@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# HELPERS
+# ----------------------------
+
 link_mac_symlinks() {
     ln -sf ~/.dotfiles/bashrc/bashrc_mac ~/.bash_profile
     ln -sf ~/.dotfiles/bashrc/bashrc_mac ~/.bashrc
@@ -23,17 +26,37 @@ link_linux_symlinks() {
     ln -sf ~/.dotfiles/spacemacs ~/.spacemacs
 }
 
+setup_i3blocks() {
+    sudo apt install fonts-font-awesome -y
+    git clone https://github.com/Anachron/i3blocks.git tmp
+    sudo cp -R tmp/blocks/. /usr/share/i3blocks
+    rm -rf tmp
+}
 
-# find config -maxdepth 1 -mindepth 1 -type d -exec ln -sf ../'{}' ~/.config/ \;
+
+# SETUP CONFIG
+# ----------------------------
 cp -a config/. ~/.config
+
+
+# INSTALL FOR SPECIFIC OS
+# ----------------------------
 
 if [ -z "${1}" ]; then
     echo "\n\tNeed to specify which OS, '-m' for Mac, '-l' for Linux\n"
+    exit 1
 elif [ "${1}" = "-m" ]; then
     link_mac_symlinks
 elif [ "${1}" = "-l" ]; then
     link_linux_symlinks
+    setup_i3blocks
 else
     echo "\n\tValid flags for param are 'l' or 'm'\n"
+    exit 1
 fi
+
+
+# FINISHED
+# ----------------------------
+echo "\nDone."
 
