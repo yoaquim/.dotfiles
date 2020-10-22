@@ -29,10 +29,10 @@ link_mac_symlinks() {
 }
 
 link_linux_symlinks() {
-    ln -s ~/.dotfiles/bashrc_linux ~/.bash_profile
-    ln -s ~/.dotfiles/bashrc_linux ~/.bashrc
-    ln -s ~/.dotfiles/bash_git_linux ~/.bash_git
-    ln -s ~/.dotfiles/bash_aliases ~/.bash_aliases
+    ln -s ~/.dotfiles/bash/bashrc_linux ~/.bash_profile
+    ln -s ~/.dotfiles/bash/bashrc_linux ~/.bashrc
+    ln -s ~/.dotfiles/bash/bash_git_linux ~/.bash_git
+    ln -s ~/.dotfiles/bash/bash_aliases ~/.bash_aliases
     ln -s ~/.dotfiles/gitconfig.linux ~/.gitconfig
     ln -s ~/.dotfiles/tmux.conf.linux ~/.tmux.conf
     ln -s ~/.dotfiles/slate.js ~/.slate.js
