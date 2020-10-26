@@ -17,7 +17,7 @@ arrowPrint() {
     fi
             
 
-    echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'>  UTC ${VAL}   </span>"
+    echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'>  UTC ${VAL}</span>"
 }
 
 #=======================
