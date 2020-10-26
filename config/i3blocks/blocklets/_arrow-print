@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+arrowPrint() {
+    local VAL=${1}
+    local BACKGROUND_COLOR=${2}
+    local TEXT_COLOR
+
+    # Set text color
+    if [ -z ${3+x} ]; then 
+        TEXT_COLOR="#ffffff";
+    else 
+        TEXT_COLOR=${3};
+    fi
+
+    echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'>${VAL}</span>"
+}

@@ -68,7 +68,7 @@ alias vbg="vim ~/.bash_git"
 alias vbl="vim ~/.bash_local"
 
 # Edit .bash_alias
-alias vbl="vim ~/.bash_local"
+alias vba="vim ~/.bash_aliases"
 
 # Edit i3 config
 alias vbi="vim ~/.config/i3/config"
@@ -99,3 +99,5 @@ alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say ca
 
 # NPM alias so you can run npm scripts on silent mode
 alias npms="npm -s"
+
+alias lcp="xclip -sel clip"

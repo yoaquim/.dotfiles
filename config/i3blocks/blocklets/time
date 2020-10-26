@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+#=======================
+# PRINTING FN
+#=======================
+
+arrowPrint() {
+    local VAL=${1}
+    local BACKGROUND_COLOR=${2}
+    local TEXT_COLOR
+
+    # Set text color
+    if [ -z ${3+x} ]; then 
+        TEXT_COLOR="#ffffff";
+    else 
+        TEXT_COLOR=${3};
+    fi
+
+    echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'> ${VAL}   </span>"
+}
+
+#=======================
+# BLOCKLET
+#=======================
+TIME_FORMAT="%I:%M %p"
+TIME=$(date "+${TIME_FORMAT}")
+
+# Print
+#--------------------------------------
+BACKGROUND_COLOR='#f1f1f1'
+TEXT_COLOR='#404040'
+
+echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'> ${TIME}   </span>"
+echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'> ${TIME}   </span>"
+

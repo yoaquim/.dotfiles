@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+#=======================
+# PRINTING FN
+#=======================
+
+arrowPrint() {
+    local VAL=${1}
+    local BACKGROUND_COLOR=${2}
+    local TEXT_COLOR=${3}
+    local ICON_COLOR=${4}
+
+
+    echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${ICON_COLOR}' background='${BACKGROUND_COLOR}'> </span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'> ${VAL}   </span>"
+}
+
+#=======================
+# BLOCKLET
+#=======================
+
+# Variables
+# ---------------------
+BATTERY=1
+BATTERY_INFO=$(acpi -b | grep "Battery ${BATTERY}")
+BATTERY_STATE=$(echo "${BATTERY_INFO}" | grep -wo "Full\|Charging\|Discharging")
+BATTERY_POWER=$(echo "${BATTERY_INFO}" | grep -o '[0-9]\+%' | tr -d '%')
+URGENT_VALUE=11
+
+BACKGROUND='#f1f1f1'
+TEXT='#404040'
+
+# Print
+# ---------------------
+if [[ "${BATTERY_POWER}" -le "${URGENT_VALUE}" ]]; then
+  arrowPrint "${BATTERY_POWER}%" '#fa4c4c' '#f1f1f1' '#f1f1f1'
+  arrowPrint "${BATTERY_POWER}%" '#fa4c4c' '#f1f1f1' '#f1f1f1'
+elif [[ "${BATTERY_STATE}" = "Charging" ]]; then
+  arrowPrint "${BATTERY_POWER}%" "${BACKGROUND}" "${TEXT}" '#35d38b'
+  arrowPrint "${BATTERY_POWER}%" "${BACKGROUND}" "${TEXT}" '#35d38b'
+elif [[ "${BATTERY_STATE}" = "Discharging" ]]; then
+  arrowPrint "${BATTERY_POWER}%" "${BACKGROUND}" "${TEXT}" '#eeda5e'
+  arrowPrint "${BATTERY_POWER}%" "${BACKGROUND}" "${TEXT}" '#eeda5e'
+else
+  arrowPrint "${BATTERY_POWER}%" "${BACKGROUND}" "${TEXT}" "${TEXT}"
+  arrowPrint "${BATTERY_POWER}%" "${BACKGROUND}" "${TEXT}" "${TEXT}"
+fi
+
