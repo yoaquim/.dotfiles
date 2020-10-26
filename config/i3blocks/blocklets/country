@@ -16,13 +16,14 @@ arrowPrint() {
         TEXT_COLOR=${3};
     fi
 
-    echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'>  ${VAL}   </span>"
+    echo "<span foreground='${BACKGROUND_COLOR}'></span><span foreground='${TEXT_COLOR}' background='${BACKGROUND_COLOR}'>  ${VAL}   </span>"
 }
 
 #=======================
 # BLOCKLET
 #=======================
 IP="$(wget -qO - icanhazip.com)"
+COUNTRY="$(curl https://ipvigilante.com/${IP} | jq '.data.country_name' | tr -d '"' )"
 
 # Copy to clipboard on mouse click
 #--------------------------------------
@@ -32,6 +33,5 @@ fi
 
 # Print
 #--------------------------------------
-arrowPrint "${IP}" '#f1f1f1' '#404040'
-arrowPrint "${IP}" '#f1f1f1' '#404040'
-
+arrowPrint "${COUNTRY}" '#404040' '#f1f1f1'
+arrowPrint "${COUNTRY}" '#404040' '#f1f1f1'
