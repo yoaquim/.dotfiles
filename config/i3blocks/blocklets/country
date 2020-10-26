@@ -23,7 +23,7 @@ arrowPrint() {
 # BLOCKLET
 #=======================
 IP="$(wget -qO - icanhazip.com)"
-COUNTRY="$(curl https://ipvigilante.com/${IP} | jq '.data.country_name' | tr -d '"' )"
+COUNTRY="$(geoiplookup "${IP}" | cut -d : -f 2 | cut -d , -f 2 | tr -d ' ')"
 
 # Copy to clipboard on mouse click
 #--------------------------------------

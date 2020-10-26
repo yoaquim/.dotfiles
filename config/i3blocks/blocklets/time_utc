@@ -23,7 +23,7 @@ arrowPrint() {
 #=======================
 # BLOCKLET
 #=======================
-TIME_FORMAT="%I:%M %p"
+TIME_FORMAT="%H:%M"
 TIME=$(TZ="UTC" date "+${TIME_FORMAT}")
 
 # Print
