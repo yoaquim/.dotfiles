@@ -8,13 +8,11 @@
 
 # III......ALIASES
 
-# IV.......DOCKER
+# IV........FUNCTIONS
 
-# V........FUNCTIONS
+# V.......BASH FILES
 
-# VI.......BASH FILES
-
-# VII......ADDED BY EXTERNAL TOOLS
+# VI......ADDED BY EXTERNAL TOOLS
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,36 +62,7 @@ if [ -f ~/.bash_aliases ]; then
 fi
 
 #=====================================================
-# IV.   DOCKER
-#=====================================================
-
-# Docker compose alias
-alias dkc="docker-compose"
-
-# Delete all docker containers
-dr="docker rm \$(docker ps -a -q)"
-alias dkrm='eval ${dr}'
-
-# Delete all docker images
-dri="docker rmi \$(docker images -q)"
-alias dkrmi='eval ${dri}'
-
-# Bash into a docker image 
-alias drun="docker run -it --entrypoint /bin/bash"
-
-# Push docker image
-alias dpush="docker push"
-
-alias cinkali="drun cintron-kali"
-
-update_cinkali(){
-    docker commit ${1} cintron-kali:latest
-    docker tag cintron-kali:latest  yoaquim/cintron:cintron-kali
-    docker push  yoaquim/cintron:cintron-kali
-}
-
-#=====================================================
-# V.    FUNCTIONS
+# IV.    FUNCTIONS
 #=====================================================
 
 # UP/FF
@@ -245,7 +214,7 @@ check_port() {
 
 
 #=====================================================
-# VI.   BASH FILES
+# V.   BASH FILES
 #=====================================================
 
 # Source local bash file
@@ -259,5 +228,5 @@ if [ -f ~/.bash_git ]; then
 fi
 
 #=====================================================
-# VII. ADDED BY EXTERNAL TOOLS
+# VI. ADDED BY EXTERNAL TOOLS
 #=====================================================
