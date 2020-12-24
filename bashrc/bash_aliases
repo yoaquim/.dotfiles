@@ -26,6 +26,10 @@ alias lh="ls -lh"
 alias lah="ls -lah"
 alias lha="ls -lah"
 
+# More ls aliases
+alias l1="ls -lh1"
+alias la1="ls -lah1"
+
 # Go to previous dir
 alias ...="cd -"
 
