@@ -39,6 +39,7 @@ export TERM=xterm-256color
 export HISTFILESIZE=
 export HISTSIZE=
 export HISTTIMEFORMAT='[%F %T] '
+export HISTFILE=~/.bash_eternal_history
 # Set prompt ocmmand so it writes history immediately
 PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
 
