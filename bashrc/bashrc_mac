@@ -293,9 +293,13 @@ if [ -f ~/.bash_git ]; then
 fi
 
 #=====================================================
-# VII.  ITERM2 SHELL INTEGRATION
+# VII.  INTEGRATIONS
 #=====================================================
+# iTerm 2
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+
+# direnv
+eval "$(direnv hook bash)"
 
 #=====================================================
 # VIII. ADDED BY EXTERNAL TOOLS
