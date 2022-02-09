@@ -61,6 +61,7 @@ alias t="touch"
 alias tm="tmux"
 alias tml="tmux ls"
 alias tma="tmux attach -t"
+alias tmk="tmux kill-session -t"
 
 # Edit .bash_profile
 alias vb="vim ~/.bash_profile"

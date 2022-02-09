@@ -119,22 +119,13 @@ function gup(){
 	gpush
 }
 
-# Stash changes, checkout master, pull from origin, checkout to previous branch, rebase off of master, then pop stashed changes
 # Used to quickly bring current branch up-to-date with origin/master
-function rebmast(){
-	branch=$(git symbolic-ref --short -q HEAD)
-	git checkout master
+function roob(){
+        SOURCE_BRANCH=${1}
+	TARGET_BRANCH=$(git symbolic-ref --short -q HEAD)
+	git checkout ${SOURCE_BRANCH}
 	git pull
-	git checkout $branch
-	git rebase master
+	git checkout ${TARGET_BRANCH}
+	git rebase ${SOURCE_BRANCH}
 }
-#
-# Stash changes, checkout development, pull from origin, checkout to previous branch, rebase off of development, then pop stashed changes
-# Used to quickly bring current branch up-to-date with origin/development
-function rebdev(){
-	branch=$(git symbolic-ref --short -q HEAD)
-	git checkout development
-	git pull
-	git checkout $branch
-	git rebase development
-}
+

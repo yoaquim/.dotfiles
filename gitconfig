@@ -18,3 +18,5 @@
 	helper = osxkeychain
 [push]
 	default = matching
+[pull]
+	rebase = true

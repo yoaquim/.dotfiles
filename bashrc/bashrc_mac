@@ -206,6 +206,7 @@ complete -o default -o nospace -F _completemarks jump unmark
 
 sawsp() {
     export AWS_DEFAULT_PROFILE="${1}"
+    export AWS_PROFILE="${1}"
 }
 
 
@@ -216,7 +217,8 @@ sawsp() {
 wawsp() {
     local account_num
     account_num=$(aws sts get-caller-identity --output text --query 'Account')
-    echo -e "\tProfile: ${AWS_DEFAULT_PROFILE}"
+    echo -e "\tProfile: ${AWS_PROFILE}"
+    echo -e "\tDefault Profile: ${AWS_DEFAULT_PROFILE}"
     echo -e "\tAccount: ${account_num}"
 }
 
