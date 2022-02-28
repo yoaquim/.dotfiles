@@ -46,7 +46,10 @@ alias gau="git add -u"
 alias gap="git add -p"
 
 # Git checkout
-alias gc="git checkout"
+alias gco="git checkout"
+
+# Git commit
+alias gcomm="git commit -m"
 
 # Git checkout new branch
 alias gcb="git checkout -b"
@@ -107,15 +110,15 @@ function gpush() {
 }
 
 
-# Git commit without having to enter quotes for message
-function gcom(){
-	message="${@}";
-	git commit -m "${message}"
-}
+# # Git commit without having to enter quotes for message
+# function gcomm(){
+# 	message="${@}";
+# 	git commit -m "${message}"
+# }
 
 # Git commit, then push to origin current branch
 function gup(){
-	gcom "$@"
+	gcomm "$@"
 	gpush
 }
 

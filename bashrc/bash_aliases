@@ -54,6 +54,9 @@ alias cdp="cd ~/Projects/"
 # Change Directory to Scratches directory
 alias cds="cd ~/Scratches/"
 
+# Copy Current Dir to Clipboard
+alias cwd="pwd | pbcopy"
+
 # `touch` alias (create new file)
 alias t="touch"
 
