@@ -300,9 +300,6 @@ fi
 # iTerm 2
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 
-# direnv
-eval "$(direnv hook bash)"
-
 #=====================================================
 # VIII. ADDED BY EXTERNAL TOOLS
 #=====================================================
