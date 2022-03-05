@@ -33,7 +33,7 @@ setup_i3blocks() {
     rm -rf tmp
 }
 
-install_tpm() {
+setup_tmux() {
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 }
 
@@ -51,11 +51,11 @@ if [ -z "${1}" ]; then
     exit 1
 elif [ "${1}" = "-m" ]; then
     link_mac_symlinks
-    install_tpm
+    setup_tmux
 elif [ "${1}" = "-l" ]; then
     link_linux_symlinks
     setup_i3blocks
-    install_tpm
+    setup_tmux
 else
     echo "\n\tValid flags for param are 'l' or 'm'\n"
     exit 1

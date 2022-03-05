@@ -32,23 +32,14 @@ Contains all my personal dotfiles and dirs:
 ## Mac Post-setup
 
 ### Homebrew
+`brewlist.txt` contains the desired packages for a base setup. Running the `install_brew_list.sh` script will install the packages in that list.
 
-`brewlist.txt` is a list a of installed brew formulae. Running the `install_brew_list.sh` script will install said list. **Java should be installed _beforehand_, otherwise some installs (**`maven`**,** `sbt`**, etc) will fail**:
 
-```
-brew cask install java
-```
 ### Bash
+**Bash** is among the formulas in `brewlist`, and so installs an updated version of bash; this sometimes leads to extra configuration that needs to happen.
 
-**Bash** is among the formulae in `brewlist`, and so installs an updated version of bash and must be linked. Running `link_bash.sh` will partly accomplish this, but the command spits out a URL that must be followed in order to finish linking. Afer installing from the brew list, or loading the custom bash profile, some errors might arise if you aren't using the latest bash.
+[This thread](https://apple.stackexchange.com/questions/291287/globstar-invalid-shell-option-name-on-macos-even-with-bash-4-x) provides some insight, but here are some other actions that may help remedy this:
 
-You'll need git bash completion:
-
-```
-brew install bash bash-completion git
-```
-
-You might also need to run either: 
 ```
 ln -s "$(which greadlink)" "$(dirname "$(which greadlink)")/readlink"
 ``` 
@@ -59,6 +50,4 @@ or
 brew install coreutils
 brew link coreutils
 ```
-
-in order to fix a readlink error.
 
