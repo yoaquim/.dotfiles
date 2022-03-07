@@ -44,10 +44,12 @@ Mac OSX now ships with zsh as the default shell. In order to change it, add the 
 # If Intel-based Mac
 sudo sh -c 'echo /usr/local/bin/bash >> /etc/shells'
 chsh -s /usr/local/bin/bash
+export PATH=/usr/local/bin:$PATH
 
 # If M1 chip Mac
 sudo sh -c 'echo /opt/homebrew/bin/bash >> /etc/shells'
 chsh -s /opt/homebrew/bin/bash
+export PATH=/opt/homebrew/bin:$PATH
 
 ```
 
