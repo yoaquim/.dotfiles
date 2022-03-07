@@ -100,7 +100,7 @@ alias vetc="sudo vim /etc/hosts"
 alias readlink=greadlink
 
 # Source bash file
-alias sb=". ~/.bash_profile"
+alias sb="source ~/.bash_profile"
 
 # Flush IP cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
@@ -108,4 +108,5 @@ alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say ca
 # NPM alias so you can run npm scripts on silent mode
 alias npms="npm -s"
 
+# Think this is to emulate pbcopy on Linux?
 alias lcp="xclip -sel clip"

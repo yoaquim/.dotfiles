@@ -36,9 +36,25 @@ Contains all my personal dotfiles and dirs:
 
 
 ### Bash
-**Bash** is among the formulas in `brewlist`, and so installs an updated version of bash; this sometimes leads to extra configuration that needs to happen.
+**Bash** is among the formulas in `brewlist`, and so installs an updated version of bash.
 
-[This thread](https://apple.stackexchange.com/questions/291287/globstar-invalid-shell-option-name-on-macos-even-with-bash-4-x) provides some insight, but here are some other actions that may help remedy this:
+Mac OSX now ships with zsh as the default shell. In order to change it, add the correct homebrew bash path to `/etc/shells` and then run `chsh` accordingly:
+
+```shell
+# If Intel-based Mac
+sudo sh -c 'echo /usr/local/bin/bash >> /etc/shells'
+chsh -s /usr/local/bin/bash
+
+# If M1 chip Mac
+sudo sh -c 'echo /opt/homebrew/bin/bash >> /etc/shells'
+chsh -s /opt/homebrew/bin/bash
+
+```
+
+[This thread](https://apple.stackexchange.com/questions/291287/globstar-invalid-shell-option-name-on-macos-even-with-bash-4-x) has some more context if things don't work.
+
+#### Bash Dependencies
+Some other actions that may help fix bash:
 
 ```
 ln -s "$(which greadlink)" "$(dirname "$(which greadlink)")/readlink"
