@@ -16,5 +16,4 @@ the_silver_searcher
 tmux
 vim
 tldr
-base16-manager
 
