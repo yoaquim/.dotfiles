@@ -54,17 +54,3 @@ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.bash_local>>
 
 [This thread](https://apple.stackexchange.com/questions/291287/globstar-invalid-shell-option-name-on-macos-even-with-bash-4-x) has some more context if things don't work.
 
-#### Bash Dependencies
-Some other actions that may help fix bash:
-
-```
-ln -s "$(which greadlink)" "$(dirname "$(which greadlink)")/readlink"
-``` 
-
-or
-
-```
-brew install coreutils
-brew link coreutils
-```
-
