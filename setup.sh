@@ -14,6 +14,7 @@ link_mac_symlinks() {
     ln -sf ~/.dotfiles/ideavimrc ~/.ideavimrc
     ln -sf ~/.dotfiles/spacemacs ~/.spacemacs
     ln -sf ~/.dotfiles/yabairc ~/.yabairc
+    ln -sf ~/.dotfiles/skhdrc ~/.skhdrc
 }
 
 link_linux_symlinks() {
