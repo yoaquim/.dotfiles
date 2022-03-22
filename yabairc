@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 
 # ==============================
+# LOAD YABAI SCRIPTING ADDON
+# https://github.com/koekeishiya/yabai/wiki/Installing-yabai-(latest-release)#macos-big-sur-and-monterey---automatically-load-scripting-addition-on-startup
+# ==============================
+sudo yabai --load-sa
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+
+# ==============================
 # BAR SETTINGS
 # ==============================
 yabai -m config status_bar                   on
