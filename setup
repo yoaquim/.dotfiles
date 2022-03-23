@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # HELPERS
 # ----------------------------
@@ -10,9 +10,7 @@ link_mac_symlinks() {
     ln -sf ~/.dotfiles/bashrc/bash_aliases ~/.bash_aliases
     ln -sf ~/.dotfiles/gitconfig ~/.gitconfig
     ln -sf ~/.dotfiles/tmux.conf ~/.tmux.conf
-    ln -sf ~/.dotfiles/slate.js ~/.slate.js
     ln -sf ~/.dotfiles/ideavimrc ~/.ideavimrc
-    ln -sf ~/.dotfiles/spacemacs ~/.spacemacs
     ln -sf ~/.dotfiles/yabairc ~/.yabairc
     ln -sf ~/.dotfiles/skhdrc ~/.skhdrc
 }
@@ -24,7 +22,6 @@ link_linux_symlinks() {
     ln -sf ~/.dotfiles/bashrc/bash_aliases ~/.bash_aliases
     ln -sf ~/.dotfiles/gitconfig.linux ~/.gitconfig
     ln -sf ~/.dotfiles/tmux.conf.linux ~/.tmux.conf
-    ln -sf ~/.dotfiles/spacemacs ~/.spacemacs
 }
 
 setup_i3blocks() {
