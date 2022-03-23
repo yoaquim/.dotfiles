@@ -55,7 +55,7 @@ yabai -m config mouse_action2                resize
 # ==============================
 # GENERAL SPACE SETTINGS
 # ==============================
-yabai -m config layout                       bsp
+yabai -m config layout                       float
 yabai -m config top_padding                  0
 yabai -m config bottom_padding               0
 yabai -m config left_padding                 0

@@ -1,0 +1,9 @@
+# ========================
+# MOVE WINDOWS
+# ========================
+ctrl + alt + cmd - h : yabai -m window --grid 2:2:0:0:1:2
+ctrl + alt + cmd - j : yabai -m window --grid 2:2:0:1:2:1
+ctrl + alt + cmd - k : yabai -m window --grid 2:2:0:0:2:1
+ctrl + alt + cmd - l : yabai -m window --grid 2:2:1:0:1:2
+ctrl + alt + cmd - m : yabai -m window --grid 2:2:0:0:2:2
+
