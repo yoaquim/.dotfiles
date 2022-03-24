@@ -1,0 +1,6 @@
+spotify
+whatsapp
+docker
+postman
+slack
+

@@ -8,6 +8,13 @@ cat brewlist.txt | xargs -L 1 brew install
 echo -e "\nFinished installing brewlist.\n\n"
 
 # ==================================
+# INSTALL brewlist casks
+# ==================================
+echo -e "\nInstalling brewlist casks...\n\n"
+cat brewlist.cask.txt | xargs -L 1 brew install --cask
+echo -e "\nFinished installing brewlist casks.\n\n"
+
+# ==================================
 # INSTALL base16-manager
 # ==================================
 echo -e "Installing base16...\n\n"
