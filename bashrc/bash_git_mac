@@ -63,6 +63,9 @@ alias gbcp="git rev-parse --abbrev-ref HEAD | tr -d '\n' | tr -d ' ' | pbcopy"
 # Git ammend last commit
 alias gam="git commit --amend"
 
+# Git ammend last commit and dont edit message
+alias gamn="git commit --amend --no-edit"
+
 # Git alias for git diff
 alias gd="git diff"
 #
