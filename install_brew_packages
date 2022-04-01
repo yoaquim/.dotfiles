@@ -33,7 +33,8 @@ echo -e "\nFinished installing ubersicht.\n\n"
 # ==================================
 # FINISH INSTALLING  yabai AND skhd
 # ==================================
-echo -e "\n\tInstall yabai https://github.com/koekeishiya/yabai/wiki.\n\n"
+echo -e "\nIf installing yabai and skhd:"
+echo -e "\n\tInstall yabai https://github.com/koekeishiya/yabai/wiki"
 echo -e "\n\tInstall skhd https://github.com/koekeishiya/skhd.\n\n"
 
 echo "Done."

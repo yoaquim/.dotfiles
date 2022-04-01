@@ -11,8 +11,9 @@ link_mac_symlinks() {
     ln -sf ~/.dotfiles/gitconfig ~/.gitconfig
     ln -sf ~/.dotfiles/tmux.conf ~/.tmux.conf
     ln -sf ~/.dotfiles/ideavimrc ~/.ideavimrc
-    ln -sf ~/.dotfiles/yabairc ~/.yabairc
-    ln -sf ~/.dotfiles/skhdrc ~/.skhdrc
+    ln -sf ~/.dotfiles/slate.js ~/.slate.js
+#   ln -sf ~/.dotfiles/yabairc ~/.yabairc
+#   ln -sf ~/.dotfiles/skhdrc ~/.skhdrc
 }
 
 link_linux_symlinks() {
