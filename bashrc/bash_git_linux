@@ -82,6 +82,12 @@ alias rc-diff="git log --no-merges --pretty=\"%Cblue*%Creset %s, %b(%Cgreen%cn%C
 
 alias merges-diff="git log --merges --pretty=\"%Cblue*%Creset %s, %b(%Cgreen%cn%Creset)\" --date=relative origin/master..origin/development"
 
+# Set tracking info for branch
+function gbu() {
+    BRANCH_NAME=$(git symbolic-ref --short -q HEAD)
+    git branch --set-upstream-to=origin/${BRANCH_NAME} ${BRANCH_NAME}
+}
+
 # Git checkout branch that first matches grep query
 function gcg() {
     branch=$(git branch | grep "${1}" | head -1)
