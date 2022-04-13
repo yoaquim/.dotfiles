@@ -3,4 +3,7 @@ whatsapp
 docker
 postman
 slack
+iterm2
+todoist
+slate
 

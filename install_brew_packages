@@ -25,10 +25,10 @@ echo -e "\nFinished installing base16.\n\n"
 # ==================================
 # INSTALL ubersicht
 # ==================================
-echo -e "Installing ubersicht...\n\n"
-brew tap chrokh/tap
-brew install --cask ubersicht
-echo -e "\nFinished installing ubersicht.\n\n"
+# echo -e "Installing ubersicht...\n\n"
+# brew tap chrokh/tap
+# brew install --cask ubersicht
+# echo -e "\nFinished installing ubersicht.\n\n"
 
 # ==================================
 # FINISH INSTALLING  yabai AND skhd

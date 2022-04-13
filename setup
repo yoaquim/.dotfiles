@@ -39,7 +39,7 @@ setup_tmux() {
 
 # SETUP CONFIG
 # ----------------------------
-ln -sf ~/.dontfiles/config ~/.config
+ln -sf ~/.dotfiles/config ~/.config
 
 
 # INSTALL FOR SPECIFIC OS
