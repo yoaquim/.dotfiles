@@ -19,7 +19,7 @@ Contains all my personal dotfiles and dirs:
  ```Shell
  cd ~/
 
- git clone https://github.com/yoaquim/.dotfiles.git
+ git clone https://github.com/cintron/.dotfiles.git
  ```
 
 - Run `setup.sh` to setup dotfiles. Need to specify for mac(m) or linux(l):
@@ -44,12 +44,12 @@ Mac OSX now ships with zsh as the default shell. In order to change it, add the 
 # If Intel-based Mac
 sudo sh -c 'echo /usr/local/bin/bash >> /etc/shells'
 chsh -s /usr/local/bin/bash
-echo 'eval "$(/usr/local/bin/brew shellenv)"' ~/.bash_local>>
+echo 'eval "$(/usr/local/bin/brew shellenv)"' ~/.bash_local
 
 # If M1 chip Mac
 sudo sh -c 'echo /opt/homebrew/bin/bash >> /etc/shells'
 chsh -s /opt/homebrew/bin/bash
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.bash_local>>
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.bash_local
 ```
 
 [This thread](https://apple.stackexchange.com/questions/291287/globstar-invalid-shell-option-name-on-macos-even-with-bash-4-x) has some more context if things don't work.
