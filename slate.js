@@ -4,7 +4,9 @@
 var focusedScreen = slate.screen();
 var screens = getAllScreens();
 
-// Get all screens
+// ================================
+// HELPER FUNCTIONS
+// ================================
 function getAllScreens() {
     var screens = [];
     slate.eachScreen(function (screen) {
@@ -43,7 +45,9 @@ function getNextScreen () {
     }
 }
 
-// Resizing/Pushing functions
+// ================================
+// RESIZING FUNCTIONS
+// ================================
 var maximize = function (screen) {
     screen = screen || slate.screen();
     var rect = screen.visibleRect();
@@ -56,44 +60,37 @@ var maximize = function (screen) {
     });
 };
 
-var pushTop = function (screen) {
-    screen = screen || focusedScreen;
-    return slate.operation('push', {
-        direction: 'up',
-        style: "bar-resize:screenSizeY/2",
-        screen: screen
-    });
-};
+function getPushFn(direction) {
+    const coords = {
+        up: "bar-resize:screenSizeY/2",
+        down: "bar-resize:screenSizeY/2",
+        left: "bar-resize:screenSizeX/2",
+        right: "bar-resize:screenSizeX/2",
+    }
 
-var pushBottom = function (screen) {
-    screen = screen || focusedScreen;
-    return slate.operation('push', {
-        direction: 'down',
-        style: "bar-resize:screenSizeY/2",
-        screen: screen
-    });
-};
+    return function (screen) {
+        screen = screen || focusedScreen;
+        return slate.operation('push', {
+            direction: direction,
+            style: coords[direction],
+            screen: screen
+        });
+    };
+}
 
-var pushLeft = function (screen) {
-    screen = screen || focusedScreen;
-    return slate.operation('push', {
-        direction: 'left',
-        style: "bar-resize:screenSizeX/2",
-        screen: screen
-    });
-};
+function getCornerFn(direction) {
+    return function (screen) {
+        screen = screen || focusedScreen;
+        return slate.operation('corner', {
+            direction: direction,
+            width: "screenSizeX/2",
+            height: "screenSizeY/2",
+            //screen: screen
+        });
+    };
+}
 
-var pushRight = function (screen) {
-    screen = screen || focusedScreen;
-    return slate.operation('push', {
-        direction: 'right',
-        style: "bar-resize:screenSizeX/2",
-        screen: screen
-    });
-};
-
-// Throwing to other screens
-var throwToScreenMax = function (screen) {
+function throwToScreenMax(screen) {
     return slate.operation('throw', {
         screen: screen,
         width: "screenSizeX",
@@ -101,45 +98,67 @@ var throwToScreenMax = function (screen) {
     });
 };
 
-// === KEY BINDINGS ===
+// ================================
+// KEY BINDINGS
+// ================================
 
-// --- PUSHING ---
-
-// all inside anonymous functions, otherwise
-// screen objects inside of operations called
-// (maximize, pushToTop,etc) would hold a static
-// reference to initial focusedScreen and would
-// not updated those inner screens as focusedScreen
-// is dynamically changed
-
-// Maximize in current window
-slate.bind('m:alt,cmd,ctrl', function (window) {
+// --------------------------------
+// MAXIMIZE IN CURRENT WINDOW
+// --------------------------------
+slate.bind('space:alt,cmd,ctrl', function (window) {
     window.doOperation(maximize());
 });
 
-// // Push window to top current screen
+// ------------------------
+// PUSH TO DIRECTIONS
+// ------------------------
+// Push window to top current screen
 slate.bind('k:alt,cmd,ctrl', function (window) {
-    window.doOperation(pushTop());
+    window.doOperation(getPushFn('up')());
 });
 
 // Push window to bottom current screen
 slate.bind('j:ctrl,alt,cmd', function (window) {
-    window.doOperation(pushBottom());
+    window.doOperation(getPushFn('down')());
 });
 
 // Push window to left current screen
 slate.bind('h:ctrl,alt,cmd', function (window) {
-    window.doOperation(pushLeft());
+    window.doOperation(getPushFn('left')());
 });
 
 // Push window to right current screen
 slate.bind('l:ctrl,alt,cmd', function (window) {
-    window.doOperation(pushRight());
+    window.doOperation(getPushFn('right')());
+});
+
+// -------------------------
+// PUSH TO CORNERS
+// -------------------------
+// Push window to upper left current screen
+slate.bind('u:ctrl,alt,cmd', function (window) {
+    window.doOperation(getCornerFn('top-left')());
+});
+
+// Push window to upper right current screen
+slate.bind('i:ctrl,alt,cmd', function (window) {
+    window.doOperation(getCornerFn('top-right')());
+});
+
+// Push window to bottom left current screen
+slate.bind('n:ctrl,alt,cmd', function (window) {
+    window.doOperation(getCornerFn('bottom-left')());
+});
+
+// Push window to bottom right current screen
+slate.bind('m:ctrl,alt,cmd', function (window) {
+    window.doOperation(getCornerFn('bottom-right')());
 });
 
 
-// --- THROWING ---
-
+// -------------------------
+// THROWING TO SCREENS
+// -------------------------
 // Throw left and maximize
 slate.bind('h:ctrl,alt,cmd,shift', function(window) {
     screens = getAllScreens();
