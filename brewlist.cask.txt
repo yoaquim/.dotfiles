@@ -6,4 +6,5 @@ slack
 iterm2
 todoist
 slate
+jetbrains-toolbox
 
