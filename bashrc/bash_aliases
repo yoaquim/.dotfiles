@@ -110,3 +110,7 @@ alias npms="npm -s"
 
 # Think this is to emulate pbcopy on Linux?
 alias lcp="xclip -sel clip"
+
+# Docker compose alias
+alias dcp="docker compose"
+

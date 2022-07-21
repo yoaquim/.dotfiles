@@ -1,3 +1,4 @@
+alfred
 spotify
 whatsapp
 docker
