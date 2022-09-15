@@ -92,7 +92,7 @@ alias dkrm='eval ${dr}'
 
 # Delete all docker images
 dri="docker rmi \$(docker images -q)"
-alias dkrmi='eval ${dri}'
+alias dkrmi_all='eval ${dri}'
 
 # Bash into a docker image 
 alias drun="docker run -it --entrypoint /bin/bash"
@@ -100,12 +100,9 @@ alias drun="docker run -it --entrypoint /bin/bash"
 # Push docker image
 alias dpush="docker push"
 
-alias cinkali="drun cintron-kali"
-
-update_cinkali(){
-    docker commit ${1} cintron-kali:latest
-    docker tag cintron-kali:latest  yoaquim/cintron:cintron-kali
-    docker push  yoaquim/cintron:cintron-kali
+# Delete docker images that match reference/beginning of name
+dkrmi_ref() {
+    docker rmi $(docker images --filter=reference="${1}/*")
 }
 
 #=====================================================
