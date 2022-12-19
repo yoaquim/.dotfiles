@@ -1,0 +1,171 @@
+#=====================================================
+# V.    FUNCTIONS
+#=====================================================
+
+# UP/FF
+# --------------------------
+# Go to previous dir as many times as input parameter
+# if no input parameter, then just go back
+# also add "ff" as an alias to function
+
+alias ff="up"
+up(){
+    counter=$1;
+    if [ -z "$1" ]; then
+        ..
+        return
+    fi
+    while [ $counter -gt 0 ]
+    do
+        ..
+        counter=$[$counter-1]
+    done
+
+}
+
+
+# TOGGLE_HIDDEN
+# --------------------------
+# Toggles if hidden (dotfiles) are shown on Finder
+
+toggle_hidden() {
+    TOGGLE=$HOME/.hidden-files-shown
+    if [ ! -e $TOGGLE ]; then
+        touch $TOGGLE
+        defaults write com.apple.finder AppleShowAllFiles YES
+    else
+        rm -f $TOGGLE
+        defaults write com.apple.finder AppleShowAllFiles NO
+    fi
+
+    killall Finder
+}
+
+
+# MARK
+# --------------------------
+# Mark a dir so you can easily jump to it later
+
+mark() {
+    mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
+}
+
+
+# UNMARK
+# --------------------------
+# Unmark  a marked dir
+unmark() {
+    rm -i "$MARKPATH/$1"
+}
+
+
+# JUMP/J
+# --------------------------
+# Jump to bookmarked location
+alias j="jump"
+jump() {
+    cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
+}
+
+
+# MARKS
+# --------------------------
+# Print out current marked dirs
+
+marks() {
+    ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
+}
+
+
+# TAB COMPLETION: MARKS
+# --------------------------
+# Tab completion for marks
+
+_completemarks() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local marks=$(find $MARKPATH -type l | awk -F '/' '{print $NF}')
+    COMPREPLY=($(compgen -W '${marks[@]}' -- "$cur"))
+    return 0
+}
+complete -o default -o nospace -F _completemarks jump unmark
+
+
+# SAWSP
+# --------------------------
+# Switch between AWS_PROFILES
+
+sawsp() {
+    export AWS_DEFAULT_PROFILE="${1}"
+    export AWS_PROFILE="${1}"
+}
+
+
+# WAWSP
+# --------------------------
+# Get current AWS_PROFILE
+
+wawsp() {
+    local account_num
+    account_num=$(aws sts get-caller-identity --output text --query 'Account')
+    echo -e "\tProfile: ${AWS_PROFILE}"
+    echo -e "\tDefault Profile: ${AWS_DEFAULT_PROFILE}"
+    echo -e "\tAccount: ${account_num}"
+}
+
+
+# RENAME_EXTENSION
+# --------------------------
+# Rename extension for all files in a dir
+
+rename_extension() {
+    for f in *."${1}"; do 
+        echo -e "\tRenaming ${f}..."
+        mv -- "$f" "${f%.${1}}.${2}"
+    done
+}
+
+
+# RENAME_EXTENSION_SUBDIRS
+# --------------------------
+# Rename file extensions in subdirs located in current dir up to 4 levels deep
+
+rename_extension_subdirs() {
+    old_extension=${1}
+    new_extension=${2}
+    for d in $(find ./ -maxdepth 4 -type d); do 
+        (
+            cd "${d}"
+            rename_extension ${old_extension} ${new_extension}
+        )
+    done
+}
+
+
+# RENAME_SUBDIRS
+# --------------------------
+# Rename subdirs in current dir
+
+rename_subdirs() {
+    old_name=${1}
+    new_name=${2}
+    for d in $(find ./ -maxdepth 4 -type d)
+    do
+        dir_to_rename="$(basename "${d}")"
+        if [ "${dir_to_rename}" == "${old_name}" ]; then
+            folder_name=$(dirname "${d}")
+            final_name="${folder_name}/${new_name}"
+            echo "${d} --> ${final_name}"
+            mv "${d}" "${final_name}"
+        fi
+    done
+}
+
+
+# CHECK_PORT
+# --------------------------
+# Print processes binded to specified port
+
+check_port() { 
+    lsof -nP -i4TCP:"${1}" | grep LISTEN
+}
+

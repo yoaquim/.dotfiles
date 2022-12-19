@@ -70,13 +70,13 @@ alias tmk="tmux kill-session -t"
 alias vb="vim ~/.bash_profile"
 
 # Edit .bash_git
-alias vbg="vim ~/.bash_git"
+alias vbg="vim ~/.bashrc_git"
 
 # Edit .bash_local
-alias vbl="vim ~/.bash_local"
+alias vbl="vim ~/.bashrc_local"
 
 # Edit .bash_alias
-alias vba="vim ~/.bash_aliases"
+alias vba="vim ~/.bashrc_aliases"
 
 # Edit i3 config
 alias vbi="vim ~/.config/i3/config"
@@ -113,4 +113,26 @@ alias lcp="xclip -sel clip"
 
 # Docker compose alias
 alias dcp="docker compose"
+
+#--------------------------
+# DOCKER
+#--------------------------
+
+# Docker compose alias
+alias dkc="docker-compose"
+
+# Delete all docker containers
+dr="docker rm $(docker ps -a -q)"
+dcr="docker rm $(docker compose ps -a -q)"
+alias dkrm="docker rm $(docker ps -qa)"
+
+# Delete all docker images
+dri="docker rmi \$(docker images -q)"
+alias dkrmi_all='eval ${dri}'
+
+# Bash into a docker image 
+alias drun="docker run -it --entrypoint /bin/bash"
+
+# Push docker image
+alias dpush="docker push"
 

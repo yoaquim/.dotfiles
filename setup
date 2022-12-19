@@ -6,8 +6,10 @@
 link_mac_symlinks() {
     ln -sf ~/.dotfiles/bashrc/bashrc_mac ~/.bash_profile
     ln -sf ~/.dotfiles/bashrc/bashrc_mac ~/.bashrc
-    ln -sf ~/.dotfiles/bashrc/bash_git_mac ~/.bash_git
-    ln -sf ~/.dotfiles/bashrc/bash_aliases ~/.bash_aliases
+    ln -sf ~/.dotfiles/bashrc/bashrc_git_mac ~/.bashrc_git
+    ln -sf ~/.dotfiles/bashrc/bashrc_aliases ~/.bashrc_aliases
+    ln -sf ~/.dotfiles/bashrc/bashrc_functions ~/.bashrc_functions
+    ln -sf ~/.dotfiles/bashrc/bashrc_tools ~/.bashrc_tools
     ln -sf ~/.dotfiles/gitconfig ~/.gitconfig
     ln -sf ~/.dotfiles/tmux.conf ~/.tmux.conf
     ln -sf ~/.dotfiles/ideavimrc ~/.ideavimrc
@@ -19,8 +21,10 @@ link_mac_symlinks() {
 link_linux_symlinks() {
     ln -sf ~/.dotfiles/bashrc/bashrc_linux ~/.bash_profile
     ln -sf ~/.dotfiles/bashrc/bashrc_linux ~/.bashrc
-    ln -sf ~/.dotfiles/bashrc/bash_git_linux ~/.bash_git
-    ln -sf ~/.dotfiles/bashrc/bash_aliases ~/.bash_aliases
+    ln -sf ~/.dotfiles/bashrc/bashrc_git_linux ~/.bashrc_git
+    ln -sf ~/.dotfiles/bashrc/bashrc_aliases ~/.bashrc_aliases
+    ln -sf ~/.dotfiles/bashrc/bashrc_functions ~/.bashrc_functions
+    ln -sf ~/.dotfiles/bashrc/bashrc_tools ~/.bashrc_tools
     ln -sf ~/.dotfiles/gitconfig.linux ~/.gitconfig
     ln -sf ~/.dotfiles/tmux.conf.linux ~/.tmux.conf
 }
@@ -33,7 +37,9 @@ setup_i3blocks() {
 }
 
 setup_tmux() {
-    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+    if [ ! -f ~/.tmux/plugins/tpm/README.md ]; then
+        git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+    fi
 }
 
 
@@ -46,7 +52,7 @@ ln -sf ~/.dotfiles/config ~/.config
 # ----------------------------
 
 if [ -z "${1}" ]; then
-    echo "\n\tNeed to specify which OS, '-m' for Mac, '-l' for Linux\n"
+    echo -e "\n\tNeed to specify which OS, '-m' for Mac, '-l' for Linux\n"
     exit 1
 elif [ "${1}" = "-m" ]; then
     link_mac_symlinks
@@ -56,12 +62,12 @@ elif [ "${1}" = "-l" ]; then
     setup_i3blocks
     setup_tmux
 else
-    echo "\n\tValid flags for param are 'l' or 'm'\n"
+    echo -e "\n\tValid flags for param are 'l' or 'm'\n"
     exit 1
 fi
 
 
 # FINISHED
 # ----------------------------
-echo "\nDone."
+echo -e "\nDone.\n"
 
