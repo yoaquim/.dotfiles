@@ -44,7 +44,7 @@ PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
 #=====================================================
 
 # Custom bash prompt; shows git branch
-PS1="[\[\033[32m\]\w]\[\033[0m\]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
+PS1="[\[\033[32m\]\w\[\033[0m\]]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
 
 # Base16 Shell (so iTerm can work with Base16)
 BASE16_SHELL="$HOME/.config/base16-shell/"
