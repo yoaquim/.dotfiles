@@ -68,6 +68,12 @@ alias tmk="tmux kill-session -t"
 
 # Edit .bash_profile
 alias vb="vim ~/.bash_profile"
+#
+# Edit .bashrc_functions
+alias vbf="vim ~/.bashrc_functions"
+
+# Edit .bashrc_tools
+alias vbt="vim ~/.bashrc_tools"
 
 # Edit .bash_git
 alias vbg="vim ~/.bashrc_git"
