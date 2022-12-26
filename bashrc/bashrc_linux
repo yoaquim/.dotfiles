@@ -75,6 +75,11 @@ if [ -f ~/.bashrc_aliases ]; then
     source ~/.bashrc_aliases
 fi
 
+# Specific to linux
+# -------------------
+alias pbcopy='xclip -selection clipboard'
+alias pbpaste='xclip -selection clipboard -o'
+
 #=====================================================
 # IV.   FUNCTIONS
 #=====================================================
