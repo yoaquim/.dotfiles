@@ -8,7 +8,7 @@
 export LESS=-R
 
 # TODO: Git bash completion 
-#
+source ~/.dotfiles/git-bash-completion.sh
 
 # Git status alias
 alias gs="git status"

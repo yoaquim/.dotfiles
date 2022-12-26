@@ -127,11 +127,6 @@ alias dcp="docker compose"
 # Docker compose alias
 alias dkc="docker-compose"
 
-# Delete all docker containers
-dr="docker rm $(docker ps -a -q)"
-dcr="docker rm $(docker compose ps -a -q)"
-alias dkrm="docker rm $(docker ps -qa)"
-
 # Delete all docker images
 dri="docker rmi \$(docker images -q)"
 alias dkrmi_all='eval ${dri}'
