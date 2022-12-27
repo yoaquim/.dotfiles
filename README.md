@@ -54,3 +54,7 @@ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.bash_local
 
 [This thread](https://apple.stackexchange.com/questions/291287/globstar-invalid-shell-option-name-on-macos-even-with-bash-4-x) has some more context if things don't work.
 
+
+## Linux Post-setup
+
+This guide helps with Lenovo fingerprint integration: https://forum.kde.org/viewtopic.php?f=309&t=175570
