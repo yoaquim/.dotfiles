@@ -58,3 +58,7 @@ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' ~/.bash_local
 ## Linux Post-setup
 
 This guide helps with Lenovo fingerprint integration: https://forum.kde.org/viewtopic.php?f=309&t=175570
+
+### Spacemacs
+
+For Spacemacs keybindings, this article helped: https://www.emacswiki.org/emacs/ModifierKeys
