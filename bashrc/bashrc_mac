@@ -23,6 +23,8 @@
 #=====================================================
 # I.    SETTINGS EXPORTS
 #=====================================================
+# Add homebrew to PATH
+export PATH="/opt/homebrew/bin:$PATH"
 
 # Dir for marking functions
 export MARKPATH=$HOME/.marks
