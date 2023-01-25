@@ -42,6 +42,15 @@ setup_tmux() {
     fi
 }
 
+setup_slate() {
+    ln -sf ~/.dotfiles/Slate.app /Applications
+}
+
+setup_base_16() {
+    git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
+}
+
+
 
 # SETUP CONFIG
 # ----------------------------
@@ -57,6 +66,8 @@ if [ -z "${1}" ]; then
 elif [ "${1}" = "-m" ]; then
     link_mac_symlinks
     setup_tmux
+    setup_slate
+    setup_base_16
 elif [ "${1}" = "-l" ]; then
     link_linux_symlinks
     setup_i3blocks
