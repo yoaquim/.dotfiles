@@ -22,20 +22,5 @@ brew tap chrokh/tap
 brew install base16-manager
 echo -e "\nFinished installing base16.\n\n"
 
-# ==================================
-# INSTALL ubersicht
-# ==================================
-# echo -e "Installing ubersicht...\n\n"
-# brew tap chrokh/tap
-# brew install --cask ubersicht
-# echo -e "\nFinished installing ubersicht.\n\n"
-
-# ==================================
-# FINISH INSTALLING  yabai AND skhd
-# ==================================
-echo -e "\nIf installing yabai and skhd:"
-echo -e "\n\tInstall yabai https://github.com/koekeishiya/yabai/wiki"
-echo -e "\n\tInstall skhd https://github.com/koekeishiya/skhd.\n\n"
-
 echo "Done."
 
