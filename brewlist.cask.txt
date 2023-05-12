@@ -8,4 +8,5 @@ iterm2
 todoist
 slate
 jetbrains-toolbox
+adobe-creative-cloud
 

@@ -16,9 +16,12 @@
         fiff = diff-tree --no-commit-id --name-only -r
 [credential]
 	helper = osxkeychain
+	helper = /usr/local/share/gcm-core/git-credential-manager
 [push]
 	default = matching
 [pull]
 	rebase = true
 [init]
 	defaultBranch = main
+[credential "https://dev.azure.com"]
+	useHttpPath = true

@@ -117,3 +117,4 @@ test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shel
 if [ -f ~/.bashrc_tools ]; then
     source ~/.bashrc_tools
 fi
+
