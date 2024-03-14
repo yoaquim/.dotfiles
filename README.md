@@ -10,8 +10,7 @@ Contains all my personal dotfiles and dirs:
  - Config Directory (where some applications set configuration)
  - Tmux Configuration
  - IntelliJ vimrc settings and CLI launcher
- - i3wm & i3blocks for linux
- - [`yabai`](https://github.com/koekeishiya/yabai) & [`skhd`](https://github.com/koekeishiya/skhd/) config files
+ - i3wm & i3blocks for Linux
 
 ## Setup
 
