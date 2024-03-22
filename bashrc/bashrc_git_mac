@@ -127,7 +127,7 @@ function gpush() {
 
 # Git commit, then push to origin current branch
 function gup(){
-	gcomm "$@"
+	gcomm "$*"
 	gpush
 }
 
