@@ -2,6 +2,7 @@
 # V.    FUNCTIONS
 #=====================================================
 
+# --------------------------
 # UP/FF
 # --------------------------
 # Go to previous dir as many times as input parameter
@@ -24,6 +25,7 @@ up(){
 }
 
 
+# --------------------------
 # TOGGLE_HIDDEN
 # --------------------------
 # Toggles if hidden (dotfiles) are shown on Finder
@@ -42,6 +44,7 @@ toggle_hidden() {
 }
 
 
+# --------------------------
 # MARK
 # --------------------------
 # Mark a dir so you can easily jump to it later
@@ -51,6 +54,7 @@ mark() {
 }
 
 
+# --------------------------
 # UNMARK
 # --------------------------
 # Unmark  a marked dir
@@ -59,6 +63,7 @@ unmark() {
 }
 
 
+# --------------------------
 # JUMP/J
 # --------------------------
 # Jump to bookmarked location
@@ -68,6 +73,7 @@ jump() {
 }
 
 
+# --------------------------
 # MARKS
 # --------------------------
 # Print out current marked dirs
@@ -77,6 +83,7 @@ marks() {
 }
 
 
+# --------------------------
 # TAB COMPLETION: MARKS
 # --------------------------
 # Tab completion for marks
@@ -90,6 +97,7 @@ _completemarks() {
 complete -o default -o nospace -F _completemarks jump unmark
 
 
+# --------------------------
 # SAWSP
 # --------------------------
 # Switch between AWS_PROFILES
@@ -100,6 +108,7 @@ sawsp() {
 }
 
 
+# --------------------------
 # WAWSP
 # --------------------------
 # Get current AWS_PROFILE
@@ -113,59 +122,25 @@ wawsp() {
 }
 
 
-# RENAME_EXTENSION
 # --------------------------
-# Rename extension for all files in a dir
+# ??? - GH COPILOT EXPLAIN
+# --------------------------
+# Use github coiplot to suggest
+# wich command to run from text provided
 
-rename_extension() {
-    for f in *."${1}"; do 
-        echo -e "\tRenaming ${f}..."
-        mv -- "$f" "${f%.${1}}.${2}"
-    done
+__() {
+    # Concatenate all arguments into a single string
+    gh copilot explain "$*"
 }
 
 
-# RENAME_EXTENSION_SUBDIRS
 # --------------------------
-# Rename file extensions in subdirs located in current dir up to 4 levels deep
-
-rename_extension_subdirs() {
-    old_extension=${1}
-    new_extension=${2}
-    for d in $(find ./ -maxdepth 4 -type d); do 
-        (
-            cd "${d}"
-            rename_extension ${old_extension} ${new_extension}
-        )
-    done
-}
-
-
-# RENAME_SUBDIRS
+# ?? - GH COPILOT SUGGEST
 # --------------------------
-# Rename subdirs in current dir
+# Use github coiplot to suggest
+# wich command to run from text provided
 
-rename_subdirs() {
-    old_name=${1}
-    new_name=${2}
-    for d in $(find ./ -maxdepth 4 -type d)
-    do
-        dir_to_rename="$(basename "${d}")"
-        if [ "${dir_to_rename}" == "${old_name}" ]; then
-            folder_name=$(dirname "${d}")
-            final_name="${folder_name}/${new_name}"
-            echo "${d} --> ${final_name}"
-            mv "${d}" "${final_name}"
-        fi
-    done
+_() {
+    # Concatenate all arguments into a single string
+    gh copilot suggest "$*" -t shell
 }
-
-
-# CHECK_PORT
-# --------------------------
-# Print processes binded to specified port
-
-check_port() { 
-    lsof -nP -i4TCP:"${1}" | grep LISTEN
-}
-
