@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# ----------------------------
 # HELPERS
 # ----------------------------
 
@@ -45,16 +46,11 @@ setup_slate() {
 }
 
 setup_base_16() {
-    git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
+    git clone https://github.com/yoaquim/base16-shell.git ~/.config/base16-shell
 }
 
 
-
-# SETUP CONFIG
 # ----------------------------
-ln -sf ~/.dotfiles/config ~/.config
-
-
 # INSTALL FOR SPECIFIC OS
 # ----------------------------
 
@@ -76,6 +72,7 @@ else
 fi
 
 
+# ----------------------------
 # FINISHED
 # ----------------------------
 echo -e "\nDone.\n"
