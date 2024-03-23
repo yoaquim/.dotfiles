@@ -46,6 +46,7 @@ setup_slate() {
 }
 
 setup_base_16() {
+    rm -rf ~/.config/base16-shell
     git clone https://github.com/yoaquim/base16-shell.git ~/.config/base16-shell
 }
 
