@@ -76,6 +76,8 @@ install_brew_fonts() {
     brew install font-source-code-pro
     brew install font-fira-code
     brew install font-jetbrains-mono
+    brew install font-fantasque-sans-mono
+    brew install font-ubuntu-mono
 }
 
 install_gh_copilot() {
