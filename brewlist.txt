@@ -16,4 +16,5 @@ the_silver_searcher
 tmux
 vim
 tldr
+gh
 

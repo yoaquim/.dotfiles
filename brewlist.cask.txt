@@ -9,4 +9,8 @@ todoist
 slate
 jetbrains-toolbox
 adobe-creative-cloud
+warp
+firefox
+google-chrome
+visual-studio-code
 

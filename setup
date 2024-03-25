@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
-# ----------------------------
+# ============================
 # HELPERS
-# ----------------------------
+# ============================
+print() {
+    local MESSAGE="${1}"  
+    echo -e "\n\e[1;33m---------------------[INFO]\e[0m ${MESSAGE}..."
+}
 
 link_mac_symlinks() {
     ln -sf ~/.dotfiles/bashrc/bashrc_mac ~/.bash_profile
@@ -50,31 +54,87 @@ setup_base_16() {
     git clone https://github.com/yoaquim/base16-shell.git ~/.config/base16-shell
 }
 
+setup_brew_taps() {
+    brew tap homebrew/cask-fonts
+    brew tap chrokh/tap
+}
 
-# ----------------------------
+setup_warp() {
+    ln -sf ~/.dotfiles/warp ~/.warp
+}
+
+install_brew_list() {
+    cat brewlist.txt | xargs -L 1 brew install
+}
+
+install_brew_casks() {
+    cat brewlist.cask.txt | xargs -L 1 brew install --cask
+}
+
+install_brew_fonts() {
+    brew install font-hack
+}
+
+install_gh_copilot() {
+    gh auth login
+    gh extension install github/gh-copilot
+}
+
+# ============================
 # INSTALL FOR SPECIFIC OS
-# ----------------------------
+# ============================
 
 if [ -z "${1}" ]; then
-    echo -e "\n\tNeed to specify which OS, '-m' for Mac, '-l' for Linux\n"
+    echo -e "\nSpecify which OS: '-m' for Mac, '-l' for Linux\n"
     exit 1
 elif [ "${1}" = "-m" ]; then
+
+    print "Setting up symlinks"
     link_mac_symlinks
+
+    print "Setting up tmux"
     setup_tmux
+
+    print "Setting up slate"
     setup_slate
+
+    print "Setting up base16"
     setup_base_16
+
+    print "Setting up warp"
+    setup_warp
+
+    print "Tapping brew taps"
+    setup_brew_taps
+
+    print "Installing brew fonts"
+    install_brew_fonts
+
+    print "Installing brew list"
+    install_brew_list
+
+    print "Installing brew casks"
+    install_brew_casks
+
+    print "Setting up GH Copilot"
+    install_gh_copilot 
+
 elif [ "${1}" = "-l" ]; then
+    print "Setting up symlinks"
     link_linux_symlinks
+
+    print "Setting up i3blocks"
     setup_i3blocks
+
+    print "Setting up tmux"
     setup_tmux
 else
     echo -e "\n\tValid flags for param are 'l' or 'm'\n"
     exit 1
 fi
 
-
-# ----------------------------
+# ============================
 # FINISHED
-# ----------------------------
-echo -e "\nDone.\n"
+# ============================
+echo -e "\n\e[1;32m[SUCCES]\e[0m DONE.\n"  # Bold green text
 
