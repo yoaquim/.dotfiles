@@ -40,6 +40,7 @@ export HISTFILESIZE=
 export HISTSIZE=
 export HISTTIMEFORMAT='[%F %T] '
 export HISTFILE=~/.bash_eternal_history
+
 # Set prompt command so it writes history immediately
 PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
 
@@ -82,7 +83,7 @@ fi
 #=====================================================
 # IV.   FUNCTIONS
 #=====================================================
-# Source alias bash file
+# Source functions bash file
 if [ -f ~/.bashrc_functions ]; then
     source ~/.bashrc_functions
 fi
@@ -112,7 +113,7 @@ test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shel
 #=====================================================
 # Always keep this sourcing at end in case some
 # tools and settings need sourcing to be at end
-#
+
 # Source tool exports settings
 if [ -f ~/.bashrc_tools ]; then
     source ~/.bashrc_tools
