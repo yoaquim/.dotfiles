@@ -78,6 +78,8 @@ install_brew_fonts() {
     brew install font-jetbrains-mono
     brew install font-fantasque-sans-mono
     brew install font-ubuntu-mono
+    brew install font-space-mono
+    brew install font-inconsolata
 }
 
 install_gh_copilot() {
