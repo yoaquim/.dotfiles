@@ -73,6 +73,9 @@ install_brew_casks() {
 
 install_brew_fonts() {
     brew install font-hack
+    brew install font-source-code-pro
+    brew install font-fira-code
+    brew install font-jetbrains-mono
 }
 
 install_gh_copilot() {
