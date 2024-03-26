@@ -4,16 +4,6 @@
 <dict>
 	<key>AllowClipboardAccess</key>
 	<true/>
-	<key>AppleAntiAliasingThreshold</key>
-	<integer>1</integer>
-	<key>ApplePressAndHoldEnabled</key>
-	<false/>
-	<key>AppleScrollAnimationEnabled</key>
-	<integer>0</integer>
-	<key>AppleSmoothFixedFontsSizeThreshold</key>
-	<integer>1</integer>
-	<key>AppleWindowTabbingMode</key>
-	<string>manual</string>
 	<key>Default Bookmark Guid</key>
 	<string>1EC3522F-B93C-4F29-AEE2-FC7C2BF9F845</string>
 	<key>HapticFeedbackForEsc</key>
@@ -197,7 +187,7 @@
 				<real>0.862579345703125</real>
 			</dict>
 			<key>Background Image Location</key>
-			<string>/Users/cintron/Desktop/delorean-3.jpg</string>
+			<string>/Users/cintron/.dotfiles/iterm2/delorean-3.jpg</string>
 			<key>Background Image Mode</key>
 			<integer>2</integer>
 			<key>Blend</key>
