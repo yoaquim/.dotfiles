@@ -4,7 +4,7 @@
 # GIT SETTINGS & ALIASES
 #==========================
 
-# TODO: Git bash completion 
+# Git bash completion 
 source ~/.dotfiles/git-bash-completion.sh
 
 # Git coloring
@@ -115,13 +115,6 @@ function gpush() {
         git push origin "${branch}:${branch}" "${1}"
     fi
 }
-
-
-# # Git commit without having to enter quotes for message
-# function gcomm(){
-# 	message="${@}";
-# 	git commit -m "${message}"
-# }
 
 # Git commit, then push to origin current branch
 function gup(){

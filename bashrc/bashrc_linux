@@ -36,6 +36,7 @@ export HISTFILESIZE=
 export HISTSIZE=
 export HISTTIMEFORMAT='[%F %T] '
 export HISTFILE=~/.bash_eternal_history
+
 # Set prompt ocmmand so it writes history immediately
 PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
 
@@ -44,9 +45,9 @@ PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
 #=====================================================
 
 # Custom bash prompt; shows git branch
-PS1="[\[\033[32m\]\w\[\033[0m\]]\$(__git_ps1)\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
+PS1="[\[\033[32m\]\w\[\033[0m\]]\$(git branch 2>/dev/null | grep -e '^*' | sed 's/^..\(.*\)/ [\1]/')\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
 
-# Base16 Shell (so iTerm can work with Base16)
+# Base16 Shell
 BASE16_SHELL="$HOME/.config/base16-shell/"
 [ -n "$PS1" ] && \
     [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
