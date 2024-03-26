@@ -193,7 +193,7 @@
 			<key>Blend</key>
 			<real>0.097946388134057968</real>
 			<key>Blinking Cursor</key>
-			<false/>
+			<true/>
 			<key>Blur</key>
 			<false/>
 			<key>Bold Color</key>
