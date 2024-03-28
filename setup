@@ -18,7 +18,6 @@ link_mac_symlinks() {
     ln -sf ~/.dotfiles/gitconfig ~/.gitconfig
     ln -sf ~/.dotfiles/tmux.conf ~/.tmux.conf
     ln -sf ~/.dotfiles/ideavimrc ~/.ideavimrc
-    ln -sf ~/.dotfiles/slate.js ~/.slate.js
 }
 
 link_linux_symlinks() {
@@ -45,8 +44,8 @@ setup_tmux() {
     fi
 }
 
-setup_slate() {
-    ln -sf ~/.dotfiles/Slate.app /Applications
+setup_rectangle() {
+    brew install --cask rectangle
 }
 
 setup_base_16() {
@@ -87,6 +86,10 @@ install_gh_copilot() {
     gh extension install github/gh-copilot
 }
 
+start_apps() {
+    open -a /Applications/Rectangle.app
+}
+
 # ============================
 # INSTALL FOR SPECIFIC OS
 # ============================
@@ -102,8 +105,8 @@ elif [ "${1}" = "-m" ]; then
     print "Setting up tmux"
     setup_tmux
 
-    print "Setting up slate"
-    setup_slate
+    print "Setting up Rectangle"
+    setup_rectangle
 
     print "Setting up base16"
     setup_base_16
@@ -135,6 +138,9 @@ elif [ "${1}" = "-l" ]; then
 
     print "Setting up tmux"
     setup_tmux
+
+    print "Starting apps"
+    start_apps
 else
     echo -e "\n\tValid flags for param are 'l' or 'm'\n"
     exit 1
