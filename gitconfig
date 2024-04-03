@@ -4,7 +4,7 @@
 	smudge = git media smudge %f
 [user]
 	name = Yoaquim Cintrón
-	email = yoaquim@outlook.com
+	email = ycintron@paylocity.com
 [core]
 	editor = /usr/bin/vim
 	pager = diff-so-fancy | less --tabs=4 -RFX

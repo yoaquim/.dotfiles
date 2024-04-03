@@ -187,11 +187,16 @@
 				<real>0.862579345703125</real>
 			</dict>
 			<key>Background Image Location</key>
-			<string>/Users/cintron/.dotfiles/iterm2/delorean-3.jpg</string>
+			<string>/Users/ycintron/.dotfiles/iterm2/delorean-3.jpg</string>
 			<key>Background Image Mode</key>
 			<integer>2</integer>
 			<key>Blend</key>
 			<real>0.097946388134057968</real>
+<<<<<<< Updated upstream
+=======
+			<key>Blink Allowed</key>
+			<false/>
+>>>>>>> Stashed changes
 			<key>Blinking Cursor</key>
 			<true/>
 			<key>Blur</key>
@@ -233,6 +238,8 @@
 				<key>Red Component</key>
 				<real>1</real>
 			</dict>
+			<key>Cursor Type</key>
+			<integer>0</integer>
 			<key>Custom Command</key>
 			<string>No</string>
 			<key>Custom Directory</key>
