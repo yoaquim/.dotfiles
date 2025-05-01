@@ -1,9 +1,26 @@
 # ====================
+# NVM 
+# ====================
+# NVM setup for both macOS and Linux
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    # Source NVM script
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+fi
+
+
+# ====================
 # HOMEBREW 
 # ====================
-if command -v brew &> /dev/null
-then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+# macOS-specific setup
+if [[ "$OS_TYPE" == "Darwin" ]]; then
+    # Check if Homebrew is installed
+    if command -v brew >/dev/null 2>&1; then
+        # Initialize Homebrew environment
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+        source $(brew --prefix nvm)/nvm.sh
+    fi
 fi
 
 
@@ -14,15 +31,6 @@ if command -v direnv &> /dev/null
 then
     eval "$(direnv hook bash)"
 fi
- 
-
-# ====================
-# NVM 
-# ====================
-export NVM_DIR="$HOME/.nvm"
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-source $(brew --prefix nvm)/nvm.sh
 
 
 # ====================
