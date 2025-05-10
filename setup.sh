@@ -152,7 +152,7 @@ elif [ "${1}" = "-m" ]; then
     install_brew_casks
 
     print "Setting up Cursor"
-    setup_cursor
+    setup_cursor -m
 elif [ "${1}" = "-l" ]; then
     print "Setting up symlinks"
     link_linux_symlinks
@@ -164,7 +164,7 @@ elif [ "${1}" = "-l" ]; then
     setup_tmux
 
     print "Setting up Cursor"
-    setup_cursor
+    setup_cursor -l
 else
     echo -e "\n\tValid flags for param are 'l' or 'm'\n"
     exit 1
