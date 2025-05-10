@@ -86,8 +86,34 @@ install_gh_copilot() {
     gh extension install github/gh-copilot
 }
 
-start_apps() {
-    open -a /Applications/Rectangle.app
+setup_cursor() {
+    local os_flag="$1"
+    local cursor_settings_path=""
+
+    print "Setting up Cursor editor"
+
+    if [ "$os_flag" = "-m" ]; then
+        cursor_settings_path="$HOME/Library/Application Support/Cursor/User/settings.json"
+    elif [ "$os_flag" = "-l" ]; then
+        cursor_settings_path="$HOME/.config/Cursor/User/settings.json"
+    else
+        echo "Unsupported OS flag for Cursor setup: $os_flag"
+        return 1
+    fi
+
+    # Ensure target directory exists
+    mkdir -p "$(dirname "$cursor_settings_path")"
+
+    # Symlink settings.json
+    ln -sf ~/.dotfiles/cursor/settings.json "$cursor_settings_path"
+
+    # Install extensions if Cursor CLI exists
+    if command -v cursor >/dev/null 2>&1; then
+        print "Installing Cursor extensions"
+        xargs -a ~/.dotfiles/cursor/extensions.txt -L 1 cursor --install-extension
+    else
+        echo "Cursor CLI not found. Please ensure it's installed and in your PATH."
+    fi
 }
 
 # ============================
@@ -98,7 +124,6 @@ if [ -z "${1}" ]; then
     echo -e "\nSpecify which OS: '-m' for Mac, '-l' for Linux\n"
     exit 1
 elif [ "${1}" = "-m" ]; then
-
     print "Setting up symlinks"
     link_mac_symlinks
 
@@ -126,9 +151,8 @@ elif [ "${1}" = "-m" ]; then
     print "Installing brew casks"
     install_brew_casks
 
-    print "Setting up GH Copilot"
-    install_gh_copilot 
-
+    print "Setting up Cursor"
+    setup_cursor
 elif [ "${1}" = "-l" ]; then
     print "Setting up symlinks"
     link_linux_symlinks
@@ -139,8 +163,8 @@ elif [ "${1}" = "-l" ]; then
     print "Setting up tmux"
     setup_tmux
 
-    print "Starting apps"
-    start_apps
+    print "Setting up Cursor"
+    setup_cursor
 else
     echo -e "\n\tValid flags for param are 'l' or 'm'\n"
     exit 1
