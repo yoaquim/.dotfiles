@@ -5,13 +5,9 @@ coreutils
 diff-so-fancy
 git
 htop
-jenv
 jq
 node
 nvm
-postgresql
-shellcheck
-tfenv
 the_silver_searcher
 tmux
 vim
