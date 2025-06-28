@@ -13,4 +13,4 @@ tmux
 vim
 tldr
 gh
-
+neovim

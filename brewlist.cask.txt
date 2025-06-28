@@ -4,7 +4,7 @@ whatsapp
 docker
 postman
 slack
-iterm2
+kitty
 todoist
 adobe-creative-cloud
 google-chrome
