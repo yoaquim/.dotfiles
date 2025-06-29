@@ -70,31 +70,25 @@ alias tmk="tmux kill-session -t"
 alias vb="vim ~/.bash_profile"
 #
 # Edit .bashrc_functions
-alias vbf="vim ~/.bashrc_functions"
+alias vbf="vim ~/.config/bashrc/bashrc_functions"
 
 # Edit .bashrc_tools
-alias vbt="vim ~/.bashrc_tools"
+alias vbt="vim ~/.config/bashrc/bashrc_tools"
 
 # Edit .bash_git
-alias vbg="vim ~/.bashrc_git"
+alias vbg="vim ~/.config/bashrc/bashrc_git"
 
 # Edit .bash_local
-alias vbl="vim ~/.bashrc_local"
+alias vbl="vim ~/.config/bashrc/bashrc_local"
 
 # Edit .bash_alias
-alias vba="vim ~/.bashrc_aliases"
-
-# Edit i3 config
-alias vbi="vim ~/.config/i3/config"
-
-# Edit i3blocks config
-alias vbib="vim ~/.config/i3blocks/config"
+alias vba="vim ~/.config/bashrc/bashrc_aliases"
 
 # Edit .vimrc
 alias vrc="vim ~/.vimrc"
 
 # Edit .tmux.conf
-alias vt="vim ~/.tmux.conf"
+alias vt="vim ~/.config/tmux/tmux.conf"
 
 # Edit .gitconfig
 alias vg="vim ~/.gitconfig"

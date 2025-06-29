@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-sudo chown root blocklets/*
-sudo cp  blocklets/* /usr/share/i3blocks/
-sudo chown $USER blocklets/*
-sudo chgrp $USER blocklets/*
-

@@ -12,7 +12,9 @@
 
 # V........BASH FILES
 
-# VI......TOOL EXPORTS AND SETTINGS
+# VI.......INTEGRATIONS
+
+# VII......TOOL EXPORTS AND SETTINGS
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,6 +23,10 @@
 #=====================================================
 # I.    SETTINGS EXPORTS
 #=====================================================
+# Add homebrew to PATH
+export PATH="/opt/homebrew/bin:$PATH"
+
+export XDG_CONFIG_HOME="$HOME/.config"
 
 # Dir for marking functions
 export MARKPATH=$HOME/.marks
@@ -29,7 +35,7 @@ export MARKPATH=$HOME/.marks
 export CLICOLOR=1
 
 # Set colors to match iTerm2 Terminal Colors
-# export TERM=xterm-256color
+export TERM=xterm-256color
 
 # Set history files nothing so they are eternal and set timestamp for entries
 export HISTFILESIZE=
@@ -37,7 +43,7 @@ export HISTSIZE=
 export HISTTIMEFORMAT='[%F %T] '
 export HISTFILE=~/.bash_eternal_history
 
-# Set prompt ocmmand so it writes history immediately
+# Set prompt command so it writes history immediately
 PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
 
 #=====================================================
@@ -51,13 +57,10 @@ PS1="[\[\033[32m\]\w\[\033[0m\]]\$(git branch 2>/dev/null | grep -e '^*' | sed '
 BASE16_SHELL="$HOME/.config/base16-shell/"
 [ -n "$PS1" ] && \
     [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-        eval "$("$BASE16_SHELL/profile_helper.sh")"
+        source "$BASE16_SHELL/profile_helper.sh"
 
 # Vim-style history scrolling (j & k)
 set -o vi
-
-# Navigate to dirs by typing their name (no cd)
-shopt -s autocd
 
 # Allow globbing with ** ruby-style
 shopt -s globstar
@@ -72,21 +75,16 @@ shopt -s cmdhist
 # III.  ALIASES
 #=====================================================
 # Source alias bash file
-if [ -f ~/.bashrc_aliases ]; then
-    source ~/.bashrc_aliases
+if [ -f ~/.config/bashrc/bashrc_aliases ]; then
+    source ~/.config/bashrc/bashrc_aliases
 fi
-
-# Specific to linux
-# -------------------
-alias pbcopy='xclip -selection clipboard'
-alias pbpaste='xclip -selection clipboard -o'
 
 #=====================================================
 # IV.   FUNCTIONS
 #=====================================================
-# Source alias bash file
-if [ -f ~/.bashrc_functions ]; then
-    source ~/.bashrc_functions
+# Source functions bash file
+if [ -f ~/.config/bashrc/bashrc_functions ]; then
+    source ~/.config/bashrc/bashrc_functions
 fi
 
 #=====================================================
@@ -94,21 +92,27 @@ fi
 #=====================================================
 
 # Source local bash file
-if [ -f ~/.bashrc_local ]; then
-    source ~/.bashrc_local
+if [ -f ~/.config/bashrc/bashrc_local ]; then
+    source ~/.config/bashrc/bashrc_local
 fi
 
 # Source git bash shortcuts
-if [ -f ~/.bashrc_git ]; then
-    source ~/.bashrc_git
+if [ -f ~/.config/bashrc/bashrc_git ]; then
+    source ~/.config/bashrc/bashrc_git
 fi
 
 #=====================================================
-# VI. TOOL EXPORTS AND SETTINGS
+# VI.  INTEGRATIONS
+#=====================================================
+# iTerm 2
+test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+
+#=====================================================
+# VII. TOOL EXPORTS AND SETTINGS
 #=====================================================
 # Always keep this sourcing at end in case some
 # tools and settings need sourcing to be at end
-#
+
 # Source tool exports settings
 if [ -f ~/.bashrc_tools ]; then
     source ~/.bashrc_tools
