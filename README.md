@@ -6,7 +6,7 @@
 #### **Requires [homebrew](https://brew.sh/) to be installed.**
 
 
-Sets up my cli environment:
+Sets up my cli environment and installs my default apps:
  - Bash Profile + subfiles for organization
  - Tmux Configuration
  - Git Configuration
