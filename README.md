@@ -27,7 +27,7 @@ Contains all my personal dotfiles and dirs:
 
 
 ### Bash
-**Bash** is among the formulas in `brewlist`, and so installs an updated version of bash.
+**Bash** is among the brew formulas installed, which means it installs an updated version of bash.
 
 Mac OSX now ships with zsh as the default shell. In order to change it, add the correct homebrew bash path to `/etc/shells` and then run `chsh` accordingly:
 
