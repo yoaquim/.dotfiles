@@ -2,13 +2,17 @@
 
 ## Intro
 
-Contains all my personal dotfiles and dirs:
 
+#### **Requires [homebrew](https://brew.sh/) to be installed.**
+
+
+Sets up my cli environment:
  - Bash Profile + subfiles for organization
  - Tmux Configuration
  - Git Configuration
- - Config Directory
- - Reactangle Configuration
+ - [Base16 Colors](https://github.com/chriskempson/base16-shell)
+ - [Rectangle](https://github.com/rxhanson/Rectangle) Configuration
+ - [Installs my defaults apps + tools via brew](https://github.com/yoaquim/.dotfiles/blob/master/install.sh#L29-L75)
 
 ## Setup
 
