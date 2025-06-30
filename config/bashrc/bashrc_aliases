@@ -86,8 +86,11 @@ alias vba="vim ~/.config/bashrc/bashrc_aliases"
 
 # Edit .vimrc
 alias vrc="vim ~/.vimrc"
+#
+# Edit kitty.conf
+alias vk="vim ~/.config/kitty/kitty.conf"
 
-# Edit .tmux.conf
+# Edit tmux.conf
 alias vt="vim ~/.config/tmux/tmux.conf"
 
 # Edit .gitconfig

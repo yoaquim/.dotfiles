@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 print() {
     local MESSAGE="${1}"  
     echo -e "\n\e[1;33m---------------------[INFO]\e[0m ${MESSAGE}..."
@@ -12,6 +13,7 @@ link_symlinks() {
     ln -sf ~/.dotfiles/config/bashrc/bashrc_tools ~/.config/bashrc/bashrc_tools
     ln -sf ~/.dotfiles/config/bashrc/bashrc_git ~/.config/bashrc/bashrc_git
     ln -sf ~/.dotfiles/config/tmux/tmux.conf ~/.config/tmux/tmux.conf
+    ln -sf ~/.dotfiles/config/kitty/kitty.conf ~/.config/kitty/kitty.conf
     ln -sf ~/.dotfiles/config/gitconfig ~/.gitconfig
 }
 
@@ -27,7 +29,6 @@ setup_base_16() {
 }
 
 setup_brew_taps() {
-    brew tap homebrew/cask-fonts
     brew tap chrokh/tap
 }
 
@@ -64,14 +65,19 @@ install_brew_casks() {
 }
 
 install_brew_fonts() {
-    brew install font-hack
     brew install font-source-code-pro
+    brew install font-fantasque-sans-mono
+    brew install font-inconsolata
+    brew install font-hack
     brew install font-fira-code
     brew install font-jetbrains-mono
-    brew install font-fantasque-sans-mono
     brew install font-ubuntu-mono
     brew install font-space-mono
-    brew install font-inconsolata
+    brew install font-hack-nerd-font
+    brew install font-fira-code-nerd-font
+    brew install font-jetbrains-mono-nerd-font
+    brew install font-ubuntu-mono-nerd-font
+    brew install font-space-mono-nerd-font
 }
 
 

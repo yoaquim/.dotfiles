@@ -10,8 +10,9 @@ Sets up my cli environment and installs my default apps:
  - Bash Profile + subfiles for organization
  - Tmux Configuration
  - Git Configuration
+ - [Kitty](https://sw.kovidgoyal.net/kitty/) setup and config
+ - [Rectangle](https://github.com/rxhanson/Rectangle) config
  - [Base16 Colors](https://github.com/chriskempson/base16-shell)
- - [Rectangle](https://github.com/rxhanson/Rectangle) Configuration
  - [Installs my defaults apps + tools via brew](https://github.com/yoaquim/.dotfiles/blob/master/install.sh#L29-L75)
 
 ## Setup
