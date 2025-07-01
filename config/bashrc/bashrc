@@ -1,28 +1,27 @@
-# ~~~~~~~~~~~~~~~~~
-# TABLE OF CONTENTS 
-# ~~~~~~~~~~~~~~~~~
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                            Table of Contents                                │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
-# I........SETTINGS EXPORTS
+# I. Exports
 
-# II.......SHELL SETTINGS
+# II. Settings
 
-# III......ALIASES
+# III. Aliases
 
-# IV.......FUNCTIONS
+# IV. Functions
 
-# V........BASH FILES
+# V. Bash Files
 
-# VI.......INTEGRATIONS
-
-# VII......TOOL EXPORTS AND SETTINGS
+# VI. Tool Settings
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#=====================================================
-# I.    SETTINGS EXPORTS
-#=====================================================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ I.                               Exports                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
 # Add homebrew to PATH
 export PATH="/opt/homebrew/bin:$PATH"
 
@@ -46,9 +45,9 @@ export HISTFILE=~/.bash_eternal_history
 # Set prompt command so it writes history immediately
 PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
 
-#=====================================================
-# II.   SHELL SETTINGS
-#=====================================================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ II.                             Settings                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
 # Custom bash prompt; shows git branch
 PS1="[\[\033[32m\]\w\[\033[0m\]]\$(git branch 2>/dev/null | grep -e '^*' | sed 's/^..\(.*\)/ [\1]/')\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
@@ -71,25 +70,27 @@ shopt -s histappend
 # Set commands on multilines to appear in one line in history
 shopt -s cmdhist
 
-#=====================================================
-# III.  ALIASES
-#=====================================================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ III.                            Aliases                                     │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
 # Source alias bash file
 if [ -f ~/.config/bashrc/bashrc_aliases ]; then
     source ~/.config/bashrc/bashrc_aliases
 fi
 
-#=====================================================
-# IV.   FUNCTIONS
-#=====================================================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ IV.                             Functions                                   │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
 # Source functions bash file
 if [ -f ~/.config/bashrc/bashrc_functions ]; then
     source ~/.config/bashrc/bashrc_functions
 fi
 
-#=====================================================
-# V.    BASH FILES
-#=====================================================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ V.                            Bash Files                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
 # Source local bash file
 if [ -f ~/.config/bashrc/bashrc_local ]; then
@@ -101,15 +102,11 @@ if [ -f ~/.config/bashrc/bashrc_git ]; then
     source ~/.config/bashrc/bashrc_git
 fi
 
-#=====================================================
-# VI.  INTEGRATIONS
-#=====================================================
-# iTerm 2
-test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 
-#=====================================================
-# VII. TOOL EXPORTS AND SETTINGS
-#=====================================================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ VI.                          Tool Settings                                  │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
 # Always keep this sourcing at end in case some
 # tools and settings need sourcing to be at end
 

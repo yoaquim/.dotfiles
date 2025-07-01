@@ -29,6 +29,4 @@
         fiff = diff-tree --no-commit-id --name-only -r
 [credential]
 	helper = osxkeychain
-[credential "https://dev.azure.com"]
-	useHttpPath = true
 

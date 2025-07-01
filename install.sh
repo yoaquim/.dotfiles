@@ -17,9 +17,12 @@ link_symlinks() {
     ln -sf ~/.dotfiles/config/gitconfig ~/.gitconfig
 }
 
-setup_tmux() {
+setup_tmux_plugins() {
     if [ ! -f ~/.config/tmux/plugins/tpm/README.md ]; then
         git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
+        mkdir -p  ~/.config/tmux-powerline/themes
+        ln -sf ~/.dotfiles/config/tmux-powerline/config.sh ~/.config/tmux-powerline/config.sh
+        ln -sf ~/.dotfiles/config/tmux-powerline/themes/theme.sh ~/.config/tmux-powerline/themes/theme.sh
     fi
 }
 

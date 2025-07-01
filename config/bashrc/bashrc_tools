@@ -1,7 +1,6 @@
 # ====================
 # NVM 
 # ====================
-# NVM setup for both macOS and Linux
 export NVM_DIR="$HOME/.nvm"
 if [ -s "$NVM_DIR/nvm.sh" ]; then
     # Source NVM script
@@ -13,7 +12,6 @@ fi
 # ====================
 # HOMEBREW 
 # ====================
-# macOS-specific setup
 if [[ "$OS_TYPE" == "Darwin" ]]; then
     # Check if Homebrew is installed
     if command -v brew >/dev/null 2>&1; then
@@ -60,5 +58,13 @@ fi
 if command -v pdm &> /dev/null
 then
     eval "$(pdm --pep582)"
+fi
+
+
+# ====================
+# NGROK 
+# ====================
+if command -v ngrok &>/dev/null; then
+  eval "$(ngrok completion)"
 fi
 
