@@ -51,13 +51,7 @@ export TMUX_POWERLINE_STATUS_RIGHT_LENGTH="0"
 
 # date.sh {
 	# date(1) format for the date. If you don't, for some reason, like ISO 8601 format you might want to have "%D" or "%m/%d/%Y".
-        export TMUX_POWERLINE_SEG_DATE_FORMAT="%b-%d-%Y"
-# }
-
-# date_week.sh {
-	# symbol for calendar week.
-	# export tmux_powerline_seg_date_week_symbol_colour="255"
-	 export tmux_powerline_seg_date_week_symbol="󰨳"
+        export TMUX_POWERLINE_SEG_DATE_FORMAT="󰨳 %b-%d-%Y"
 # }
 
 # hostname.sh {
@@ -67,7 +61,7 @@ export TMUX_POWERLINE_STATUS_RIGHT_LENGTH="0"
 
 # lan_ip.sh {
 	# Symbol for LAN IP.
-	export TMUX_POWERLINE_SEG_LAN_IP_SYMBOL="ⓛ "
+	export TMUX_POWERLINE_SEG_LAN_IP_SYMBOL=" "
 	# Symbol colour for LAN IP
 	# export TMUX_POWERLINE_SEG_LAN_IP_SYMBOL_COLOUR="255"
 # }
@@ -97,7 +91,7 @@ export TMUX_POWERLINE_STATUS_RIGHT_LENGTH="0"
 
 # wan_ip.sh {
 	# symbol for wan ip
-	export TMUX_POWERLINE_SEG_WAN_IP_SYMBOL="ⓦ "
+	export TMUX_POWERLINE_SEG_WAN_IP_SYMBOL=" "
 	# symbol colour for wan ip
 	# export TMUX_POWERLINE_SEG_WAN_IP_SYMBOL_COLOUR="255"
 # }
