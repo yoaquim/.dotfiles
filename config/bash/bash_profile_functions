@@ -1,13 +1,13 @@
-#=====================================================
-# V.    FUNCTIONS
-#=====================================================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ IV.                             Functions                                   │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
 # --------------------------
-# UP/FF
+# | up/ff                   
 # --------------------------
 # Go to previous dir as many times as input parameter
 # if no input parameter, then just go back
-# also add "ff" as an alias to function
+# add "ff" as an alias to function
 
 alias ff="up"
 up(){
@@ -26,7 +26,7 @@ up(){
 
 
 # --------------------------
-# TOGGLE_HIDDEN
+# | toggle_hidden
 # --------------------------
 # Toggles if hidden (dotfiles) are shown on Finder
 
@@ -45,7 +45,7 @@ toggle_hidden() {
 
 
 # --------------------------
-# MARK
+# | mark
 # --------------------------
 # Mark a dir so you can easily jump to it later
 
@@ -55,18 +55,20 @@ mark() {
 
 
 # --------------------------
-# UNMARK
+# | unmark
 # --------------------------
 # Unmark  a marked dir
+
 unmark() {
     rm -i "$MARKPATH/$1"
 }
 
 
 # --------------------------
-# JUMP/J
+# | jump/j
 # --------------------------
 # Jump to bookmarked location
+
 alias j="jump"
 jump() {
     cd -P "$MARKPATH/$1" 2> /dev/null || echo "No such mark: $1"
@@ -74,7 +76,7 @@ jump() {
 
 
 # --------------------------
-# MARKS
+# | marks
 # --------------------------
 # Print out current marked dirs
 
@@ -84,7 +86,7 @@ marks() {
 
 
 # --------------------------
-# TAB COMPLETION: MARKS
+# | Tab Completion: marks
 # --------------------------
 # Tab completion for marks
 
@@ -96,51 +98,3 @@ _completemarks() {
 }
 complete -o default -o nospace -F _completemarks jump unmark
 
-
-# --------------------------
-# SAWSP
-# --------------------------
-# Switch between AWS_PROFILES
-
-sawsp() {
-    export AWS_DEFAULT_PROFILE="${1}"
-    export AWS_PROFILE="${1}"
-}
-
-
-# --------------------------
-# WAWSP
-# --------------------------
-# Get current AWS_PROFILE
-
-wawsp() {
-    local account_num
-    account_num=$(aws sts get-caller-identity --output text --query 'Account')
-    echo -e "\tProfile: ${AWS_PROFILE}"
-    echo -e "\tDefault Profile: ${AWS_DEFAULT_PROFILE}"
-    echo -e "\tAccount: ${account_num}"
-}
-
-
-# --------------------------
-# ??? - GH COPILOT EXPLAIN
-# --------------------------
-# Use github coiplot to suggest
-# wich command to run from text provided
-
-__() {
-    # Concatenate all arguments into a single string
-    gh copilot explain "$*"
-}
-
-
-# --------------------------
-# ?? - GH COPILOT SUGGEST
-# --------------------------
-# Use github coiplot to suggest
-# wich command to run from text provided
-
-_() {
-    # Concatenate all arguments into a single string
-    gh copilot suggest "$*" -t shell
-}

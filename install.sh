@@ -1,38 +1,33 @@
 #!/usr/bin/env bash
 
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                                 Functions                                   │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
 print() {
     local MESSAGE="${1}"  
     echo -e "\n\e[1;33m---------------------[INFO]\e[0m ${MESSAGE}..."
 }
 
 link_symlinks() {
-    ln -sf ~/.dotfiles/config/bashrc/bashrc ~/.bash_profile
-    ln -sf ~/.dotfiles/config/bashrc/bashrc ~/.bashrc
-    ln -sf ~/.dotfiles/config/bashrc/bashrc_aliases ~/.config/bashrc/bashrc_aliases
-    ln -sf ~/.dotfiles/config/bashrc/bashrc_functions ~/.config/bashrc/bashrc_functions
-    ln -sf ~/.dotfiles/config/bashrc/bashrc_tools ~/.config/bashrc/bashrc_tools
-    ln -sf ~/.dotfiles/config/bashrc/bashrc_git ~/.config/bashrc/bashrc_git
-    ln -sf ~/.dotfiles/config/tmux/tmux.conf ~/.config/tmux/tmux.conf
-    ln -sf ~/.dotfiles/config/kitty/kitty.conf ~/.config/kitty/kitty.conf
+    ln -sf ~/.dotfiles/config/bash/bash_profile ~/.bash_profile
+    ln -sf ~/.dotfiles/config/bash/bash_profile ~/.bashrc
+    ln -sf ~/.dotfiles/config/bash ~/.config/bash
+    ln -sf ~/.dotfiles/config/tmux ~/.config/tmux
+    ln -sf ~/.dotfiles/config/kitty ~/.config/kitty
     ln -sf ~/.dotfiles/config/gitconfig ~/.gitconfig
 }
 
 setup_tmux_plugins() {
     if [ ! -f ~/.config/tmux/plugins/tpm/README.md ]; then
         git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
-        mkdir -p  ~/.config/tmux-powerline/themes
-        ln -sf ~/.dotfiles/config/tmux-powerline/config.sh ~/.config/tmux-powerline/config.sh
-        ln -sf ~/.dotfiles/config/tmux-powerline/themes/theme.sh ~/.config/tmux-powerline/themes/theme.sh
+        ln -sf ~/.dotfiles/config/tmux-powerline ~/.config/tmux-powerline
     fi
 }
 
 setup_base_16() {
     rm -rf ~/.config/base16-shell
     git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
-}
-
-setup_brew_taps() {
-    brew tap chrokh/tap
 }
 
 install_brew_list() {
@@ -84,6 +79,10 @@ install_brew_fonts() {
 }
 
 
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                                  Install                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
 print "Setting up symlinks"
 link_symlinks
 
@@ -92,9 +91,6 @@ setup_tmux
 
 print "Setting up base16"
 setup_base_16
-
-print "Tapping brew taps"
-setup_brew_taps
 
 print "Installing brew list"
 install_brew_list
@@ -105,8 +101,9 @@ install_brew_casks
 print "Installing brew fonts"
 install_brew_fonts
 
-# ============================
-# FINISHED
-# ============================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                                  Finished                                   │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
 echo -e "\n\e[1;32m[SUCCES]\e[0m DONE.\n"
 

@@ -5,14 +5,9 @@
 # │                            General Settings                                 │
 # └─────────────────────────────────────────────────────────────────────────────┘
 
-# enable/disable debug
-export TMUX_POWERLINE_DEBUG_MODE_ENABLED="true"
-# use powerline-patched symbols
+export TMUX_POWERLINE_DEBUG_MODE_ENABLED="false"
 export TMUX_POWERLINE_PATCHED_FONT_IN_USE="true"
-
-# name of your theme
 export TMUX_POWERLINE_THEME="theme"
-# allow overriding the shipped themes/segments
 export TMUX_POWERLINE_DIR_USER_THEMES="${XDG_CONFIG_HOME:-$HOME/.config}/tmux-powerline/themes"
 export TMUX_POWERLINE_DIR_USER_SEGMENTS="${XDG_CONFIG_HOME:-$HOME/.config}/tmux-powerline/segments"
 
@@ -46,7 +41,7 @@ export TMUX_POWERLINE_STATUS_RIGHT_LENGTH="0"
 	# How to display battery remaining. Can be {percentage, cute, hearts}.
 	export TMUX_POWERLINE_SEG_BATTERY_TYPE="percentage"
 	# How may hearts to show if cute indicators are used.
-	export TMUX_POWERLINE_SEG_BATTERY_NUM_HEARTS="5"
+	# export TMUX_POWERLINE_SEG_BATTERY_NUM_HEARTS="5"
 # }
 
 # date.sh {

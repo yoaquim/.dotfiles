@@ -1,13 +1,17 @@
-#=====================================================
-# III.  ALIASES
-#=====================================================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ III.                            Aliases                                     │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Alias for clear
 alias c="clear"
 alias cl="clear"
 
-# Vim alias
+# Clipboard copy and paste
+alias pbc="pbcopy"
+alias pbp="pbpaste"
+
+# Vim aliases
 alias v="vim"
+alias nv="nvim"
 
 # Alias remove dir ('rmdir') to 'rmd'
 alias rmd="rm -rf"
@@ -70,19 +74,22 @@ alias tmk="tmux kill-session -t"
 alias vb="vim ~/.bash_profile"
 #
 # Edit .bashrc_functions
-alias vbf="vim ~/.config/bashrc/bashrc_functions"
+alias vbf="vim ~/.config/bash/bash_profile_functions"
 
 # Edit .bashrc_tools
-alias vbt="vim ~/.config/bashrc/bashrc_tools"
+alias vbt="vim ~/.config/bash/bash_profile_tools"
 
 # Edit .bash_git
-alias vbg="vim ~/.config/bashrc/bashrc_git"
+alias vbg="vim ~/.config/bash/bash_profile_git"
 
 # Edit .bash_local
-alias vbl="vim ~/.config/bashrc/bashrc_local"
+alias vbl="vim ~/.config/bash/bash_profile_local"
 
 # Edit .bash_alias
-alias vba="vim ~/.config/bashrc/bashrc_aliases"
+alias vba="vim ~/.config/bash/bash_profile_aliases"
+
+# Edit .vimrc
+alias vnc="vim ~/.config/nvim"
 
 # Edit .vimrc
 alias vrc="vim ~/.vimrc"
@@ -116,21 +123,4 @@ alias lcp="xclip -sel clip"
 
 # Docker compose alias
 alias dcp="docker compose"
-
-#--------------------------
-# DOCKER
-#--------------------------
-
-# Docker compose alias
-alias dkc="docker-compose"
-
-# Delete all docker images
-dri="docker rmi \$(docker images -q)"
-alias dkrmi_all='eval ${dri}'
-
-# Bash into a docker image 
-alias drun="docker run -it --entrypoint /bin/bash"
-
-# Push docker image
-alias dpush="docker push"
 

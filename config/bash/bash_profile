@@ -14,10 +14,6 @@
 
 # VI. Tool Settings
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ I.                               Exports                                    │
 # └─────────────────────────────────────────────────────────────────────────────┘
@@ -75,8 +71,8 @@ shopt -s cmdhist
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 # Source alias bash file
-if [ -f ~/.config/bashrc/bashrc_aliases ]; then
-    source ~/.config/bashrc/bashrc_aliases
+if [ -f ~/.config/bash/bash_profile_aliases ]; then
+    source ~/.config/bash/bash_profile_aliases
 fi
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -84,8 +80,8 @@ fi
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 # Source functions bash file
-if [ -f ~/.config/bashrc/bashrc_functions ]; then
-    source ~/.config/bashrc/bashrc_functions
+if [ -f ~/.config/bash/bash_profile_functions ]; then
+    source ~/.config/bash/bash_profile_functions
 fi
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -93,15 +89,14 @@ fi
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 # Source local bash file
-if [ -f ~/.config/bashrc/bashrc_local ]; then
-    source ~/.config/bashrc/bashrc_local
+if [ -f ~/.config/bash/bash_profile_local ]; then
+    source ~/.config/bash/bash_profile_local
 fi
 
 # Source git bash shortcuts
-if [ -f ~/.config/bashrc/bashrc_git ]; then
-    source ~/.config/bashrc/bashrc_git
+if [ -f ~/.config/bash/bash_profile_git ]; then
+    source ~/.config/bash/bash_profile_git
 fi
-
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ VI.                          Tool Settings                                  │
@@ -111,7 +106,7 @@ fi
 # tools and settings need sourcing to be at end
 
 # Source tool exports settings
-if [ -f ~/.bashrc_tools ]; then
-    source ~/.bashrc_tools
+if [ -f ~/.config/bash/bash_tools ]; then
+    source ~/.config/bash/bash_tools
 fi
 

@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
-#==========================
-# GIT SETTINGS & ALIASES
-#==========================
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ V.                         Bash Files - Git                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# -------------------------------------------------------------------------------
+# │                                  Aliases                                    │
+# -------------------------------------------------------------------------------
 
 # Git bash completion (hombrew, mac only)
 if [ -f `brew --prefix`/etc/bash_completion ]; then
@@ -89,6 +93,10 @@ alias gcsha="git rev-parse HEAD"
 alias rc-diff="git log --no-merges --pretty=\"%Cblue*%Creset %s, %b(%Cgreen%cn%Creset)\" --date=relative origin/master..origin/development"
 
 alias merges-diff="git log --merges --pretty=\"%Cblue*%Creset %s, %b(%Cgreen%cn%Creset)\" --date=relative origin/master..origin/development"
+
+# -------------------------------------------------------------------------------
+# │                                 Functions                                   │
+# -------------------------------------------------------------------------------
 
 # Set tracking info for branch
 function gbu() {
