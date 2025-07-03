@@ -1,4 +1,3 @@
--- ~/.config/nvim/lua/mappings.lua
 local map = vim.keymap.set
 local opts = { silent = true }
 
@@ -31,11 +30,17 @@ map('n', '<Leader>X', '<Cmd>X<CR>', opts)
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
 -- │                              Fast Scrolling                                 │
 -- └─────────────────────────────────────────────────────────────────────────────┘
+-- On many mac setups <M-j> isn't caught, so map both <M-j> *and* the literal ∆/˚
 for _, mode in ipairs({ 'n', 'v' }) do
-  map(mode, '<M-j>', '5j',  opts)
-  map(mode, '<M-k>', '5k',  opts)
+  map(mode, '<M-j>', '5j', opts)
+  map(mode, '<M-k>', '5k', opts)
   map(mode, '<M-J>', '15j', opts)
   map(mode, '<M-K>', '15k', opts)
+  -- literal Mac Option-j/k characters:
+  map(mode, '∆', '5j', opts)
+  map(mode, '˚', '5k', opts)
+  map(mode, 'Ô', '15j', opts)
+  map(mode, '', '15k', opts)
 end
 
 -- ┌─────────────────────────────────────────────────────────────────────────────┐

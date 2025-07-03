@@ -1,4 +1,3 @@
--- ~/.config/nvim/lua/settings.lua
 local opt = vim.opt
 local cmd = vim.cmd
 local g   = vim.g
@@ -7,6 +6,13 @@ local g   = vim.g
 -- │                                  Leader                                     │
 -- └─────────────────────────────────────────────────────────────────────────────┘
 g.mapleader = ' '
+
+-- ┌─────────────────────────────────────────────────────────────────────────────┐
+-- │                                  Colors                                     │
+-- └─────────────────────────────────────────────────────────────────────────────┘
+opt.termguicolors = true
+cmd('highlight Normal guibg=NONE guifg=NONE')
+cmd('highlight NonText guibg=NONE')
 
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
 -- │                        File & Syntax Higlighting                            │
@@ -35,3 +41,5 @@ opt.expandtab     = true
 -- └─────────────────────────────────────────────────────────────────────────────┘
 vim.api.nvim_create_user_command('Q', 'q!', {})
 vim.api.nvim_create_user_command('W', 'w !sudo tee % > /dev/null', {})
+vim.api.nvim_create_user_command('X', 'x !sudo tee % > /dev/null', {})
+
