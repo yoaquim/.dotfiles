@@ -71,40 +71,37 @@ alias tma="tmux attach -t"
 alias tmk="tmux kill-session -t"
 
 # Edit .bash_profile
-alias vb="vim ~/.bash_profile"
+alias vb="nvim ~/.bash_profile"
 #
 # Edit .bashrc_functions
-alias vbf="vim ~/.config/bash/bash_profile_functions"
+alias vbf="nvim ~/.config/bash/bash_profile_functions"
 
 # Edit .bashrc_tools
-alias vbt="vim ~/.config/bash/bash_profile_tools"
+alias vbt="nvim ~/.config/bash/bash_profile_tools"
 
 # Edit .bash_git
-alias vbg="vim ~/.config/bash/bash_profile_git"
+alias vbg="nvim ~/.config/bash/bash_profile_git"
 
 # Edit .bash_local
-alias vbl="vim ~/.config/bash/bash_profile_local"
+alias vbl="nvim ~/.config/bash/bash_profile_local"
 
 # Edit .bash_alias
-alias vba="vim ~/.config/bash/bash_profile_aliases"
+alias vba="nvim ~/.config/bash/bash_profile_aliases"
 
-# Edit .vimrc
-alias vnc="vim ~/.config/nvim"
-
-# Edit .vimrc
-alias vrc="vim ~/.vimrc"
-#
 # Edit kitty.conf
-alias vk="vim ~/.config/kitty/kitty.conf"
+alias vk="nvim ~/.config/kitty/kitty.conf"
+#
+# Edit nvim.conf
+alias vk="nvim ~/.config/nvim"
 
 # Edit tmux.conf
-alias vt="vim ~/.config/tmux/tmux.conf"
+alias vt="nvim ~/.config/tmux/tmux.conf"
 
 # Edit .gitconfig
-alias vg="vim ~/.gitconfig"
+alias vg="nvim ~/.gitconfig"
 
 # Edit /etc/hosts
-alias vetc="sudo vim /etc/hosts"
+alias vetc="sudo nvim /etc/hosts"
 
 # Coreutils so "sb" alias can work
 alias readlink=greadlink
