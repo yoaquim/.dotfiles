@@ -92,7 +92,7 @@ alias vba="nvim ~/.config/bash/bash_profile_aliases"
 alias vk="nvim ~/.config/kitty/kitty.conf"
 #
 # Edit nvim.conf
-alias vk="nvim ~/.config/nvim"
+alias vnv="nvim ~/.config/nvim"
 
 # Edit tmux.conf
 alias vt="nvim ~/.config/tmux/tmux.conf"
