@@ -10,6 +10,7 @@ Sets up my cli environment and installs my default apps:
  - Bash Profile + subfiles for organization
  - Tmux Configuration
  - Git Configuration
+ - Neovim Configuration, using [mini.nvim](https://github.com/echasnovski/mini.nvim)
  - [Kitty](https://sw.kovidgoyal.net/kitty/) setup and config
  - [Rectangle](https://github.com/rxhanson/Rectangle) config
  - [Base16 Colors](https://github.com/chriskempson/base16-shell)
