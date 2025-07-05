@@ -93,6 +93,7 @@ alias vk="nvim ~/.config/kitty/kitty.conf"
 #
 # Edit nvim.conf
 alias vnv="nvim ~/.config/nvim"
+alias nvc="nvim ~/.config/nvim"
 
 # Edit tmux.conf
 alias vt="nvim ~/.config/tmux/tmux.conf"

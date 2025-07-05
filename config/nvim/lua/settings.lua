@@ -1,11 +1,7 @@
 local opt = vim.opt
 local cmd = vim.cmd
 local g   = vim.g
-
--- ┌─────────────────────────────────────────────────────────────────────────────┐
--- │                                  Leader                                     │
--- └─────────────────────────────────────────────────────────────────────────────┘
-g.mapleader = ' '
+local o   = vim.o
 
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
 -- │                                  Colors                                     │
@@ -21,13 +17,20 @@ cmd('filetype plugin indent on')
 cmd('syntax on')
 
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
--- │                            Performance & UI                                 │
+-- │                                 Behavior                                    │
 -- └─────────────────────────────────────────────────────────────────────────────┘
-opt.mouse         = 'a'                   -- enable mouse
+-- yank to clipboard
+o.clipboard = 'unnamedplus'
+-- enable mouse
+opt.mouse         = 'a'                   
+-- show partial commands
+opt.showcmd       = true                  
+-- line numbers
+opt.number        = true                  
+-- incremental search
+opt.incsearch     = true                  
+-- backspace over everything
 opt.backspace     = { 'indent', 'eol', 'start' }
-opt.showcmd       = true                  -- show partial commands
-opt.number        = true                  -- line numbers
-opt.incsearch     = true                  -- incremental search
 
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
 -- │                            Tabs & Indentation                               │
