@@ -6,7 +6,7 @@
 
 print() {
     local MESSAGE="${1}"  
-    echo -e "\n\e[1;33m---------------------[INFO]\e[0m ${MESSAGE}..."
+    echo -e "\n\e[1;33m[INFO]\e[0m ${MESSAGE}..."
 }
 
 link_symlinks() {
@@ -38,14 +38,13 @@ install_brew_list() {
     brew install diff-so-fancy
     brew install git
     brew install jq
-    brew install node
     brew install nvm
-    brew install the_silver_searcher
+    bfew install pyenv
+    bfew install pipx
     brew install tmux
     brew install vim
     brew install tldr
     brew install gh
-    brew install neovim
 }
 
 install_brew_casks() {
@@ -78,6 +77,58 @@ install_brew_fonts() {
     brew install font-space-mono-nerd-font
 }
 
+post_brew_install_setup() {
+  # install and setup node 
+  nvm install --lts
+  nvm latest default node
+  
+  # install and setup python 
+  LATEST_PYTHON=$(pyenv install --list | grep -E '^\s*3\.[0-9]+\.[0-9]+$' | tr -d ' ' | tail -1)
+  pyenv install "${LATEST_PYTHON}"
+  pyenv global "${LATEST_PYTHON}"
+}
+
+install_lunar_vim_deps() {
+  # lunarvim needs cargo (rust) 
+  brew install rust
+  brew install ripgrep
+  brew install lazygit
+  
+  # lunarvim pynvim, and we can install i
+  # globally with regular pip because we 
+  # never use pynvim outside lvim anyway
+  pip3 install pynvim --break-system-packages --user
+}
+
+install_lunar_vim() {
+  if ! command -v jq &> /dev/null; then
+    print "jq is required but not installed. Aborting."
+    exit 1
+  fi
+
+  LV_BRANCH=$(curl -s https://api.github.com/repos/LunarVim/LunarVim/branches | \
+    jq -r '.[].name' | \
+    grep -E '^release-[0-9]+\.[0-9]+/neovim-[0-9]+\.[0-9]+$' | \
+    sort -V | tail -n 1)
+
+  if [ -z "${LV_BRANCH}" ]; then
+    print "Failed to detect latest LunarVim release branch. Aborting."
+    exit 1
+  fi
+
+  print "Detected latest LunarVim branch: ${LV_BRANCH}"
+
+  tmpfile=$(mktemp)
+  curl -s "https://raw.githubusercontent.com/LunarVim/LunarVim/${LV_BRANCH}/utils/installer/install.sh" -o "$tmpfile"
+  bash "$tmpfile" <<EOF
+n
+n
+n
+EOF
+
+  rm -f "$tmpfile"
+}
+
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │                                  Install                                    │
@@ -93,6 +144,7 @@ print "Setting up base16"
 setup_base_16
 
 print "Installing brew list"
+brew update
 install_brew_list
 
 print "Installing brew casks"

@@ -12,6 +12,7 @@ alias pbp="pbpaste"
 # Vim aliases
 alias v="vim"
 alias nv="nvim"
+alias lv="lvim"
 
 # Alias remove dir ('rmdir') to 'rmd'
 alias rmd="rm -rf"

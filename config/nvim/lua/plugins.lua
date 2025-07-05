@@ -20,7 +20,7 @@ local add, now, later = MiniDeps.add, MiniDeps.now, MiniDeps.later
 
 
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
--- │                          Add mini.nvim plugins                              │
+-- │                             mini.nvim plugins                               │
 -- └─────────────────────────────────────────────────────────────────────────────┘
 
 -- mini.pairs: https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-pairs.md
@@ -30,7 +30,6 @@ require('mini.pairs').setup()
 
 -- mini.comment: https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-comment.md
 -- ─────────────────────────────────────────────────────────────────────────────
-add('echasnovski/mini.pairs')
 add('echasnovski/mini.comment')
 require('mini.comment').setup()
 
@@ -121,7 +120,7 @@ snippets.setup({
 
 
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
--- │                             Add nvim plugins                                │
+-- │                                 Plugins                                     │
 -- └─────────────────────────────────────────────────────────────────────────────┘
 
 -- friendly-snippets: https://github.com/rafamadriz/friendly-snippets
@@ -132,5 +131,16 @@ add({source = 'rafamadriz/friendly-snippets'})
 -- ─────────────────────────────────────────────────────────────────────────────
 add({source = 'nvim-tree/nvim-tree.lua'})
 require("nvim-tree").setup()
-vim.keymap.set('n', '<leader>f', ':NvimTreeToggle<CR>', {noremap = true, silent = true})
+vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', {noremap = true, silent = true})
+vim.keymap.set('n', '<C-S>f', ':NvimTreeFindFile<CR>', {noremap = true, silent = true})
+
+-- nvim-telescope: https://github.com/nvim-telescope/telescope.nvim
+-- ─────────────────────────────────────────────────────────────────────────────
+add({source = 'nvim-lua/plenary.nvim'})
+add({source = 'nvim-telescope/telescope.nvim'})
+local builtin = require('telescope.builtin')
+vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
+vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
+vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' })
+vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
 

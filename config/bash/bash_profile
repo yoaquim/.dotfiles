@@ -19,17 +19,15 @@
 # └─────────────────────────────────────────────────────────────────────────────┘
 
 # Add homebrew to PATH
-export PATH="/opt/homebrew/bin:$PATH"
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
 
 export XDG_CONFIG_HOME="$HOME/.config"
 
 # Dir for marking functions
 export MARKPATH=$HOME/.marks
 
-# Set CLICOLOR if you want Ansi Colors in iTerm2
-export CLICOLOR=1
-
-# Set colors to match iTerm2 Terminal Colors
+# Set colors to match terminal colors
+export COLORTERM="truecolor"
 export TERM=xterm-256color
 
 # Set history files nothing so they are eternal and set timestamp for entries

@@ -112,3 +112,4 @@ if [ -z "$TMUX_POWERLINE_RIGHT_STATUS_SEGMENTS" ]; then
     "date               0   255"
   )
 fi
+
