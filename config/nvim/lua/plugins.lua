@@ -10,11 +10,14 @@ if not vim.loop.fs_stat(mini_path) then
   vim.cmd('packadd mini.nvim | helptags ALL')
   vim.cmd('echo "Installed `mini.nvim`" | redraw')
 end
+
+
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
 -- │                             Setup mini.deps                                 │
 -- └─────────────────────────────────────────────────────────────────────────────┘
 require('mini.deps').setup({ path = { package = path_package } })
 local add, now, later = MiniDeps.add, MiniDeps.now, MiniDeps.later
+
 
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
 -- │                          Add mini.nvim plugins                              │
@@ -116,6 +119,7 @@ snippets.setup({
   },
 })
 
+
 -- ┌─────────────────────────────────────────────────────────────────────────────┐
 -- │                             Add nvim plugins                                │
 -- └─────────────────────────────────────────────────────────────────────────────┘
@@ -123,4 +127,10 @@ snippets.setup({
 -- friendly-snippets: https://github.com/rafamadriz/friendly-snippets
 -- ─────────────────────────────────────────────────────────────────────────────
 add({source = 'rafamadriz/friendly-snippets'})
+
+-- nvim-tree: https://github.com/nvim-tree/nvim-tree.lua
+-- ─────────────────────────────────────────────────────────────────────────────
+add({source = 'nvim-tree/nvim-tree.lua'})
+require("nvim-tree").setup()
+vim.keymap.set('n', '<leader>f', ':NvimTreeToggle<CR>', {noremap = true, silent = true})
 
