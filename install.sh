@@ -29,7 +29,6 @@ setup_base_16() {
     rm -rf ~/.config/base16-shell
     git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
 }
-
 install_brew_list() {
     brew install awscli
     brew install bash
@@ -88,45 +87,16 @@ post_brew_install_setup() {
   pyenv global "${LATEST_PYTHON}"
 }
 
-install_lunar_vim_deps() {
-  # lunarvim needs cargo (rust) 
-  brew install rust
+install_nvim_deps() {
   brew install ripgrep
   brew install lazygit
+  brew install fd
+  brew install tree-sitter
   
   # lunarvim pynvim, and we can install i
   # globally with regular pip because we 
   # never use pynvim outside lvim anyway
-  pip3 install pynvim --break-system-packages --user
-}
-
-install_lunar_vim() {
-  if ! command -v jq &> /dev/null; then
-    print "jq is required but not installed. Aborting."
-    exit 1
-  fi
-
-  LV_BRANCH=$(curl -s https://api.github.com/repos/LunarVim/LunarVim/branches | \
-    jq -r '.[].name' | \
-    grep -E '^release-[0-9]+\.[0-9]+/neovim-[0-9]+\.[0-9]+$' | \
-    sort -V | tail -n 1)
-
-  if [ -z "${LV_BRANCH}" ]; then
-    print "Failed to detect latest LunarVim release branch. Aborting."
-    exit 1
-  fi
-
-  print "Detected latest LunarVim branch: ${LV_BRANCH}"
-
-  tmpfile=$(mktemp)
-  curl -s "https://raw.githubusercontent.com/LunarVim/LunarVim/${LV_BRANCH}/utils/installer/install.sh" -o "$tmpfile"
-  bash "$tmpfile" <<EOF
-n
-n
-n
-EOF
-
-  rm -f "$tmpfile"
+  # pip3 install pynvim --break-system-packages --user
 }
 
 
