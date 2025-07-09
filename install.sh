@@ -92,11 +92,6 @@ install_nvim_deps() {
   brew install lazygit
   brew install fd
   brew install tree-sitter
-  
-  # lunarvim pynvim, and we can install i
-  # globally with regular pip because we 
-  # never use pynvim outside lvim anyway
-  # pip3 install pynvim --break-system-packages --user
 }
 
 
