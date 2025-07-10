@@ -8,11 +8,6 @@ return {
     opts = {
       picker = {
         prompt = "🔭 ",
-        layout = {
-          preset = "vertical",
-          width = 0.85,
-          height = 0.9,
-        },
       },
     },
   },
