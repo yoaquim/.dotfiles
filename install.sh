@@ -15,30 +15,65 @@ FORCE_REINSTALL=false
 # Logging Functions
 # ───────────────────────────────────────────────────
 
+# Check if terminal supports colors
+supports_color() {
+    # Check if we have a terminal and it supports colors
+    if [[ -t 1 ]] && command -v tput &> /dev/null; then
+        local colors
+        colors=$(tput colors 2>/dev/null || echo 0)
+        [[ $colors -ge 8 ]]
+    else
+        false
+    fi
+}
+
 log() {
     local level="${1}"
     local message="${2}"
     local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
     
-    case "${level}" in
-        "INFO")
-            echo -e "\n\e[1;34m[INFO]\e[0m ${message}..."
-            ;;
-        "SUCCESS")
-            echo -e "\n\e[1;32m[SUCCESS]\e[0m ${message}"
-            ;;
-        "ERROR")
-            echo -e "\n\e[1;31m[ERROR]\e[0m ${message}" >&2
-            ;;
-        "WARNING")
-            echo -e "\n\e[1;33m[WARNING]\e[0m ${message}"
-            ;;
-        "DEBUG")
-            if [[ "${DEBUG:-false}" == "true" ]]; then
-                echo -e "\n\e[1;35m[DEBUG]\e[0m ${message}"
-            fi
-            ;;
-    esac
+    if supports_color; then
+        case "${level}" in
+            "INFO")
+                echo -e "\n\e[1;34m[INFO]\e[0m ${message}..."
+                ;;
+            "SUCCESS")
+                echo -e "\n\e[1;32m[SUCCESS]\e[0m ${message}"
+                ;;
+            "ERROR")
+                echo -e "\n\e[1;31m[ERROR]\e[0m ${message}" >&2
+                ;;
+            "WARNING")
+                echo -e "\n\e[1;33m[WARNING]\e[0m ${message}"
+                ;;
+            "DEBUG")
+                if [[ "${DEBUG:-false}" == "true" ]]; then
+                    echo -e "\n\e[1;35m[DEBUG]\e[0m ${message}"
+                fi
+                ;;
+        esac
+    else
+        # Fallback to plain text without colors
+        case "${level}" in
+            "INFO")
+                echo -e "\n[INFO] ${message}..."
+                ;;
+            "SUCCESS")
+                echo -e "\n[SUCCESS] ${message}"
+                ;;
+            "ERROR")
+                echo -e "\n[ERROR] ${message}" >&2
+                ;;
+            "WARNING")
+                echo -e "\n[WARNING] ${message}"
+                ;;
+            "DEBUG")
+                if [[ "${DEBUG:-false}" == "true" ]]; then
+                    echo -e "\n[DEBUG] ${message}"
+                fi
+                ;;
+        esac
+    fi
 }
 
 print_info() {
@@ -142,7 +177,11 @@ confirm_action() {
         return 0
     fi
     
-    echo -e "\n\e[1;33m[CONFIRM]\e[0m ${message} (y/N): "
+    if supports_color; then
+        echo -e "\n\e[1;33m[CONFIRM]\e[0m ${message} (y/N): "
+    else
+        echo -e "\n[CONFIRM] ${message} (y/N): "
+    fi
     read -r response
     
     if [[ "${response}" =~ ^[Yy]$ ]]; then
