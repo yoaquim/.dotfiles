@@ -483,15 +483,31 @@ setup_node() {
     # Set NVM_DIR environment variable
     export NVM_DIR="$HOME/.nvm"
     
-    # Source nvm if available
+    # Create NVM_DIR if it doesn't exist
+    mkdir -p "$NVM_DIR"
+    
+    # Source nvm if available, with error handling
+    local nvm_script=""
     if [[ -f "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
-        source "/opt/homebrew/opt/nvm/nvm.sh"
+        nvm_script="/opt/homebrew/opt/nvm/nvm.sh"
     elif [[ -f "/usr/local/opt/nvm/nvm.sh" ]]; then
-        source "/usr/local/opt/nvm/nvm.sh"
+        nvm_script="/usr/local/opt/nvm/nvm.sh"
     elif [[ -f "$HOME/.nvm/nvm.sh" ]]; then
-        source "$HOME/.nvm/nvm.sh"
+        nvm_script="$HOME/.nvm/nvm.sh"
     else
         print_error "nvm not found, skipping Node.js setup"
+        return 1
+    fi
+    
+    # Source nvm script with safer error handling
+    if ! source "$nvm_script" 2>/dev/null; then
+        print_error "Failed to source nvm script, skipping Node.js setup"
+        return 1
+    fi
+    
+    # Verify nvm is available
+    if ! command -v nvm &> /dev/null; then
+        print_error "nvm command not available after sourcing, skipping Node.js setup"
         return 1
     fi
     
