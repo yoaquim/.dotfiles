@@ -480,38 +480,43 @@ post_brew_install_setup() {
 setup_node() {
     print_info "Setting up Node.js with nvm"
     
-    # Set NVM_DIR environment variable
+    # Set NVM_DIR environment variable first
     export NVM_DIR="$HOME/.nvm"
-    
-    # Create NVM_DIR if it doesn't exist
     mkdir -p "$NVM_DIR"
     
-    # Source nvm if available, with error handling
-    local nvm_script=""
-    if [[ -f "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
-        nvm_script="/opt/homebrew/opt/nvm/nvm.sh"
-    elif [[ -f "/usr/local/opt/nvm/nvm.sh" ]]; then
-        nvm_script="/usr/local/opt/nvm/nvm.sh"
-    elif [[ -f "$HOME/.nvm/nvm.sh" ]]; then
-        nvm_script="$HOME/.nvm/nvm.sh"
+    # Temporarily disable errexit for nvm sourcing
+    set +e
+    
+    # Source nvm using the homebrew method
+    if [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
+        print_debug "Sourcing nvm from homebrew"
+        . "/opt/homebrew/opt/nvm/nvm.sh"
+        nvm_loaded=$?
+    elif [[ -s "/usr/local/opt/nvm/nvm.sh" ]]; then
+        print_debug "Sourcing nvm from intel homebrew"
+        . "/usr/local/opt/nvm/nvm.sh"
+        nvm_loaded=$?
+    elif [[ -s "$NVM_DIR/nvm.sh" ]]; then
+        print_debug "Sourcing nvm from home directory"
+        . "$NVM_DIR/nvm.sh"
+        nvm_loaded=$?
     else
         print_error "nvm not found, skipping Node.js setup"
+        set -e
         return 1
     fi
     
-    # Source nvm script with safer error handling
-    if ! source "$nvm_script" 2>/dev/null; then
-        print_error "Failed to source nvm script, skipping Node.js setup"
-        return 1
-    fi
+    # Re-enable errexit
+    set -e
     
-    # Verify nvm is available
-    if ! command -v nvm &> /dev/null; then
-        print_error "nvm command not available after sourcing, skipping Node.js setup"
+    # Check if nvm loaded successfully
+    if [[ $nvm_loaded -ne 0 ]] || ! type nvm &> /dev/null; then
+        print_error "Failed to load nvm, skipping Node.js setup"
         return 1
     fi
     
     # Install latest LTS Node.js
+    print_info "Installing Node.js LTS"
     nvm install --lts || error_exit "Failed to install Node.js LTS"
     nvm alias default node || error_exit "Failed to set default Node.js version"
     
