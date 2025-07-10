@@ -26,14 +26,14 @@
 ### One-Command Installation
 ```bash
 # Clone and install everything
-cd ~ && git clone https://github.com/cintron/.dotfiles.git && cd .dotfiles && ./install.sh
+cd ~ && git clone https://github.com/yoaquim/.dotfiles.git && cd .dotfiles && ./install.sh
 ```
 
 ### Manual Installation
 ```bash
 # 1. Clone the repository
 cd ~/
-git clone https://github.com/cintron/.dotfiles.git
+git clone https://github.com/yoaquim/.dotfiles.git
 
 # 2. Run installation script
 cd ~/.dotfiles
