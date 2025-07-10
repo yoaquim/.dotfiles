@@ -5,32 +5,32 @@
 -- Kitty Focus Hotkey
 -- ───────────────────────────────────────────────────
 
--- Helper function to focus or launch Kitty
+-- helper function to focus or launch kitty
 function focusKitty()
     local kitty = hs.application.find("kitty")
     
     if kitty then
-        -- If Kitty is running, focus it
+        -- if kitty is running, focus it
         if kitty:isFrontmost() then
-            -- If Kitty is already focused, hide it
+            -- if kitty is already focused, hide it
             kitty:hide()
         else
-            -- Focus Kitty and bring all windows to front
+            -- focus kitty and bring all windows to front
             kitty:activate()
         end
     else
-        -- If Kitty is not running, launch it
-        hs.application.launchOrFocus("kitty")
+        -- if kitty is not running, launch it
+        hs.application.launchorfocus("kitty")
     end
 end
 
--- Bind Alt+Space to focus Kitty
+-- bind alt+space to focus kitty
 hs.hotkey.bind({"alt"}, "space", focusKitty)
 
 -- Configuration Management
 -- ───────────────────────────────────────────────────
 
--- Auto-reload configuration when file changes
+-- auto-reload configuration when file changes
 function reloadConfig(files)
     doReload = false
     for _,file in pairs(files) do
@@ -47,13 +47,13 @@ function reloadConfig(files)
     end
 end
 
--- Watch for config file changes
+-- watch for config file changes
 myWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/.config/hammerspoon/", reloadConfig):start()
 
 -- Startup Notification
 -- ───────────────────────────────────────────────────
 
--- Show notification when Hammerspoon loads
+-- show notification when hammerspoon loads
 hs.notify.new({
     title="Hammerspoon", 
     informativeText="Kitty hotkey loaded (Alt+Space)"
