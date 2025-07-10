@@ -480,6 +480,9 @@ post_brew_install_setup() {
 setup_node() {
     print_info "Setting up Node.js with nvm"
     
+    # Set NVM_DIR environment variable
+    export NVM_DIR="$HOME/.nvm"
+    
     # Source nvm if available
     if [[ -f "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
         source "/opt/homebrew/opt/nvm/nvm.sh"
