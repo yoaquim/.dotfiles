@@ -4,8 +4,9 @@
 
 
 # nvm 
-# ─────────────────────────────────────────────────────────────────────────────
-# # Create ~/.nvm if it doesn't exist
+# ───────────────────────────────────────────────────
+
+# create ~/.nvm if it doesn't exist
 if [ ! -d "$HOME/.nvm" ]; then
   mkdir -p "$HOME/.nvm"
 fi
@@ -15,8 +16,9 @@ export NVM_DIR="$HOME/.nvm"
 
 
 # pyenv 
-# ─────────────────────────────────────────────────────────────────────────────
-# # Create ~/.pyenv if it doesn't exist
+# ───────────────────────────────────────────────────
+
+# create ~/.pyenv if it doesn't exist
 if [ ! -d "$HOME/.pyenv" ]; then
   mkdir -p "$HOME/.pyenv"
 fi
@@ -26,7 +28,7 @@ eval "$(pyenv init - bash)"
 
 
 # direnv 
-# ─────────────────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────
 if command -v direnv &> /dev/null
 then
     eval "$(direnv hook bash)"
@@ -34,7 +36,7 @@ fi
 
 
 # ngrok 
-# ─────────────────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────
 if command -v ngrok &>/dev/null; then
   eval "$(ngrok completion)"
 fi

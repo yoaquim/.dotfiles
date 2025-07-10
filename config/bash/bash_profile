@@ -20,19 +20,19 @@
 # I. Exports
 # ───────────────────────────────────────────────────
 
-# Add homebrew to PATH
+# add homebrew to path
 export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
 
 export XDG_CONFIG_HOME="$HOME/.config"
 
-# Dir for marking functions
+# dir for marking functions
 export MARKPATH=$HOME/.marks
 
-# Set colors to match terminal colors
+# set colors to match terminal colors
 export COLORTERM="truecolor"
 export TERM=xterm-256color
 
-# Set history files nothing so they are eternal and set timestamp for entries
+# set history files nothing so they are eternal and set timestamp for entries
 export HISTFILESIZE=
 export HISTSIZE=
 export HISTTIMEFORMAT='[%F %T] '

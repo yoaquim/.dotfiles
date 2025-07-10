@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
-# ~/.config/tmux-powerline/config.sh
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                            General Settings                                 │
-# └─────────────────────────────────────────────────────────────────────────────┘
 
+# General Settings
+# ───────────────────────────────────────────────────
 export TMUX_POWERLINE_DEBUG_MODE_ENABLED="false"
 export TMUX_POWERLINE_PATCHED_FONT_IN_USE="true"
 export TMUX_POWERLINE_THEME="theme"
 export TMUX_POWERLINE_DIR_USER_THEMES="${XDG_CONFIG_HOME:-$HOME/.config}/tmux-powerline/themes"
 export TMUX_POWERLINE_DIR_USER_SEGMENTS="${XDG_CONFIG_HOME:-$HOME/.config}/tmux-powerline/segments"
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                          Two-Line Status Configuration                      │
-# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Two-Line Status Configuration
+# ───────────────────────────────────────────────────
 
 # show two status lines:
 #  0 → window list on top; left/right segments on bottom
@@ -33,9 +31,9 @@ export TMUX_POWERLINE_STATUS_INTERVAL="1"
 export TMUX_POWERLINE_STATUS_LEFT_LENGTH="100"
 export TMUX_POWERLINE_STATUS_RIGHT_LENGTH="0"
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                        Bottom Bar Segments Config                           │
-# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Bottom Bar Segments Config
+# ───────────────────────────────────────────────────
 
 # battery.sh {
 	# How to display battery remaining. Can be {percentage, cute, hearts}.
@@ -91,9 +89,10 @@ export TMUX_POWERLINE_STATUS_RIGHT_LENGTH="0"
 	# export TMUX_POWERLINE_SEG_WAN_IP_SYMBOL_COLOUR="255"
 # }
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                          Bottom-Bar Segments                                │
-# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Bottom-Bar Segments
+# ───────────────────────────────────────────────────
+
 if [ -z "$TMUX_POWERLINE_LEFT_STATUS_SEGMENTS" ]; then
   TMUX_POWERLINE_LEFT_STATUS_SEGMENTS=(
     "tmux_session_info 148 234"

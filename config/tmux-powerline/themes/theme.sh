@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# ~/.config/tmux-powerline/themes/custom/theme.sh
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                          Separator Characters                               │
-# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Separator Characters
+# ───────────────────────────────────────────────────
 if patched_font_in_use; then
     TMUX_POWERLINE_SEPARATOR_LEFT_BOLD=" "
     TMUX_POWERLINE_SEPARATOR_LEFT_THIN=" "
@@ -16,18 +15,19 @@ else
     TMUX_POWERLINE_SEPARATOR_RIGHT_THIN="❯"
 fi
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                          Inherit base16 colors                              │
-# └─────────────────────────────────────────────────────────────────────────────┘
-# Use the terminal’s default background/foreground (your Base16 palette)
+
+# Inherit base16 colors
+# ───────────────────────────────────────────────────
+
+# use the terminal’s default background/foreground (your base16 palette)
 TMUX_POWERLINE_DEFAULT_BACKGROUND_COLOR=${TMUX_POWERLINE_DEFAULT_BACKGROUND_COLOR:-'terminal'}
 TMUX_POWERLINE_DEFAULT_FOREGROUND_COLOR=${TMUX_POWERLINE_DEFAULT_FOREGROUND_COLOR:-'terminal'}
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                     Window-List Line (Top Bar)                              │
-# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Active window entry: use reverse video of the inactive style
+# Window-List Line (Top Bar)
+# ───────────────────────────────────────────────────
+
+# active window entry: use reverse video of the inactive style
 TMUX_POWERLINE_WINDOW_STATUS_CURRENT=(
   "#[fg=$TMUX_POWERLINE_DEFAULT_BACKGROUND_COLOR,bg=$TMUX_POWERLINE_DEFAULT_FOREGROUND_COLOR]"   # swap colors
   "#[reverse]"                                                                                   # invert
@@ -35,13 +35,13 @@ TMUX_POWERLINE_WINDOW_STATUS_CURRENT=(
   "#[noreverse]"                                                                                 # back to normal
 )
 
-# Inactive window entry: default fg/bg, padded
+# inactive window entry: default fg/bg, padded
 TMUX_POWERLINE_WINDOW_STATUS_FORMAT=(
   "#[fg=$TMUX_POWERLINE_DEFAULT_FOREGROUND_COLOR,bg=$TMUX_POWERLINE_DEFAULT_BACKGROUND_COLOR]"
   "  #I:#W  "
 )
 
-# Ensure the whole line uses “regular” style
+# ensure the whole line uses “regular” style
 TMUX_POWERLINE_WINDOW_STATUS_STYLE=(
   "$(format regular)"
 )
