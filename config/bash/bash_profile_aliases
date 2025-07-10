@@ -10,7 +10,7 @@ alias pbc="pbcopy"
 alias pbp="pbpaste"
 
 # Vim aliases
-alias v="vim"
+alias v="nvim"
 alias nv="nvim"
 alias av="nvim"
 
