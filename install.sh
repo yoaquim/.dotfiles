@@ -331,16 +331,9 @@ setup_base16() {
 setup_hammerspoon() {
     print_info "Setting up Hammerspoon configuration"
     
-    # Create hammerspoon config directory in .config
-    local hammerspoon_dir="$HOME/.config/hammerspoon"
-    mkdir -p "${hammerspoon_dir}"
-    
     # Link hammerspoon configuration directory
+    local hammerspoon_dir="$HOME/.config/hammerspoon"
     create_symlink "${SCRIPT_DIR}/config/hammerspoon" "${hammerspoon_dir}"
-    
-    # Create symlink from default location to .config location
-    # This allows Hammerspoon to find the config in .config/hammerspoon
-    create_symlink "${hammerspoon_dir}" "$HOME/.hammerspoon"
     
     print_success "Hammerspoon configuration setup complete"
     print_info "Note: Launch Hammerspoon and grant accessibility permissions to enable Alt+Space hotkey"
@@ -384,7 +377,7 @@ install_brew_casks() {
         "alfred"
         "spotify"
         "whatsapp"
-        "docker"
+        # "docker" # skipping Docker for now, due to bug in package install
         "postman"
         "slack"
         "kitty"
@@ -405,12 +398,6 @@ install_brew_casks() {
 
 install_brew_fonts() {
     print_info "Installing Homebrew fonts"
-    
-    # Add homebrew fonts tap if not already added
-    if ! brew tap | grep -q "homebrew/cask-fonts"; then
-        print_info "Adding homebrew/cask-fonts tap"
-        brew tap homebrew/cask-fonts || error_exit "Failed to add homebrew/cask-fonts tap"
-    fi
     
     local fonts=(
         "font-source-code-pro"
@@ -514,7 +501,7 @@ install_nvim_deps() {
         "tree-sitter"
         "go"
         "bottom"
-        "du-dust"
+        "gdu"
     )
     
     for dep in "${nvim_deps[@]}"; do
@@ -651,7 +638,6 @@ uninstall_symlinks() {
         "$HOME/.config/nvim/lua/polish.lua"
         "$HOME/.config/nvim/lua/plugins/user.lua"
         "$HOME/.config/hammerspoon"
-        "$HOME/.hammerspoon"
     )
     
     for symlink in "${symlinks[@]}"; do
