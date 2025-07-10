@@ -1,14 +1,14 @@
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ IV.                             Functions                                   │
-# └─────────────────────────────────────────────────────────────────────────────┘
+# ───────────────────────────────────────────────────
+# IV. Functions
+# ───────────────────────────────────────────────────
 
-# --------------------------
-# | up/ff                   
-# --------------------------
+
+# up/ff                   
+# ───────────────────────────────────────────────────
+
 # Go to previous dir as many times as input parameter
 # if no input parameter, then just go back
 # add "ff" as an alias to function
-
 alias ff="up"
 up(){
     counter=$1;
@@ -25,11 +25,10 @@ up(){
 }
 
 
-# --------------------------
-# | toggle_hidden
-# --------------------------
-# Toggles if hidden (dotfiles) are shown on Finder
+# toggle_hidden
+# ───────────────────────────────────────────────────
 
+# toggles if hidden (dotfiles) are shown on finder
 toggle_hidden() {
     TOGGLE=$HOME/.hidden-files-shown
     if [ ! -e $TOGGLE ]; then
@@ -44,30 +43,28 @@ toggle_hidden() {
 }
 
 
-# --------------------------
-# | mark
-# --------------------------
-# Mark a dir so you can easily jump to it later
+# mark
+# ───────────────────────────────────────────────────
 
+# mark a dir so you can easily jump to it later
 mark() {
     mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
 }
 
 
-# --------------------------
-# | unmark
-# --------------------------
-# Unmark  a marked dir
-
+# unmark
+# ───────────────────────────────────────────────────
+ 
+# unmark  a marked dir
 unmark() {
     rm -i "$MARKPATH/$1"
 }
 
 
-# --------------------------
-# | jump/j
-# --------------------------
-# Jump to bookmarked location
+# jump/j
+# ───────────────────────────────────────────────────
+
+# jump to bookmarked location
 
 alias j="jump"
 jump() {
@@ -75,21 +72,19 @@ jump() {
 }
 
 
-# --------------------------
-# | marks
-# --------------------------
-# Print out current marked dirs
+# marks
+# ───────────────────────────────────────────────────
 
+# print out current marked dirs
 marks() {
     ls -l "$MARKPATH" | tail -n +2 | sed 's/  / /g' | cut -d' ' -f9- | awk -F ' -> ' '{printf "%-10s -> %s\n", $1, $2}'
 }
 
 
-# --------------------------
-# | Tab Completion: marks
-# --------------------------
-# Tab completion for marks
+# tab completion: marks
+# ───────────────────────────────────────────────────
 
+# tab completion for marks
 _completemarks() {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local marks=$(find $MARKPATH -type l | awk -F '/' '{print $NF}')

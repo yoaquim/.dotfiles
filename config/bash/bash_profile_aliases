@@ -1,65 +1,65 @@
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ III.                            Aliases                                     │
-# └─────────────────────────────────────────────────────────────────────────────┘
+# ───────────────────────────────────────────────────
+# III. Aliases
+# ───────────────────────────────────────────────────
 
 alias c="clear"
 alias cl="clear"
 
-# Clipboard copy and paste
+# clipboard copy and paste
 alias pbc="pbcopy"
 alias pbp="pbpaste"
 
 # Vim aliases
 alias v="vim"
 alias nv="nvim"
-alias lv="lvim"
+alias av="nvim"
 
-# Alias remove dir ('rmdir') to 'rmd'
+# ALIAS REMOVE DIR ('RMDIR') TO 'RMD'
 alias rmd="rm -rf"
 
-# Show hidden files, long listing format
+# show hidden files, long listing format
 alias la="ls -la"
 
-# Long listing format
+# long listing format
 alias l="ls -l"
 alias ll="ls -l"
 
-# Human readable, long listing format
+# human readable, long listing format
 alias lh="ls -lh"
 
-# Human readable, show hidden files, long listing format
+# human readable, show hidden files, long listing format
 alias lah="ls -lah"
 alias lha="ls -lah"
 
-# More ls aliases
+# more ls aliases
 alias l1="ls -lh1"
 alias la1="ls -lah1"
 
-# Go to previous dir
+# go to previous dir
 alias ...="cd -"
 
-# Go to parent dir
+# go to parent dir
 alias ..="cd .."
 
-# Go to vim directory
+# go to vim directory
 alias cdv="cd ~/.vim"
 
-# Go to dotfiles directory
+# go to dotfiles directory
 alias cd.="cd ~/.dotfiles"
 
-# Go to Desktop
+# go to desktop
 alias cdd="cd ~/Desktop/"
 
-# Change Directory to Dropbox directory
+# change directory to dropbox directory
 alias cdb="cd ~/Dropbox/"
 
-# Change Directory to Projects directory
+# change directory to projects directory
 alias cdp="cd ~/Projects/"
 
-# Change Directory to Scratches directory
+# change directory to scratches directory
 alias cds="cd ~/Scratches/"
 
-# Copy Current Dir to Clipboard
+# copy current dir to clipboard
 alias cwd="pwd | pbcopy"
 
 # `touch` alias (create new file)
@@ -71,55 +71,55 @@ alias tml="tmux ls"
 alias tma="tmux attach -t"
 alias tmk="tmux kill-session -t"
 
-# Edit .bash_profile
+# edit .bash_profile
 alias vb="nvim ~/.bash_profile"
-#
-# Edit .bashrc_functions
+
+# edit .bashrc_functions
 alias vbf="nvim ~/.config/bash/bash_profile_functions"
 
-# Edit .bashrc_tools
+# edit .bashrc_tools
 alias vbt="nvim ~/.config/bash/bash_profile_tools"
 
-# Edit .bash_git
+# edit .bash_git
 alias vbg="nvim ~/.config/bash/bash_profile_git"
 
-# Edit .bash_local
+# edit .bash_local
 alias vbl="nvim ~/.config/bash/bash_profile_local"
 
-# Edit .bash_alias
+# edit .bash_alias
 alias vba="nvim ~/.config/bash/bash_profile_aliases"
 
-# Edit kitty.conf
+# edit kitty.conf
 alias vk="nvim ~/.config/kitty/kitty.conf"
-#
-# Edit nvim.conf
+
+# edit nvim.conf
 alias vnv="nvim ~/.config/nvim"
 alias nvc="nvim ~/.config/nvim"
 
-# Edit tmux.conf
+# edit tmux.conf
 alias vt="nvim ~/.config/tmux/tmux.conf"
 
-# Edit .gitconfig
+# edit .gitconfig
 alias vg="nvim ~/.gitconfig"
 
-# Edit /etc/hosts
+# edit /etc/hosts
 alias vetc="sudo nvim /etc/hosts"
 
-# Coreutils so "sb" alias can work
+# coreutils so "sb" alias can work
 alias readlink=greadlink
 
-# Source bash file
+# source bash file
 alias sb="source ~/.bash_profile"
 
-# Flush IP cache
+# flush ip cache
 alias flush="sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder;say cache flushed"
 
-# NPM alias so you can run npm scripts on silent mode
+# npm alias so you can run npm scripts on silent mode
 alias npms="npm -s"
 
-# Think this is to emulate pbcopy on Linux?
+# think this is to emulate pbcopy on linux?
 alias lcp="xclip -sel clip"
 
-# Docker compose alias
+# docker compose alias
 alias dcp="docker compose"
 

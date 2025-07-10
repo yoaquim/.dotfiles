@@ -1,6 +1,7 @@
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │                            Table of Contents                                │
-# └─────────────────────────────────────────────────────────────────────────────┘
+# ───────────────────────────────────────────────────
+# Table of Contents
+# ───────────────────────────────────────────────────
+
 
 # I. Exports
 
@@ -14,9 +15,10 @@
 
 # VI. Tool Settings
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ I.                               Exports                                    │
-# └─────────────────────────────────────────────────────────────────────────────┘
+
+# ───────────────────────────────────────────────────
+# I. Exports
+# ───────────────────────────────────────────────────
 
 # Add homebrew to PATH
 export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
@@ -39,71 +41,76 @@ export HISTFILE=~/.bash_eternal_history
 # Set prompt command so it writes history immediately
 PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ II.                             Settings                                    │
-# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Custom bash prompt; shows git branch
+# ───────────────────────────────────────────────────
+# II. Settings
+# ───────────────────────────────────────────────────
+
+# custom bash prompt; shows git branch
 PS1="[\[\033[32m\]\w\[\033[0m\]]\$(git branch 2>/dev/null | grep -e '^*' | sed 's/^..\(.*\)/ [\1]/')\n\[\033[1;36m\]\u\[\033[32m\]$ \[\033[0m\]"
 
-# Base16 Shell
+# base16 shell
 BASE16_SHELL="$HOME/.config/base16-shell/"
 [ -n "$PS1" ] && \
     [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
         source "$BASE16_SHELL/profile_helper.sh"
 
-# Vim-style history scrolling (j & k)
+# vim-style history scrolling (j & k)
 set -o vi
 
-# Allow globbing with ** ruby-style
+# allow globbing with ** ruby-style
 shopt -s globstar
 
-# Append history, dont overwrite
+# append history, dont overwrite
 shopt -s histappend
 
-# Set commands on multilines to appear in one line in history
+# set commands on multilines to appear in one line in history
 shopt -s cmdhist
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ III.                            Aliases                                     │
-# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Source alias bash file
+# ───────────────────────────────────────────────────
+# III. Aliases
+# ───────────────────────────────────────────────────
+
+# source alias bash file
 if [ -f ~/.config/bash/bash_profile_aliases ]; then
     source ~/.config/bash/bash_profile_aliases
 fi
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ IV.                             Functions                                   │
-# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Source functions bash file
+# ───────────────────────────────────────────────────
+# IV. Functions
+# ───────────────────────────────────────────────────
+
+# source functions bash file
 if [ -f ~/.config/bash/bash_profile_functions ]; then
     source ~/.config/bash/bash_profile_functions
 fi
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ V.                            Bash Files                                    │
-# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Source local bash file
+# ───────────────────────────────────────────────────
+# V. Bash Files
+# ───────────────────────────────────────────────────
+
+# source local bash file
 if [ -f ~/.config/bash/bash_profile_local ]; then
     source ~/.config/bash/bash_profile_local
 fi
 
-# Source git bash shortcuts
+# source git bash shortcuts
 if [ -f ~/.config/bash/bash_profile_git ]; then
     source ~/.config/bash/bash_profile_git
 fi
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ VI.                          Tool Settings                                  │
-# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Always keep this sourcing at end in case some
+# ───────────────────────────────────────────────────
+# VI. Tool Settings
+# ───────────────────────────────────────────────────
+
+# always keep this sourcing at end in case some
 # tools and settings need sourcing to be at end
 
-# Source tool exports settings
+# source tool exports settings
 if [ -f ~/.config/bash/bash_tools ]; then
     source ~/.config/bash/bash_tools
 fi
