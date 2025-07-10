@@ -70,7 +70,7 @@ cd ~/.dotfiles
 - **Language Managers** - nvm, pyenv, pipx
 
 ### 🎨 **Applications**
-- **Productivity**: Alfred, Todoist, Rectangle
+- **Productivity**: Alfred, Todoist, Rectangle, Hammerspoon
 - **Development**: Docker, Postman, VS Code alternatives
 - **Communication**: Slack, WhatsApp
 - **Creative**: Adobe Creative Cloud, Spotify
@@ -163,6 +163,9 @@ The `install.sh` script provides several installation modes:
     │   ├── 📄 polish.lua           # AstroNvim customizations
     │   ├── 📄 user.lua             # Plugin configurations
     │   └── 📄 README.md            # AstroNvim user guide
+    ├── 🔨 hammerspoon/             # Hammerspoon automation
+    │   ├── 📄 init.lua             # Hotkey and automation config
+    │   └── 📄 README.md            # Hammerspoon user guide
     └── 📄 gitconfig                # Git configuration
 ```
 
@@ -179,6 +182,7 @@ After installation, configurations are linked to standard locations:
 | `config/gitconfig` | `~/.gitconfig` | Git configuration |
 | `config/nvim/polish.lua` | `~/.config/nvim/lua/polish.lua` | Neovim customizations |
 | `config/nvim/user.lua` | `~/.config/nvim/lua/plugins/user.lua` | Neovim plugins |
+| `config/hammerspoon/` | `~/.config/hammerspoon/` | Hammerspoon automation |
 
 ---
 
@@ -192,6 +196,7 @@ After installation, configurations are linked to standard locations:
 | **Tmux** | Terminal multiplexer | `config/tmux/` |
 | **Neovim** | Modern text editor | `config/nvim/` |
 | **Kitty** | GPU-accelerated terminal | `config/kitty/` |
+| **Hammerspoon** | macOS automation and hotkeys | `config/hammerspoon/` |
 
 ### 📦 Package Managers
 | Tool | Purpose | Auto-Setup |
@@ -501,6 +506,7 @@ tmux list-sessions | grep -v attached | cut -d: -f1 | xargs -t -n1 tmux kill-ses
 - **[Tmux User Guide](config/tmux/README.md)** - Terminal multiplexer
 - **[Tmux Powerline Guide](config/tmux-powerline/README.md)** - Status line setup
 - **[AstroNvim Guide](config/nvim/README.md)** - Neovim configuration
+- **[Hammerspoon Guide](config/hammerspoon/README.md)** - macOS automation setup
 
 ### 🔗 External Resources
 - **[Homebrew Documentation](https://brew.sh/)** - Package manager

@@ -323,6 +323,29 @@ setup_base16() {
     
     print_success "Base16 shell themes installed successfully"
 }
+
+# ───────────────────────────────────────────────────
+# Hammerspoon Setup
+# ───────────────────────────────────────────────────
+
+setup_hammerspoon() {
+    print_info "Setting up Hammerspoon configuration"
+    
+    # Create hammerspoon config directory in .config
+    local hammerspoon_dir="$HOME/.config/hammerspoon"
+    mkdir -p "${hammerspoon_dir}"
+    
+    # Link hammerspoon configuration directory
+    create_symlink "${SCRIPT_DIR}/config/hammerspoon" "${hammerspoon_dir}"
+    
+    # Create symlink from default location to .config location
+    # This allows Hammerspoon to find the config in .config/hammerspoon
+    create_symlink "${hammerspoon_dir}" "$HOME/.hammerspoon"
+    
+    print_success "Hammerspoon configuration setup complete"
+    print_info "Note: Launch Hammerspoon and grant accessibility permissions to enable Alt+Space hotkey"
+}
+
 # ───────────────────────────────────────────────────
 # Homebrew Package Installation
 # ───────────────────────────────────────────────────
@@ -370,6 +393,7 @@ install_brew_casks() {
         "adobe-creative-cloud"
         "google-chrome"
         "rectangle"
+        "hammerspoon"
     )
     
     for cask in "${casks[@]}"; do
@@ -626,6 +650,8 @@ uninstall_symlinks() {
         "$HOME/.config/tmux-powerline"
         "$HOME/.config/nvim/lua/polish.lua"
         "$HOME/.config/nvim/lua/plugins/user.lua"
+        "$HOME/.config/hammerspoon"
+        "$HOME/.hammerspoon"
     )
     
     for symlink in "${symlinks[@]}"; do
@@ -705,6 +731,7 @@ full_install() {
     link_symlinks
     setup_tmux_plugins
     setup_base16
+    setup_hammerspoon
     
     # Setup language environments
     post_brew_install_setup
@@ -732,6 +759,7 @@ reinstall() {
     link_symlinks
     setup_tmux_plugins
     setup_base16
+    setup_hammerspoon
     setup_astronvim
     
     # Reinstall Claude Code if not present
