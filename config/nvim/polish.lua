@@ -172,5 +172,5 @@ map('n', '<leader>ta', "<cmd>lua require'neotest'.run.attach()<cr>", opts)
 
 -- Set colorscheme
 -- ───────────────────────────────────────────────────
-vim.cmd('colorscheme minimal')
+vim.cmd('colorscheme material-oceanic')
 

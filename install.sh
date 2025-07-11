@@ -482,45 +482,83 @@ setup_node() {
     
     # Set NVM_DIR environment variable first
     export NVM_DIR="$HOME/.nvm"
-    mkdir -p "$NVM_DIR"
     
-    # Temporarily disable errexit for nvm sourcing
+    # Create NVM directory with proper error handling
+    if ! mkdir -p "$NVM_DIR" 2>/dev/null; then
+        print_error "Cannot create NVM directory, skipping Node.js setup"
+        return 1
+    fi
+    
+    # Store original shell options
+    local orig_opts="$-"
+    
+    # Temporarily disable errexit and pipefail for nvm sourcing
     set +e
+    set +o pipefail
     
-    # Source nvm using the homebrew method
-    if [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
-        print_debug "Sourcing nvm from homebrew"
-        . "/opt/homebrew/opt/nvm/nvm.sh"
-        nvm_loaded=$?
-    elif [[ -s "/usr/local/opt/nvm/nvm.sh" ]]; then
-        print_debug "Sourcing nvm from intel homebrew"
-        . "/usr/local/opt/nvm/nvm.sh"
-        nvm_loaded=$?
-    elif [[ -s "$NVM_DIR/nvm.sh" ]]; then
-        print_debug "Sourcing nvm from home directory"
-        . "$NVM_DIR/nvm.sh"
-        nvm_loaded=$?
+    local nvm_loaded=1
+    local nvm_script=""
+    
+    # Find nvm script using safer method
+    if [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]] && [[ -r "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
+        nvm_script="/opt/homebrew/opt/nvm/nvm.sh"
+    elif [[ -s "/usr/local/opt/nvm/nvm.sh" ]] && [[ -r "/usr/local/opt/nvm/nvm.sh" ]]; then
+        nvm_script="/usr/local/opt/nvm/nvm.sh"
+    elif [[ -s "$NVM_DIR/nvm.sh" ]] && [[ -r "$NVM_DIR/nvm.sh" ]]; then
+        nvm_script="$NVM_DIR/nvm.sh"
+    fi
+    
+    if [[ -n "$nvm_script" ]]; then
+        print_debug "Sourcing nvm from: $nvm_script"
+        
+        # Source in a subshell first to test safety
+        if (source "$nvm_script" && type nvm >/dev/null 2>&1) 2>/dev/null; then
+            # Safe to source in current shell
+            source "$nvm_script" 2>/dev/null
+            nvm_loaded=$?
+        else
+            print_warning "NVM script failed safety check"
+            nvm_loaded=1
+        fi
     else
-        print_error "nvm not found, skipping Node.js setup"
-        set -e
+        print_error "No readable nvm script found, skipping Node.js setup"
+        # Restore original shell options
+        [[ "$orig_opts" == *e* ]] && set -e
+        [[ "$orig_opts" == *o*pipefail* ]] && set -o pipefail
         return 1
     fi
     
-    # Re-enable errexit
-    set -e
+    # Restore original shell options
+    [[ "$orig_opts" == *e* ]] && set -e
+    [[ "$orig_opts" == *o*pipefail* ]] && set -o pipefail
     
-    # Check if nvm loaded successfully
-    if [[ $nvm_loaded -ne 0 ]] || ! type nvm &> /dev/null; then
-        print_error "Failed to load nvm, skipping Node.js setup"
+    # Verify nvm is available with timeout
+    local nvm_check_result=1
+    if [[ $nvm_loaded -eq 0 ]]; then
+        timeout 10 bash -c 'type nvm >/dev/null 2>&1' 2>/dev/null
+        nvm_check_result=$?
+    fi
+    
+    if [[ $nvm_loaded -ne 0 ]] || [[ $nvm_check_result -ne 0 ]]; then
+        print_error "Failed to load nvm safely, skipping Node.js setup"
+        print_info "You can manually install Node.js later or run: brew install node"
         return 1
     fi
     
-    # Install latest LTS Node.js
+    # Install latest LTS Node.js with timeout and error handling
     print_info "Installing Node.js LTS"
-    nvm install --lts || error_exit "Failed to install Node.js LTS"
-    nvm alias default node || error_exit "Failed to set default Node.js version"
     
-    print_success "Node.js setup complete"
+    # Use timeout to prevent hanging
+    if timeout 300 nvm install --lts 2>/dev/null; then
+        if ! nvm alias default node 2>/dev/null; then
+            print_warning "Failed to set default Node.js version, but installation succeeded"
+        fi
+        print_success "Node.js setup complete"
+    else
+        print_error "Node.js installation timed out or failed"
+        print_info "You can manually install Node.js later with: nvm install --lts"
+        return 1
+    fi
 }
 
 setup_python() {
