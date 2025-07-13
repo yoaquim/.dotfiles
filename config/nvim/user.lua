@@ -63,39 +63,8 @@ return {
     end,
   },
 
-  -- LSP and Language Support
+  -- LSP and Language Support configured in mason.lua
   -- ───────────────────────────────────────────────────
-  {
-    "williamboman/mason.nvim",
-    opts = {
-      ensure_installed = {
-        -- Language servers
-        "typescript-language-server",
-        "pyright",
-        "terraform-ls",
-        "css-lsp",
-        "html-lsp", 
-        "json-lsp",
-        "tailwindcss-language-server",
-        "solargraph",
-        "yaml-language-server",
-        "dockerfile-language-server",
-        "bash-language-server",
-        "marksman",
-        -- Formatters
-        "prettier",
-        "black",
-        "stylua",
-        "shfmt",
-        -- Linters
-        "eslint-d",
-        "shellcheck",
-        -- Debuggers
-        "js-debug-adapter",
-        "debugpy",
-      },
-    },
-  },
 
   -- Debugging Support
   -- ───────────────────────────────────────────────────
@@ -222,8 +191,28 @@ return {
       "nvim-treesitter/nvim-treesitter",
     },
     config = function()
-      require("devcontainer").setup({})
+      require("devcontainer").setup({
+        -- Configure the plugin
+        attach_mounts = {
+          neovim_config = {
+            enabled = true,
+            options = { "readonly" }
+          },
+          neovim_data = {
+            enabled = false,
+            options = {}
+          },
+        },
+        always_mount = {},
+      })
     end,
+    keys = {
+      { "<leader>cs", "<cmd>DevcontainerStart<cr>", desc = "Start dev container" },
+      { "<leader>ct", "<cmd>DevcontainerStop<cr>", desc = "Stop dev container" },
+      { "<leader>cr", "<cmd>DevcontainerRestart<cr>", desc = "Restart dev container" },
+      { "<leader>ce", "<cmd>DevcontainerExec<cr>", desc = "Execute in container" },
+      { "<leader>cl", "<cmd>DevcontainerLogs<cr>", desc = "View container logs" },
+    },
   },
 
   -- AI/Copilot Support
