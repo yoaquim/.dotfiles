@@ -478,114 +478,19 @@ post_brew_install_setup() {
 }
 
 setup_node() {
-    print_info "Setting up Node.js with nvm"
+    print_info "Setting up Node.js prerequisites"
     
-    # Set NVM_DIR environment variable first
+    # Create NVM directory
     export NVM_DIR="$HOME/.nvm"
+    mkdir -p "$NVM_DIR"
     
-    # Create NVM directory with proper error handling
-    if ! mkdir -p "$NVM_DIR" 2>/dev/null; then
-        print_error "Cannot create NVM directory, skipping Node.js setup"
-        return 1
-    fi
-    
-    # Store original shell options
-    local orig_opts="$-"
-    
-    # Temporarily disable errexit and pipefail for nvm sourcing
-    set +e
-    set +o pipefail
-    
-    local nvm_loaded=1
-    local nvm_script=""
-    
-    # Find nvm script using safer method
-    if [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]] && [[ -r "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
-        nvm_script="/opt/homebrew/opt/nvm/nvm.sh"
-    elif [[ -s "/usr/local/opt/nvm/nvm.sh" ]] && [[ -r "/usr/local/opt/nvm/nvm.sh" ]]; then
-        nvm_script="/usr/local/opt/nvm/nvm.sh"
-    elif [[ -s "$NVM_DIR/nvm.sh" ]] && [[ -r "$NVM_DIR/nvm.sh" ]]; then
-        nvm_script="$NVM_DIR/nvm.sh"
-    fi
-    
-    if [[ -n "$nvm_script" ]]; then
-        print_debug "Sourcing nvm from: $nvm_script"
-        
-        # Source in a subshell first to test safety
-        if (source "$nvm_script" && type nvm >/dev/null 2>&1) 2>/dev/null; then
-            # Safe to source in current shell
-            source "$nvm_script" 2>/dev/null
-            nvm_loaded=$?
-        else
-            print_warning "NVM script failed safety check"
-            nvm_loaded=1
-        fi
-    else
-        print_error "No readable nvm script found, skipping Node.js setup"
-        # Restore original shell options
-        [[ "$orig_opts" == *e* ]] && set -e
-        [[ "$orig_opts" == *o*pipefail* ]] && set -o pipefail
-        return 1
-    fi
-    
-    # Restore original shell options
-    [[ "$orig_opts" == *e* ]] && set -e
-    [[ "$orig_opts" == *o*pipefail* ]] && set -o pipefail
-    
-    # Verify nvm is available with timeout
-    local nvm_check_result=1
-    if [[ $nvm_loaded -eq 0 ]]; then
-        timeout 10 bash -c 'type nvm >/dev/null 2>&1' 2>/dev/null
-        nvm_check_result=$?
-    fi
-    
-    if [[ $nvm_loaded -ne 0 ]] || [[ $nvm_check_result -ne 0 ]]; then
-        print_error "Failed to load nvm safely, skipping Node.js setup"
-        print_info "You can manually install Node.js later or run: brew install node"
-        return 1
-    fi
-    
-    # Install latest LTS Node.js with timeout and error handling
-    print_info "Installing Node.js LTS"
-    
-    # Use timeout to prevent hanging
-    if timeout 300 nvm install --lts 2>/dev/null; then
-        if ! nvm alias default node 2>/dev/null; then
-            print_warning "Failed to set default Node.js version, but installation succeeded"
-        fi
-        print_success "Node.js setup complete"
-    else
-        print_error "Node.js installation timed out or failed"
-        print_info "You can manually install Node.js later with: nvm install --lts"
-        return 1
-    fi
+    print_success "Node.js prerequisites installed (nvm available via Homebrew)"
 }
 
 setup_python() {
-    print_info "Setting up Python with pyenv"
+    print_info "Setting up Python prerequisites"
     
-    # Get the latest Python 3.x version
-    local latest_python
-    latest_python=$(pyenv install --list | grep -E '^\s*3\.[0-9]+\.[0-9]+$' | tr -d ' ' | tail -1)
-    
-    if [[ -z "${latest_python}" ]]; then
-        print_error "Could not determine latest Python version"
-        return 1
-    fi
-    
-    print_info "Installing Python ${latest_python}"
-    
-    # Check if already installed
-    if pyenv versions | grep -q "${latest_python}"; then
-        print_debug "Python ${latest_python} already installed"
-    else
-        pyenv install "${latest_python}" || error_exit "Failed to install Python ${latest_python}"
-    fi
-    
-    # Set as global version
-    pyenv global "${latest_python}" || error_exit "Failed to set global Python version"
-    
-    print_success "Python setup complete"
+    print_success "Python prerequisites installed (pyenv available via Homebrew)"
 }
 
 # ───────────────────────────────────────────────────
@@ -886,6 +791,71 @@ uninstall_all() {
 }
 
 # ───────────────────────────────────────────────────
+# Final Instructions
+# ───────────────────────────────────────────────────
+
+show_final_instructions() {
+    if supports_color; then
+        echo -e "\n\e[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\e[0m"
+        echo -e "\e[1;36m║                           SETUP COMPLETE!                                   ║\e[0m"
+        echo -e "\e[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\e[0m"
+        echo -e "\n\e[1;33mNext Steps:\e[0m"
+        echo -e "\n\e[1;34m1. Restart your terminal or run:\e[0m"
+        echo -e "   \e[32msource ~/.bash_profile\e[0m"
+        echo -e "\n\e[1;34m2. Set up Node.js:\e[0m"
+        echo -e "   \e[32m# Load nvm\e[0m"
+        echo -e "   \e[32msource /opt/homebrew/opt/nvm/nvm.sh\e[0m"
+        echo -e "   \e[32m# Install latest LTS Node.js\e[0m"
+        echo -e "   \e[32mnvm install --lts\e[0m"
+        echo -e "   \e[32mnvm alias default node\e[0m"
+        echo -e "\n\e[1;34m3. Set up Python:\e[0m"
+        echo -e "   \e[32m# Install latest Python\e[0m"
+        echo -e "   \e[32mpyenv install 3.12.0  # or latest version\e[0m"
+        echo -e "   \e[32mpyenv global 3.12.0\e[0m"
+        echo -e "\n\e[1;34m4. Configure Claude Code:\e[0m"
+        echo -e "   \e[32mclaude auth login\e[0m"
+        echo -e "\n\e[1;34m5. Launch applications:\e[0m"
+        echo -e "   \e[32m• Hammerspoon - Grant accessibility permissions\e[0m"
+        echo -e "   \e[32m• Kitty - Set as default terminal\e[0m"
+        echo -e "   \e[32m• Run 'nvim' to complete AstroNvim setup\e[0m"
+        echo -e "\n\e[1;35mEnjoy your new development environment! 🚀\e[0m\n"
+    else
+        echo ""
+        echo "=============================================================================="
+        echo "                           SETUP COMPLETE!"
+        echo "=============================================================================="
+        echo ""
+        echo "Next Steps:"
+        echo ""
+        echo "1. Restart your terminal or run:"
+        echo "   source ~/.bash_profile"
+        echo ""
+        echo "2. Set up Node.js:"
+        echo "   # Load nvm"
+        echo "   source /opt/homebrew/opt/nvm/nvm.sh"
+        echo "   # Install latest LTS Node.js"
+        echo "   nvm install --lts"
+        echo "   nvm alias default node"
+        echo ""
+        echo "3. Set up Python:"
+        echo "   # Install latest Python"
+        echo "   pyenv install 3.12.0  # or latest version"
+        echo "   pyenv global 3.12.0"
+        echo ""
+        echo "4. Configure Claude Code:"
+        echo "   claude auth login"
+        echo ""
+        echo "5. Launch applications:"
+        echo "   • Hammerspoon - Grant accessibility permissions"
+        echo "   • Kitty - Set as default terminal"
+        echo "   • Run 'nvim' to complete AstroNvim setup"
+        echo ""
+        echo "Enjoy your new development environment!"
+        echo ""
+    fi
+}
+
+# ───────────────────────────────────────────────────
 # Usage and Argument Parsing
 # ───────────────────────────────────────────────────
 
@@ -983,6 +953,9 @@ main() {
     esac
     
     print_success "Dotfiles setup complete."
+    
+    # Show final setup instructions
+    show_final_instructions
 }
 
 # Run main function with all arguments

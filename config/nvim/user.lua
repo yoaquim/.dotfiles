@@ -74,10 +74,10 @@ return {
         "pyright",
         "terraform-ls",
         "css-lsp",
-        "html-lsp",
+        "html-lsp", 
+        "json-lsp",
         "tailwindcss-language-server",
         "solargraph",
-        "json-lsp",
         "yaml-language-server",
         "dockerfile-language-server",
         "bash-language-server",
@@ -88,11 +88,10 @@ return {
         "stylua",
         "shfmt",
         -- Linters
-        "eslint_d",
-        "flake8",
+        "eslint-d",
         "shellcheck",
         -- Debuggers
-        "node-debug2-adapter",
+        "js-debug-adapter",
         "debugpy",
       },
     },
@@ -137,6 +136,40 @@ return {
         adapters = { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" },
       })
       
+      -- Configure JavaScript/TypeScript debug configurations
+      for _, language in ipairs({ "typescript", "javascript", "typescriptreact", "javascriptreact" }) do
+        dap.configurations[language] = {
+          {
+            type = "pwa-node",
+            request = "launch",
+            name = "Launch file",
+            program = "${file}",
+            cwd = "${workspaceFolder}",
+          },
+          {
+            type = "pwa-node",
+            request = "attach",
+            name = "Attach",
+            processId = require("dap.utils").pick_process,
+            cwd = "${workspaceFolder}",
+          },
+          {
+            type = "pwa-node",
+            request = "launch",
+            name = "Debug Jest Tests",
+            runtimeExecutable = "node",
+            runtimeArgs = {
+              "./node_modules/jest/bin/jest.js",
+              "--runInBand",
+            },
+            rootPath = "${workspaceFolder}",
+            cwd = "${workspaceFolder}",
+            console = "integratedTerminal",
+            internalConsoleOptions = "neverOpen",
+          },
+        }
+      end
+      
       -- Virtual text
       require("nvim-dap-virtual-text").setup()
     end,
@@ -157,6 +190,7 @@ return {
       "nvim-treesitter/nvim-treesitter",
       "nvim-neotest/neotest-python",
       "nvim-neotest/neotest-jest",
+      "marilari88/neotest-vitest",
     },
     config = function()
       require("neotest").setup({
@@ -171,6 +205,9 @@ return {
             cwd = function()
               return vim.fn.getcwd()
             end,
+          }),
+          require("neotest-vitest")({
+            vitestCommand = "npm run test --",
           }),
         },
       })
