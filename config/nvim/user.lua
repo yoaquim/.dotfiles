@@ -207,11 +207,13 @@ return {
       })
     end,
     keys = {
-      { "<leader>cs", "<cmd>DevcontainerStart<cr>", desc = "Start dev container" },
-      { "<leader>ct", "<cmd>DevcontainerStop<cr>", desc = "Stop dev container" },
-      { "<leader>cr", "<cmd>DevcontainerRestart<cr>", desc = "Restart dev container" },
-      { "<leader>ce", "<cmd>DevcontainerExec<cr>", desc = "Execute in container" },
-      { "<leader>cl", "<cmd>DevcontainerLogs<cr>", desc = "View container logs" },
+      { "<leader>Ds", "<cmd>DevcontainerStart<cr>", desc = "Start dev container" },
+      { "<leader>Da", "<cmd>DevcontainerAttach<cr>", desc = "Attach to dev container" },
+      { "<leader>Dt", "<cmd>DevcontainerStop<cr>", desc = "Stop dev container" },
+      { "<leader>De", "<cmd>DevcontainerExec<cr>", desc = "Execute in container" },
+      { "<leader>Dl", "<cmd>DevcontainerLogs<cr>", desc = "View container logs" },
+      { "<leader>Dr", "<cmd>DevcontainerRemoveAll<cr>", desc = "Remove all containers" },
+      { "<leader>Dc", "<cmd>DevcontainerEditNearestConfig<cr>", desc = "Edit devcontainer config" },
     },
   },
 
