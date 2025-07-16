@@ -1,7 +1,7 @@
 [user]
 	name = Yoaquim Cintrón
         email = yoaquim@outlook.com
-        signingkey = /Users/cintron/.ssh/git
+        signingkey = ~/.ssh/git
 [commit]
 	gpgsign = true
 [gpg]

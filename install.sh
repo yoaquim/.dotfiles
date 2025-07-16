@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/opt/homebrew/bin/bash
 
 # ───────────────────────────────────────────────────
 # Dotfiles Installation Script
@@ -371,7 +371,7 @@ setup_hammerspoon() {
     print_info "Setting up Hammerspoon configuration"
     
     # Link hammerspoon configuration directory
-    local hammerspoon_dir="$HOME/.config/hammerspoon"
+    local hammerspoon_dir="$HOME/.hammerspoon"
     create_symlink "${SCRIPT_DIR}/config/hammerspoon" "${hammerspoon_dir}"
     
     print_success "Hammerspoon configuration setup complete"
@@ -418,6 +418,7 @@ install_brew_casks() {
         "whatsapp"
         # "docker" # skipping Docker for now, due to bug in package install
         "postman"
+        "1password"
         "slack"
         "kitty"
         "todoist"
@@ -478,13 +479,26 @@ post_brew_install_setup() {
 }
 
 setup_node() {
-    print_info "Setting up Node.js prerequisites"
+    print_info "Setting up Node.js with nvm"
     
     # Create NVM directory
     export NVM_DIR="$HOME/.nvm"
     mkdir -p "$NVM_DIR"
     
-    print_success "Node.js prerequisites installed (nvm available via Homebrew)"
+    # Load nvm from homebrew for this script session
+    if [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
+        source "/opt/homebrew/opt/nvm/nvm.sh"
+        
+        # Install latest LTS Node.js
+        print_info "Installing latest LTS Node.js"
+        nvm install --lts
+        nvm alias default node
+        nvm use default
+        
+        print_success "Node.js installed and configured via nvm"
+    else
+        print_warning "nvm script not found. Node.js setup incomplete."
+    fi
 }
 
 setup_python() {
@@ -643,7 +657,7 @@ uninstall_symlinks() {
         "$HOME/.config/tmux-powerline"
         "$HOME/.config/nvim/lua/polish.lua"
         "$HOME/.config/nvim/lua/plugins/user.lua"
-        "$HOME/.config/hammerspoon"
+        "$HOME/.hammerspoon"
     )
     
     for symlink in "${symlinks[@]}"; do
@@ -791,23 +805,54 @@ uninstall_all() {
 }
 
 # ───────────────────────────────────────────────────
+# Shell Configuration
+# ───────────────────────────────────────────────────
+
+change_default_shell() {
+    print_info "Changing default shell to homebrew bash"
+    
+    local bash_path="/opt/homebrew/bin/bash"
+    
+    # Check if homebrew bash exists
+    if [[ ! -f "${bash_path}" ]]; then
+        print_warning "Homebrew bash not found at ${bash_path}. Skipping shell change."
+        return 1
+    fi
+    
+    # Check if bash is already in /etc/shells
+    if ! grep -q "${bash_path}" /etc/shells; then
+        print_info "Adding homebrew bash to /etc/shells"
+        echo "${bash_path}" | sudo tee -a /etc/shells > /dev/null
+    fi
+    
+    # Change the user's default shell
+    local current_shell="$(dscl . -read /Users/$(whoami) UserShell | cut -d' ' -f2)"
+    if [[ "${current_shell}" != "${bash_path}" ]]; then
+        print_info "Changing default shell from ${current_shell} to ${bash_path}"
+        chsh -s "${bash_path}" || print_warning "Failed to change default shell. You may need to run 'chsh -s ${bash_path}' manually."
+        print_success "Default shell changed to homebrew bash"
+    else
+        print_debug "Default shell is already set to homebrew bash"
+    fi
+}
+
+# ───────────────────────────────────────────────────
 # Final Instructions
 # ───────────────────────────────────────────────────
 
 show_final_instructions() {
     if supports_color; then
         echo -e "\n\e[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\e[0m"
-        echo -e "\e[1;36m║                           SETUP COMPLETE!                                   ║\e[0m"
+        echo -e "\e[1;36m║                            SETUP COMPLETE!                                   ║\e[0m"
         echo -e "\e[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\e[0m"
         echo -e "\n\e[1;33mNext Steps:\e[0m"
         echo -e "\n\e[1;34m1. Restart your terminal or run:\e[0m"
         echo -e "   \e[32msource ~/.bash_profile\e[0m"
-        echo -e "\n\e[1;34m2. Set up Node.js:\e[0m"
-        echo -e "   \e[32m# Load nvm\e[0m"
-        echo -e "   \e[32msource /opt/homebrew/opt/nvm/nvm.sh\e[0m"
-        echo -e "   \e[32m# Install latest LTS Node.js\e[0m"
-        echo -e "   \e[32mnvm install --lts\e[0m"
-        echo -e "   \e[32mnvm alias default node\e[0m"
+        echo -e "\n\e[1;34m2. Add nvm to your bash profile:\e[0m"
+        echo -e "   \e[32m# Add these lines to your ~/.bash_profile:\e[0m"
+        echo -e "   \e[32mexport NVM_DIR=\"\$HOME/.nvm\"\e[0m"
+        echo -e "   \e[32m[ -s \"/opt/homebrew/opt/nvm/nvm.sh\" ] && \\. \"/opt/homebrew/opt/nvm/nvm.sh\"\e[0m"
+        echo -e "   \e[32m[ -s \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\" ] && \\. \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\"\e[0m"
         echo -e "\n\e[1;34m3. Set up Python:\e[0m"
         echo -e "   \e[32m# Install latest Python\e[0m"
         echo -e "   \e[32mpyenv install 3.12.0  # or latest version\e[0m"
@@ -830,12 +875,11 @@ show_final_instructions() {
         echo "1. Restart your terminal or run:"
         echo "   source ~/.bash_profile"
         echo ""
-        echo "2. Set up Node.js:"
-        echo "   # Load nvm"
-        echo "   source /opt/homebrew/opt/nvm/nvm.sh"
-        echo "   # Install latest LTS Node.js"
-        echo "   nvm install --lts"
-        echo "   nvm alias default node"
+        echo "2. Add nvm to your bash profile:"
+        echo "   # Add these lines to your ~/.bash_profile:"
+        echo "   export NVM_DIR=\"\$HOME/.nvm\""
+        echo "   [ -s \"/opt/homebrew/opt/nvm/nvm.sh\" ] && \\. \"/opt/homebrew/opt/nvm/nvm.sh\""
+        echo "   [ -s \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\" ] && \\. \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\""
         echo ""
         echo "3. Set up Python:"
         echo "   # Install latest Python"
@@ -954,9 +998,18 @@ main() {
     
     print_success "Dotfiles setup complete."
     
+    # Change default shell to homebrew bash
+    change_default_shell
+    
     # Show final setup instructions
     show_final_instructions
 }
+
+# Ensure we're running in bash, not zsh
+if [[ -z "${BASH_VERSION}" ]]; then
+    echo "This script must be run with bash. Switching to bash..."
+    exec /opt/homebrew/bin/bash "$0" "$@"
+fi
 
 # Run main function with all arguments
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
