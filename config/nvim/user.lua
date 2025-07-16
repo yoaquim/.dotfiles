@@ -233,6 +233,19 @@ return {
     end,
   },
 
+  -- Neo-tree Configuration
+  -- ───────────────────────────────────────────────────
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    opts = {
+      filesystem = {
+        filtered_items = {
+          visible = true,
+        },
+      },
+    },
+  },
+
   -- Color Schemes
   -- ───────────────────────────────────────────────────
   { "RRethy/base16-nvim" },
