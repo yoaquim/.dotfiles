@@ -738,6 +738,7 @@ full_install() {
     setup_tmux_plugins
     setup_base16
     setup_hammerspoon
+    setup_git_ssh
     
     # Setup language environments
     post_brew_install_setup
@@ -802,6 +803,27 @@ uninstall_all() {
     fi
     
     print_success "Uninstallation complete."
+}
+
+# ───────────────────────────────────────────────────
+# Git Configuration
+# ───────────────────────────────────────────────────
+
+setup_git_ssh() {
+    print_info "Configuring Git to use SSH for GitHub"
+    
+    # Set GitHub to always use SSH instead of HTTPS
+    git config --global url."git@github.com:".insteadOf "https://github.com/"
+    
+    # If this is the dotfiles repo, update its remote to SSH
+    if [[ "$(git remote get-url origin 2>/dev/null)" == "https://github.com/"* ]]; then
+        local current_url="$(git remote get-url origin)"
+        local ssh_url="${current_url/https:\/\/github.com\//git@github.com:}"
+        git remote set-url origin "${ssh_url}"
+        print_success "Updated dotfiles repo remote to SSH"
+    fi
+    
+    print_success "Git SSH configuration complete"
 }
 
 # ───────────────────────────────────────────────────
