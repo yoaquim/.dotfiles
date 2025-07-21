@@ -31,21 +31,10 @@ OS="$(uname -s)"
 # Logging Functions
 # ───────────────────────────────────────────────────
 
-# Check if terminal supports colors
+# Check if terminal supports colors - ALWAYS return true for bash
 supports_color() {
-    # Force colors if FORCE_COLOR is set
-    if [[ "${FORCE_COLOR:-false}" == "true" ]]; then
-        return 0
-    fi
-    
-    # Check if we have a terminal and it supports colors
-    if [[ -t 1 ]] && command -v tput &> /dev/null; then
-        local colors
-        colors=$(tput colors 2>/dev/null || echo 0)
-        [[ $colors -ge 8 ]]
-    else
-        false
-    fi
+    # Always enable colors when running in bash
+    return 0
 }
 
 log() {
