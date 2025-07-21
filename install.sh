@@ -611,22 +611,26 @@ install_claude_code() {
         return 0
     fi
     
-    # Install Claude Code via npm
+    # Check if npm is available (Node.js installed)
     if command -v npm &> /dev/null; then
         print_info "Installing Claude Code via npm"
-        npm install -g @anthropic-ai/claude-code || error_exit "Failed to install Claude Code via npm"
+        if npm install -g @anthropic-ai/claude-code; then
+            # Verify installation
+            if command -v claude &> /dev/null; then
+                local version
+                version=$(claude --version 2>/dev/null || echo "unknown")
+                print_success "Claude Code installed successfully (version: ${version})"
+            else
+                print_warning "Claude Code installation verification failed"
+                return 1
+            fi
+        else
+            print_warning "Failed to install Claude Code via npm"
+            return 1
+        fi
     else
-        print_error "npm not found. Please install Node.js first or run full installation."
+        print_warning "npm not found. Claude Code will be available after running post-setup.sh to install Node.js"
         return 1
-    fi
-    
-    # Verify installation
-    if command -v claude &> /dev/null; then
-        local version
-        version=$(claude --version 2>/dev/null || echo "unknown")
-        print_success "Claude Code installed successfully (version: ${version})"
-    else
-        error_exit "Claude Code installation verification failed"
     fi
 }
 
@@ -760,9 +764,12 @@ full_install() {
     # Setup AstroNvim
     setup_astronvim || print_warning "AstroNvim setup failed - continuing"
     
-    # Install and setup Claude Code
-    install_claude_code
-    setup_claude_code
+    # Install and setup Claude Code (requires Node.js from post-setup)
+    if install_claude_code; then
+        setup_claude_code
+    else
+        print_info "Claude Code installation skipped - run post-setup.sh first to install Node.js, then install Claude Code manually with: npm install -g @anthropic-ai/claude-code"
+    fi
     
     print_success "Full installation complete."
 }

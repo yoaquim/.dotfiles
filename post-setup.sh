@@ -181,6 +181,9 @@ setup_nvm() {
         
         print_success "Node.js ${node_version} and npm ${npm_version} installed via nvm"
         
+        # Install Claude Code now that npm is available
+        install_claude_code
+        
         # Add nvm to bash profile if not already present
         local bash_profile="$HOME/.bash_profile"
         if [[ -f "${bash_profile}" ]] && ! grep -q "NVM_DIR" "${bash_profile}"; then
@@ -283,6 +286,41 @@ check_astronvim_compatibility() {
 }
 
 # ───────────────────────────────────────────────────
+# Claude Code Installation
+# ───────────────────────────────────────────────────
+
+install_claude_code() {
+    print_info "Installing Claude Code CLI"
+    
+    if command -v claude &> /dev/null; then
+        print_debug "Claude Code already installed"
+        return 0
+    fi
+    
+    # Install Claude Code via npm (npm should be available now)
+    if command -v npm &> /dev/null; then
+        print_info "Installing Claude Code via npm"
+        if npm install -g @anthropic-ai/claude-code; then
+            # Verify installation
+            if command -v claude &> /dev/null; then
+                local version
+                version=$(claude --version 2>/dev/null || echo "unknown")
+                print_success "Claude Code installed successfully (version: ${version})"
+            else
+                print_warning "Claude Code installation verification failed"
+                return 1
+            fi
+        else
+            print_warning "Failed to install Claude Code via npm"
+            return 1
+        fi
+    else
+        print_warning "npm not found - cannot install Claude Code"
+        return 1
+    fi
+}
+
+# ───────────────────────────────────────────────────
 # Final Instructions
 # ───────────────────────────────────────────────────
 
@@ -297,7 +335,7 @@ show_final_instructions() {
         echo -e "\n\e[1;34m2. Verify installations:\e[0m"
         echo -e "   \e[32mnode --version && npm --version\e[0m"
         echo -e "   \e[32mpython --version && pip --version\e[0m"
-        echo -e "\n\e[1;34m3. Configure Claude Code (if not done already):\e[0m"
+        echo -e "\n\e[1;34m3. Configure Claude Code:\e[0m"
         echo -e "   \e[32mclaude auth login\e[0m"
         echo -e "\n\e[1;34m4. You can now safely run nvim to complete AstroNvim setup\e[0m"
         echo -e "\n\e[1;35mEnjoy your complete development environment! 🚀\e[0m\n"
@@ -316,7 +354,7 @@ show_final_instructions() {
         echo "   node --version && npm --version"
         echo "   python --version && pip --version"
         echo ""
-        echo "3. Configure Claude Code (if not done already):"
+        echo "3. Configure Claude Code:"
         echo "   claude auth login"
         echo ""
         echo "4. You can now safely run nvim to complete AstroNvim setup"
