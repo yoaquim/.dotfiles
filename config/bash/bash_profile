@@ -19,8 +19,11 @@
 # I. Exports
 # ───────────────────────────────────────────────────
 
-# add homebrew to path
-export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+# Add Homebrew to PATH (Apple Silicon)
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Add local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"
 
 export XDG_CONFIG_HOME="$HOME/.config"
 

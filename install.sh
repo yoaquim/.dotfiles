@@ -233,16 +233,22 @@ install_homebrew() {
     fi
     
     print_info "Installing Homebrew"
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || error_exit "Failed to install Homebrew"
-    
-    # Add Homebrew to PATH for current session
-    if [[ -f "/opt/homebrew/bin/brew" ]]; then
+    if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+        # Add Homebrew to PATH for current session (Apple Silicon)
         eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [[ -f "/usr/local/bin/brew" ]]; then
-        eval "$(/usr/local/bin/brew shellenv)"
+        
+        # Verify installation
+        if command -v brew &> /dev/null; then
+            print_success "Homebrew installed successfully"
+            return 0
+        else
+            print_warning "Homebrew installation completed but brew command not found - may need to restart terminal"
+            return 1
+        fi
+    else
+        print_warning "Homebrew installation failed - some packages may not be available"
+        return 1
     fi
-    
-    print_success "Homebrew installed successfully"
 }
 
 brew_package_exists() {
@@ -343,10 +349,13 @@ link_symlinks() {
     # Create .config directory if it doesn't exist
     mkdir -p "$HOME/.config"
     
-    # Link shell configuration
+    # Link shell configuration for bash
     create_symlink "${SCRIPT_DIR}/config/bash/bash_profile" "$HOME/.bash_profile"
     create_symlink "${SCRIPT_DIR}/config/bash/bash_profile" "$HOME/.bashrc"
     create_symlink "${SCRIPT_DIR}/config/bash" "$HOME/.config/bash"
+    
+    # Also link for zsh users (if they want to use the same configs)
+    setup_zsh_compatibility
     
     # Link application configurations
     create_symlink "${SCRIPT_DIR}/config/tmux" "$HOME/.config/tmux"
@@ -354,6 +363,36 @@ link_symlinks() {
     create_symlink "${SCRIPT_DIR}/config/gitconfig" "$HOME/.gitconfig"
     
     print_success "Symlinks created successfully"
+}
+
+setup_zsh_compatibility() {
+    print_info "Setting up zsh compatibility"
+    
+    # Check if user is currently using zsh
+    local current_shell="$(echo $SHELL)"
+    if [[ "${current_shell}" == *"zsh"* ]]; then
+        print_info "Detected zsh as current shell - adding bash profile sourcing to zsh config"
+        
+        # Add sourcing of bash_profile to zshrc if not already present
+        local zshrc="$HOME/.zshrc"
+        if [[ ! -f "${zshrc}" ]] || ! grep -q "bash_profile" "${zshrc}"; then
+            cat >> "${zshrc}" << 'EOF'
+
+# Homebrew PATH setup (Apple Silicon)
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Source bash configuration for dotfiles compatibility
+if [ -f ~/.bash_profile ]; then
+    source ~/.bash_profile
+fi
+EOF
+            print_success "Added Homebrew PATH and bash profile sourcing to ~/.zshrc"
+        else
+            print_debug "Bash profile sourcing already present in ~/.zshrc"
+        fi
+    else
+        print_debug "Not using zsh, skipping zsh compatibility setup"
+    fi
 }
 
 # ───────────────────────────────────────────────────
@@ -451,6 +490,30 @@ install_brew_list() {
     done
     
     print_success "Homebrew packages installed successfully"
+}
+
+install_xcode() {
+    print_info "Checking for full Xcode installation"
+    
+    # Check if Xcode is already installed
+    if [[ -d "/Applications/Xcode.app" ]]; then
+        print_success "Xcode is already installed"
+        return 0
+    fi
+    
+    # Ask if user wants to install full Xcode (it's huge!)
+    if confirm_action "Install full Xcode IDE? (This is ~15GB and takes a while)"; then
+        print_info "Installing Xcode via Homebrew (this will take a long time...)"
+        if brew install --cask xcode; then
+            print_success "Xcode installed successfully"
+            print_info "You may need to launch Xcode and accept the license agreement"
+        else
+            print_warning "Xcode installation failed - you can install it manually from the App Store"
+            return 1
+        fi
+    else
+        print_info "Skipping full Xcode installation - Command Line Tools are sufficient for most development"
+    fi
 }
 
 install_brew_casks() {
@@ -737,7 +800,11 @@ full_install() {
     validate_environment
     
     # Install Homebrew if not present
-    install_homebrew
+    if ! install_homebrew; then
+        print_warning "Homebrew installation failed - some features may not work"
+        print_info "You can install Homebrew manually later and re-run this script"
+        return 1
+    fi
     
     # Update Homebrew
     print_info "Updating Homebrew"
@@ -747,6 +814,9 @@ full_install() {
     install_brew_list
     install_brew_casks
     install_brew_fonts
+    
+    # Optional: Install full Xcode
+    install_xcode
     
     # Install Neovim dependencies
     install_nvim_deps
@@ -852,30 +922,32 @@ setup_git_ssh() {
 # ───────────────────────────────────────────────────
 
 change_default_shell() {
-    print_info "Changing default shell to homebrew bash"
+    print_info "Checking default shell configuration"
     
     local bash_path="/opt/homebrew/bin/bash"
     
     # Check if homebrew bash exists
     if [[ ! -f "${bash_path}" ]]; then
-        print_warning "Homebrew bash not found at ${bash_path}. Skipping shell change."
-        return 1
+        print_warning "Homebrew bash not found at ${bash_path}. Shell change not needed."
+        return 0
     fi
     
-    # Check if bash is already in /etc/shells
-    if ! grep -q "${bash_path}" /etc/shells; then
-        print_info "Adding homebrew bash to /etc/shells"
-        echo "${bash_path}" | sudo tee -a /etc/shells > /dev/null
-    fi
+    # Check current shell
+    local current_shell="$(dscl . -read /Users/$(whoami) UserShell 2>/dev/null | cut -d' ' -f2 || echo '/bin/zsh')"
     
-    # Change the user's default shell
-    local current_shell="$(dscl . -read /Users/$(whoami) UserShell | cut -d' ' -f2)"
     if [[ "${current_shell}" != "${bash_path}" ]]; then
-        print_info "Changing default shell from ${current_shell} to ${bash_path}"
-        chsh -s "${bash_path}" || print_warning "Failed to change default shell. You may need to run 'chsh -s ${bash_path}' manually."
-        print_success "Default shell changed to homebrew bash"
+        print_info "Current shell: ${current_shell}"
+        print_info "To change your default shell to Homebrew bash, run these commands manually:"
+        if supports_color; then
+            echo -e "   \e[32msudo sh -c 'echo ${bash_path} >> /etc/shells'\e[0m"
+            echo -e "   \e[32mchsh -s ${bash_path}\e[0m"
+        else
+            echo "   sudo sh -c 'echo ${bash_path} >> /etc/shells'"
+            echo "   chsh -s ${bash_path}"
+        fi
+        print_info "This is optional - your dotfiles will work with any shell"
     else
-        print_debug "Default shell is already set to homebrew bash"
+        print_success "Default shell is already set to homebrew bash"
     fi
 }
 
@@ -893,9 +965,15 @@ show_final_instructions() {
         echo -e "   \e[32msource ~/.bash_profile\e[0m"
         echo -e "\n\e[1;34m2. Set up language environments:\e[0m"
         echo -e "   \e[32m./post-setup.sh\e[0m"
-        echo -e "\n\e[1;34m3. Configure Claude Code:\e[0m"
+        echo -e "\n\e[1;34m3. Configure Claude Code (installed with post-setup.sh):\e[0m"
         echo -e "   \e[32mclaude auth login\e[0m"
-        echo -e "\n\e[1;34m4. Launch applications:\e[0m"
+        echo -e "\n\e[1;34m4. Optional - Change default shell to Homebrew bash:\e[0m"
+        echo -e "   \e[32msudo sh -c 'echo /opt/homebrew/bin/bash >> /etc/shells'\e[0m"
+        echo -e "   \e[32mchsh -s /opt/homebrew/bin/bash\e[0m"
+        echo -e "\n\e[1;34m5. If using zsh (and configurations not auto-added), add to ~/.zshrc:\e[0m"
+        echo -e "   \e[32meval \"\$(/opt/homebrew/bin/brew shellenv)\"\e[0m"
+        echo -e "   \e[32msource ~/.bash_profile\e[0m"
+        echo -e "\n\e[1;34m6. Launch applications:\e[0m"
         echo -e "   \e[32m• Hammerspoon - Grant accessibility permissions\e[0m"
         echo -e "   \e[32m• Kitty - Set as default terminal\e[0m"
         echo -e "   \e[32m• Run 'nvim' to complete AstroNvim setup\e[0m"
@@ -914,10 +992,18 @@ show_final_instructions() {
         echo "2. Set up language environments:"
         echo "   ./post-setup.sh"
         echo ""
-        echo "3. Configure Claude Code:"
+        echo "3. Configure Claude Code (installed with post-setup.sh):"
         echo "   claude auth login"
         echo ""
-        echo "4. Launch applications:"
+        echo "4. Optional - Change default shell to Homebrew bash:"
+        echo "   sudo sh -c 'echo /opt/homebrew/bin/bash >> /etc/shells'"
+        echo "   chsh -s /opt/homebrew/bin/bash"
+        echo ""
+        echo "5. If using zsh (and configurations not auto-added), add to ~/.zshrc:"
+        echo "   eval \"\$(/opt/homebrew/bin/brew shellenv)\""
+        echo "   source ~/.bash_profile"
+        echo ""
+        echo "6. Launch applications:"
         echo "   • Hammerspoon - Grant accessibility permissions"
         echo "   • Kitty - Set as default terminal"
         echo "   • Run 'nvim' to complete AstroNvim setup"
