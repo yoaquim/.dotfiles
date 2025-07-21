@@ -27,14 +27,14 @@
 
 #### Step 1: Core Installation
 ```bash
-# Clone and install core components
-cd ~ && git clone https://github.com/yoaquim/.dotfiles.git && cd .dotfiles && ./install.sh
+# Clone and install core components (use bash explicitly for color support)
+cd ~ && git clone https://github.com/yoaquim/.dotfiles.git && cd .dotfiles && bash ./install.sh
 ```
 
 #### Step 2: Language Environments
 ```bash
-# Setup Node.js and Python environments
-./post-setup.sh
+# Setup Node.js and Python environments (use bash explicitly)
+bash ./post-setup.sh
 ```
 
 ### Manual Installation
@@ -43,12 +43,12 @@ cd ~ && git clone https://github.com/yoaquim/.dotfiles.git && cd .dotfiles && ./
 cd ~/
 git clone https://github.com/yoaquim/.dotfiles.git
 
-# 2. Run core installation script
+# 2. Run core installation script (use bash explicitly for colors)
 cd ~/.dotfiles
-./install.sh
+bash ./install.sh
 
-# 3. Setup language environments
-./post-setup.sh
+# 3. Setup language environments (use bash explicitly)
+bash ./post-setup.sh
 ```
 
 ---

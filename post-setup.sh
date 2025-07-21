@@ -20,7 +20,8 @@ if [[ -z "${BASH_VERSION}" ]]; then
     fi
 fi
 
-set -euo pipefail
+# Note: Not using set -e because we want to handle errors gracefully
+set -uo pipefail
 
 # Global variables
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -4,9 +4,10 @@
 # Dotfiles Installation Script
 # ───────────────────────────────────────────────────
 
-# Ensure we're running in bash BEFORE any other operations
+# CRITICAL: Ensure we're running in bash BEFORE any other operations
+# This MUST be the first thing that happens for colors to work properly
 if [[ -z "${BASH_VERSION}" ]]; then
-    echo "This script must be run with bash. Switching to bash..."
+    echo "Switching to bash for proper color support..."
     # Try different bash locations in order of preference
     if [[ -f "/opt/homebrew/bin/bash" ]]; then
         exec /opt/homebrew/bin/bash "$0" "$@"
@@ -20,7 +21,11 @@ if [[ -z "${BASH_VERSION}" ]]; then
     fi
 fi
 
-set -euo pipefail
+# Force color support - we're definitely in bash now
+export FORCE_COLOR=true
+
+# Note: Not using set -e because we want to handle errors gracefully
+set -uo pipefail
 
 # Global variables
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
