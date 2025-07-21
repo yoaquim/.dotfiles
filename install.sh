@@ -4,6 +4,22 @@
 # Dotfiles Installation Script
 # ───────────────────────────────────────────────────
 
+# Ensure we're running in bash BEFORE any other operations
+if [[ -z "${BASH_VERSION}" ]]; then
+    echo "This script must be run with bash. Switching to bash..."
+    # Try different bash locations in order of preference
+    if [[ -f "/opt/homebrew/bin/bash" ]]; then
+        exec /opt/homebrew/bin/bash "$0" "$@"
+    elif [[ -f "/usr/local/bin/bash" ]]; then
+        exec /usr/local/bin/bash "$0" "$@"
+    elif [[ -f "/bin/bash" ]]; then
+        exec /bin/bash "$0" "$@"
+    else
+        echo "Error: No suitable bash found. Please install bash and try again."
+        exit 1
+    fi
+fi
+
 set -euo pipefail
 
 # Global variables
@@ -17,6 +33,11 @@ FORCE_REINSTALL=false
 
 # Check if terminal supports colors
 supports_color() {
+    # Force colors if FORCE_COLOR is set
+    if [[ "${FORCE_COLOR:-false}" == "true" ]]; then
+        return 0
+    fi
+    
     # Check if we have a terminal and it supports colors
     if [[ -t 1 ]] && command -v tput &> /dev/null; then
         local colors
@@ -1005,21 +1026,7 @@ main() {
     show_final_instructions
 }
 
-# Ensure we're running in bash, not zsh
-if [[ -z "${BASH_VERSION}" ]]; then
-    echo "This script must be run with bash. Switching to bash..."
-    # Try different bash locations in order of preference
-    if [[ -f "/opt/homebrew/bin/bash" ]]; then
-        exec /opt/homebrew/bin/bash "$0" "$@"
-    elif [[ -f "/usr/local/bin/bash" ]]; then
-        exec /usr/local/bin/bash "$0" "$@"
-    elif [[ -f "/bin/bash" ]]; then
-        exec /bin/bash "$0" "$@"
-    else
-        echo "Error: No suitable bash found. Please install bash and try again."
-        exit 1
-    fi
-fi
+# Bash check already done at top of script
 
 # Run main function with all arguments
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
