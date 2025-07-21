@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/bin/bash
 
 # ───────────────────────────────────────────────────
 # Dotfiles Installation Script
@@ -144,6 +144,16 @@ validate_environment() {
     check_command "curl"
     check_command "git"
     
+    # Check for Xcode Command Line Tools (required for Homebrew)
+    if ! xcode-select -p &> /dev/null; then
+        print_warning "Xcode Command Line Tools not found"
+        print_info "Installing Xcode Command Line Tools..."
+        print_info "You may be prompted to install them - please accept and wait for completion"
+        xcode-select --install || print_warning "Failed to trigger Xcode Command Line Tools installation"
+        print_info "Please run this script again after installing Xcode Command Line Tools"
+        exit 1
+    fi
+    
     print_success "Environment validation complete"
 }
 
@@ -235,7 +245,12 @@ brew_install_if_missing() {
                 return 0
             fi
             print_info "Installing package '${package}'"
-            brew install "${package}" || error_exit "Failed to install package '${package}'"
+            if brew install "${package}"; then
+                print_success "Successfully installed '${package}'"
+            else
+                print_warning "Failed to install package '${package}' - continuing with other packages"
+                return 1
+            fi
             ;;
         "cask")
             if brew_cask_exists "${package}"; then
@@ -243,14 +258,18 @@ brew_install_if_missing() {
                 return 0
             fi
             print_info "Installing cask '${package}'"
-            brew install --cask "${package}" || error_exit "Failed to install cask '${package}'"
+            if brew install --cask "${package}"; then
+                print_success "Successfully installed '${package}'"
+            else
+                print_warning "Failed to install cask '${package}' - continuing with other packages"
+                return 1
+            fi
             ;;
         *)
-            error_exit "Invalid package type: ${package_type}"
+            print_error "Invalid package type: ${package_type}"
+            return 1
             ;;
     esac
-    
-    print_success "Successfully installed '${package}'"
 }
 
 # ───────────────────────────────────────────────────
@@ -328,7 +347,10 @@ setup_tmux_plugins() {
     if [[ ! -d "${tpm_dir}" ]]; then
         print_info "Installing tmux plugin manager (tpm)"
         mkdir -p "$(dirname "${tpm_dir}")"
-        git clone https://github.com/tmux-plugins/tpm "${tpm_dir}" || error_exit "Failed to clone tpm"
+        if ! git clone https://github.com/tmux-plugins/tpm "${tpm_dir}"; then
+            print_warning "Failed to clone tpm - tmux plugins may not work"
+            return 1
+        fi
         print_success "tpm installed successfully"
     else
         print_debug "tpm already installed"
@@ -358,7 +380,10 @@ setup_base16() {
         fi
     fi
     
-    git clone https://github.com/chriskempson/base16-shell.git "${base16_dir}" || error_exit "Failed to clone base16-shell"
+    if ! git clone https://github.com/chriskempson/base16-shell.git "${base16_dir}"; then
+        print_warning "Failed to clone base16-shell - color themes may not work"
+        return 1
+    fi
     
     print_success "Base16 shell themes installed successfully"
 }
@@ -393,8 +418,6 @@ install_brew_list() {
         "diff-so-fancy"
         "git"
         "jq"
-        "nvm"
-        "pyenv"
         "pipx"
         "tmux"
         "vim"
@@ -427,6 +450,7 @@ install_brew_casks() {
         "google-chrome"
         "rectangle"
         "hammerspoon"
+        "notion"
     )
     
     for cask in "${casks[@]}"; do
@@ -467,44 +491,10 @@ install_brew_fonts() {
 # ───────────────────────────────────────────────────
 
 post_brew_install_setup() {
-    print_info "Setting up language environments"
+    print_info "Post-installation setup complete"
+    print_info "Language environments (Node.js and Python) can be configured using the post-setup script"
     
-    # Setup Node.js via nvm
-    setup_node
-    
-    # Setup Python via pyenv
-    setup_python
-    
-    print_success "Language environments setup complete"
-}
-
-setup_node() {
-    print_info "Setting up Node.js with nvm"
-    
-    # Create NVM directory
-    export NVM_DIR="$HOME/.nvm"
-    mkdir -p "$NVM_DIR"
-    
-    # Load nvm from homebrew for this script session
-    if [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
-        source "/opt/homebrew/opt/nvm/nvm.sh"
-        
-        # Install latest LTS Node.js
-        print_info "Installing latest LTS Node.js"
-        nvm install --lts
-        nvm alias default node
-        nvm use default
-        
-        print_success "Node.js installed and configured via nvm"
-    else
-        print_warning "nvm script not found. Node.js setup incomplete."
-    fi
-}
-
-setup_python() {
-    print_info "Setting up Python prerequisites"
-    
-    print_success "Python prerequisites installed (pyenv available via Homebrew)"
+    print_success "Basic installation complete - run post-setup.sh for language environments"
 }
 
 # ───────────────────────────────────────────────────
@@ -553,7 +543,10 @@ install_astronvim() {
     
     # Install AstroNvim
     print_info "Cloning AstroNvim repository"
-    git clone --depth 1 https://github.com/AstroNvim/template "${nvim_config_dir}" || error_exit "Failed to clone AstroNvim"
+    if ! git clone --depth 1 https://github.com/AstroNvim/template "${nvim_config_dir}"; then
+        print_warning "Failed to clone AstroNvim - Neovim setup incomplete"
+        return 1
+    fi
     
     # Remove the template's .git directory to make it your own
     rm -rf "${nvim_config_dir}/.git"
@@ -735,16 +728,16 @@ full_install() {
     
     # Setup configurations
     link_symlinks
-    setup_tmux_plugins
-    setup_base16
+    setup_tmux_plugins || print_warning "Tmux plugin setup failed - continuing"
+    setup_base16 || print_warning "Base16 setup failed - continuing"
     setup_hammerspoon
     setup_git_ssh
     
-    # Setup language environments
+    # Complete basic setup
     post_brew_install_setup
     
     # Setup AstroNvim
-    setup_astronvim
+    setup_astronvim || print_warning "AstroNvim setup failed - continuing"
     
     # Install and setup Claude Code
     install_claude_code
@@ -764,10 +757,10 @@ reinstall() {
     
     # Reinstall configurations
     link_symlinks
-    setup_tmux_plugins
-    setup_base16
+    setup_tmux_plugins || print_warning "Tmux plugin setup failed - continuing"
+    setup_base16 || print_warning "Base16 setup failed - continuing"
     setup_hammerspoon
-    setup_astronvim
+    setup_astronvim || print_warning "AstroNvim setup failed - continuing"
     
     # Reinstall Claude Code if not present
     if ! command -v claude &> /dev/null; then
@@ -870,18 +863,11 @@ show_final_instructions() {
         echo -e "\n\e[1;33mNext Steps:\e[0m"
         echo -e "\n\e[1;34m1. Restart your terminal or run:\e[0m"
         echo -e "   \e[32msource ~/.bash_profile\e[0m"
-        echo -e "\n\e[1;34m2. Add nvm to your bash profile:\e[0m"
-        echo -e "   \e[32m# Add these lines to your ~/.bash_profile:\e[0m"
-        echo -e "   \e[32mexport NVM_DIR=\"\$HOME/.nvm\"\e[0m"
-        echo -e "   \e[32m[ -s \"/opt/homebrew/opt/nvm/nvm.sh\" ] && \\. \"/opt/homebrew/opt/nvm/nvm.sh\"\e[0m"
-        echo -e "   \e[32m[ -s \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\" ] && \\. \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\"\e[0m"
-        echo -e "\n\e[1;34m3. Set up Python:\e[0m"
-        echo -e "   \e[32m# Install latest Python\e[0m"
-        echo -e "   \e[32mpyenv install 3.12.0  # or latest version\e[0m"
-        echo -e "   \e[32mpyenv global 3.12.0\e[0m"
-        echo -e "\n\e[1;34m4. Configure Claude Code:\e[0m"
+        echo -e "\n\e[1;34m2. Set up language environments:\e[0m"
+        echo -e "   \e[32m./post-setup.sh\e[0m"
+        echo -e "\n\e[1;34m3. Configure Claude Code:\e[0m"
         echo -e "   \e[32mclaude auth login\e[0m"
-        echo -e "\n\e[1;34m5. Launch applications:\e[0m"
+        echo -e "\n\e[1;34m4. Launch applications:\e[0m"
         echo -e "   \e[32m• Hammerspoon - Grant accessibility permissions\e[0m"
         echo -e "   \e[32m• Kitty - Set as default terminal\e[0m"
         echo -e "   \e[32m• Run 'nvim' to complete AstroNvim setup\e[0m"
@@ -897,21 +883,13 @@ show_final_instructions() {
         echo "1. Restart your terminal or run:"
         echo "   source ~/.bash_profile"
         echo ""
-        echo "2. Add nvm to your bash profile:"
-        echo "   # Add these lines to your ~/.bash_profile:"
-        echo "   export NVM_DIR=\"\$HOME/.nvm\""
-        echo "   [ -s \"/opt/homebrew/opt/nvm/nvm.sh\" ] && \\. \"/opt/homebrew/opt/nvm/nvm.sh\""
-        echo "   [ -s \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\" ] && \\. \"/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm\""
+        echo "2. Set up language environments:"
+        echo "   ./post-setup.sh"
         echo ""
-        echo "3. Set up Python:"
-        echo "   # Install latest Python"
-        echo "   pyenv install 3.12.0  # or latest version"
-        echo "   pyenv global 3.12.0"
-        echo ""
-        echo "4. Configure Claude Code:"
+        echo "3. Configure Claude Code:"
         echo "   claude auth login"
         echo ""
-        echo "5. Launch applications:"
+        echo "4. Launch applications:"
         echo "   • Hammerspoon - Grant accessibility permissions"
         echo "   • Kitty - Set as default terminal"
         echo "   • Run 'nvim' to complete AstroNvim setup"
@@ -1030,7 +1008,17 @@ main() {
 # Ensure we're running in bash, not zsh
 if [[ -z "${BASH_VERSION}" ]]; then
     echo "This script must be run with bash. Switching to bash..."
-    exec /opt/homebrew/bin/bash "$0" "$@"
+    # Try different bash locations in order of preference
+    if [[ -f "/opt/homebrew/bin/bash" ]]; then
+        exec /opt/homebrew/bin/bash "$0" "$@"
+    elif [[ -f "/usr/local/bin/bash" ]]; then
+        exec /usr/local/bin/bash "$0" "$@"
+    elif [[ -f "/bin/bash" ]]; then
+        exec /bin/bash "$0" "$@"
+    else
+        echo "Error: No suitable bash found. Please install bash and try again."
+        exit 1
+    fi
 fi
 
 # Run main function with all arguments

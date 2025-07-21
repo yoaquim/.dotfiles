@@ -23,10 +23,18 @@
 - **Command Line Tools** for Xcode
 - **Internet connection** for downloading tools
 
-### One-Command Installation
+### Two-Step Installation
+
+#### Step 1: Core Installation
 ```bash
-# Clone and install everything
+# Clone and install core components
 cd ~ && git clone https://github.com/yoaquim/.dotfiles.git && cd .dotfiles && ./install.sh
+```
+
+#### Step 2: Language Environments
+```bash
+# Setup Node.js and Python environments
+./post-setup.sh
 ```
 
 ### Manual Installation
@@ -35,9 +43,12 @@ cd ~ && git clone https://github.com/yoaquim/.dotfiles.git && cd .dotfiles && ./
 cd ~/
 git clone https://github.com/yoaquim/.dotfiles.git
 
-# 2. Run installation script
+# 2. Run core installation script
 cd ~/.dotfiles
 ./install.sh
+
+# 3. Setup language environments
+./post-setup.sh
 ```
 
 ---
@@ -166,7 +177,8 @@ The `install.sh` script provides several installation modes:
     ├── 🔨 hammerspoon/             # Hammerspoon automation
     │   ├── 📄 init.lua             # Hotkey and automation config
     │   └── 📄 README.md            # Hammerspoon user guide
-    └── 📄 gitconfig                # Git configuration
+    ├── 📄 gitconfig                # Git configuration
+    └── 🚀 post-setup.sh            # Language environment setup script
 ```
 
 ### 🔗 Symlink Structure
