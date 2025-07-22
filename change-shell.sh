@@ -55,14 +55,24 @@ fi
 
 # Change default shell
 print_info "Changing default shell to Homebrew bash"
+print_info "You may be prompted for your password..."
+
+# Try chsh first
 if chsh -s "$HOMEBREW_BASH"; then
     print_success "Default shell changed to $HOMEBREW_BASH"
-    print_info "Changes will take effect after you restart your terminal or log out/in"
 else
-    print_error "Failed to change default shell"
-    print_error "You may need to run: sudo chsh -s $HOMEBREW_BASH $USER"
-    exit 1
+    print_warning "chsh failed, trying with sudo..."
+    if sudo chsh -s "$HOMEBREW_BASH" "$USER"; then
+        print_success "Default shell changed to $HOMEBREW_BASH (with sudo)"
+    else
+        print_error "Both chsh and sudo chsh failed"
+        print_error "Manual commands to try:"
+        print_error "  sudo dscl . -create /Users/$USER UserShell $HOMEBREW_BASH"
+        exit 1
+    fi
 fi
+
+print_info "Changes will take effect after you restart your terminal or log out/in"
 
 # Verify the change
 NEW_SHELL=$(dscl . -read /Users/$USER UserShell | cut -d' ' -f2)
