@@ -36,10 +36,16 @@ FORCE_REINSTALL=false
 # Logging Functions
 # ───────────────────────────────────────────────────
 
-# Check if terminal supports colors - ALWAYS return true for bash
+# Check if terminal supports colors
 supports_color() {
-    # Always enable colors when running in bash
-    return 0
+    # Check if we're in tmux and handle accordingly
+    if [[ -n "${TMUX:-}" ]]; then
+        # In tmux, use tput for colors
+        return 0
+    else
+        # Not in tmux, enable colors
+        return 0
+    fi
 }
 
 log() {
@@ -50,20 +56,20 @@ log() {
     if supports_color; then
         case "${level}" in
             "INFO")
-                echo -e "\n\e[1;34m[INFO]\e[0m ${message}..."
+                printf "\n%s[INFO]%s %s...\n" "$(tput bold; tput setaf 4)" "$(tput sgr0)" "${message}"
                 ;;
             "SUCCESS")
-                echo -e "\n\e[1;32m[SUCCESS]\e[0m ${message}"
+                printf "\n%s[SUCCESS]%s %s\n" "$(tput bold; tput setaf 2)" "$(tput sgr0)" "${message}"
                 ;;
             "ERROR")
-                echo -e "\n\e[1;31m[ERROR]\e[0m ${message}" >&2
+                printf "\n%s[ERROR]%s %s\n" "$(tput bold; tput setaf 1)" "$(tput sgr0)" "${message}" >&2
                 ;;
             "WARNING")
-                echo -e "\n\e[1;33m[WARNING]\e[0m ${message}"
+                printf "\n%s[WARNING]%s %s\n" "$(tput bold; tput setaf 3)" "$(tput sgr0)" "${message}"
                 ;;
             "DEBUG")
                 if [[ "${DEBUG:-false}" == "true" ]]; then
-                    echo -e "\n\e[1;35m[DEBUG]\e[0m ${message}"
+                    printf "\n%s[DEBUG]%s %s\n" "$(tput bold; tput setaf 5)" "$(tput sgr0)" "${message}"
                 fi
                 ;;
         esac
@@ -71,20 +77,20 @@ log() {
         # Fallback to plain text without colors
         case "${level}" in
             "INFO")
-                echo -e "\n[INFO] ${message}..."
+                printf "\n[INFO] %s...\n" "${message}"
                 ;;
             "SUCCESS")
-                echo -e "\n[SUCCESS] ${message}"
+                printf "\n[SUCCESS] %s\n" "${message}"
                 ;;
             "ERROR")
-                echo -e "\n[ERROR] ${message}" >&2
+                printf "\n[ERROR] %s\n" "${message}" >&2
                 ;;
             "WARNING")
-                echo -e "\n[WARNING] ${message}"
+                printf "\n[WARNING] %s\n" "${message}"
                 ;;
             "DEBUG")
                 if [[ "${DEBUG:-false}" == "true" ]]; then
-                    echo -e "\n[DEBUG] ${message}"
+                    printf "\n[DEBUG] %s\n" "${message}"
                 fi
                 ;;
         esac
@@ -203,9 +209,9 @@ confirm_action() {
     fi
     
     if supports_color; then
-        echo -e "\n\e[1;33m[CONFIRM]\e[0m ${message} (y/N): "
+        printf "\n\033[1;33m[CONFIRM]\033[0m %s (y/N): " "${message}"
     else
-        echo -e "\n[CONFIRM] ${message} (y/N): "
+        printf "\n[CONFIRM] %s (y/N): " "${message}"
     fi
     read -r response
     
@@ -933,8 +939,8 @@ change_default_shell() {
         print_info "Current shell: ${current_shell}"
         print_info "To change your default shell to Homebrew bash, run these commands manually:"
         if supports_color; then
-            echo -e "   \e[32msudo sh -c 'echo ${bash_path} >> /etc/shells'\e[0m"
-            echo -e "   \e[32mchsh -s ${bash_path}\e[0m"
+            printf "   \033[32msudo sh -c 'echo %s >> /etc/shells'\033[0m\n" "${bash_path}"
+            printf "   \033[32mchsh -s %s\033[0m\n" "${bash_path}"
         else
             echo "   sudo sh -c 'echo ${bash_path} >> /etc/shells'"
             echo "   chsh -s ${bash_path}"
@@ -951,27 +957,27 @@ change_default_shell() {
 
 show_final_instructions() {
     if supports_color; then
-        echo -e "\n\e[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\e[0m"
-        echo -e "\e[1;36m║                            SETUP COMPLETE!                                   ║\e[0m"
-        echo -e "\e[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\e[0m"
-        echo -e "\n\e[1;33mNext Steps:\e[0m"
-        echo -e "\n\e[1;34m1. Restart your terminal or run:\e[0m"
-        echo -e "   \e[32msource ~/.bash_profile\e[0m"
-        echo -e "\n\e[1;34m2. Set up language environments:\e[0m"
-        echo -e "   \e[32m./post-setup.sh\e[0m"
-        echo -e "\n\e[1;34m3. Configure Claude Code (installed with post-setup.sh):\e[0m"
-        echo -e "   \e[32mclaude auth login\e[0m"
-        echo -e "\n\e[1;34m4. Optional - Change default shell to Homebrew bash:\e[0m"
-        echo -e "   \e[32msudo sh -c 'echo /opt/homebrew/bin/bash >> /etc/shells'\e[0m"
-        echo -e "   \e[32mchsh -s /opt/homebrew/bin/bash\e[0m"
-        echo -e "\n\e[1;34m5. If using zsh (and configurations not auto-added), add to ~/.zshrc:\e[0m"
-        echo -e "   \e[32meval \"\$(/opt/homebrew/bin/brew shellenv)\"\e[0m"
-        echo -e "   \e[32msource ~/.bash_profile\e[0m"
-        echo -e "\n\e[1;34m6. Launch applications:\e[0m"
-        echo -e "   \e[32m• Hammerspoon - Grant accessibility permissions\e[0m"
-        echo -e "   \e[32m• Kitty - Set as default terminal\e[0m"
-        echo -e "   \e[32m• Run 'nvim' to complete AstroNvim setup\e[0m"
-        echo -e "\n\e[1;35mEnjoy your new development environment! 🚀\e[0m\n"
+        printf "\n\033[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\033[0m\n"
+        printf "\033[1;36m║                            SETUP COMPLETE!                                   ║\033[0m\n"
+        printf "\033[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\033[0m\n"
+        printf "\n\033[1;33mNext Steps:\033[0m\n"
+        printf "\n\033[1;34m1. Restart your terminal or run:\033[0m\n"
+        printf "   \033[32msource ~/.bash_profile\033[0m\n"
+        printf "\n\033[1;34m2. Set up language environments:\033[0m\n"
+        printf "   \033[32mbash ./post-setup.sh\033[0m\n"
+        printf "\n\033[1;34m3. Configure Claude Code (installed with post-setup.sh):\033[0m\n"
+        printf "   \033[32mclaude auth login\033[0m\n"
+        printf "\n\033[1;34m4. Optional - Change default shell to Homebrew bash:\033[0m\n"
+        printf "   \033[32msudo sh -c 'echo /opt/homebrew/bin/bash >> /etc/shells'\033[0m\n"
+        printf "   \033[32mchsh -s /opt/homebrew/bin/bash\033[0m\n"
+        printf "\n\033[1;34m5. If using zsh (and configurations not auto-added), add to ~/.zshrc:\033[0m\n"
+        printf "   \033[32meval \"\$(/opt/homebrew/bin/brew shellenv)\"\033[0m\n"
+        printf "   \033[32msource ~/.bash_profile\033[0m\n"
+        printf "\n\033[1;34m6. Launch applications:\033[0m\n"
+        printf "   \033[32m• Hammerspoon - Grant accessibility permissions\033[0m\n"
+        printf "   \033[32m• Kitty - Set as default terminal\033[0m\n"
+        printf "   \033[32m• Run 'nvim' to complete AstroNvim setup\033[0m\n"
+        printf "\n\033[1;35mEnjoy your new development environment! 🚀\033[0m\n\n"
     else
         echo ""
         echo "=============================================================================="

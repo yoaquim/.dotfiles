@@ -45,32 +45,32 @@ log() {
     if supports_color; then
         case "${level}" in
             "INFO")
-                echo -e "\n\e[1;34m[INFO]\e[0m ${message}..."
+                printf "\n%s[INFO]%s %s...\n" "$(tput bold; tput setaf 4)" "$(tput sgr0)" "${message}"
                 ;;
             "SUCCESS")
-                echo -e "\n\e[1;32m[SUCCESS]\e[0m ${message}"
+                printf "\n%s[SUCCESS]%s %s\n" "$(tput bold; tput setaf 2)" "$(tput sgr0)" "${message}"
                 ;;
             "ERROR")
-                echo -e "\n\e[1;31m[ERROR]\e[0m ${message}" >&2
+                printf "\n%s[ERROR]%s %s\n" "$(tput bold; tput setaf 1)" "$(tput sgr0)" "${message}" >&2
                 ;;
             "WARNING")
-                echo -e "\n\e[1;33m[WARNING]\e[0m ${message}"
+                printf "\n%s[WARNING]%s %s\n" "$(tput bold; tput setaf 3)" "$(tput sgr0)" "${message}"
                 ;;
         esac
     else
         # Fallback to plain text without colors
         case "${level}" in
             "INFO")
-                echo -e "\n[INFO] ${message}..."
+                printf "\n[INFO] %s...\n" "${message}"
                 ;;
             "SUCCESS")
-                echo -e "\n[SUCCESS] ${message}"
+                printf "\n[SUCCESS] %s\n" "${message}"
                 ;;
             "ERROR")
-                echo -e "\n[ERROR] ${message}" >&2
+                printf "\n[ERROR] %s\n" "${message}" >&2
                 ;;
             "WARNING")
-                echo -e "\n[WARNING] ${message}"
+                printf "\n[WARNING] %s\n" "${message}"
                 ;;
         esac
     fi
@@ -316,19 +316,19 @@ install_claude_code() {
 
 show_final_instructions() {
     if supports_color; then
-        echo -e "\n\e[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\e[0m"
-        echo -e "\e[1;36m║                     LANGUAGE SETUP COMPLETE!                                ║\e[0m"
-        echo -e "\e[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\e[0m"
-        echo -e "\n\e[1;33mNext Steps:\e[0m"
-        echo -e "\n\e[1;34m1. Restart your terminal or run:\e[0m"
-        echo -e "   \e[32msource ~/.bash_profile\e[0m"
-        echo -e "\n\e[1;34m2. Verify installations:\e[0m"
-        echo -e "   \e[32mnode --version && npm --version\e[0m"
-        echo -e "   \e[32mpython --version && pip --version\e[0m"
-        echo -e "\n\e[1;34m3. Configure Claude Code:\e[0m"
-        echo -e "   \e[32mclaude auth login\e[0m"
-        echo -e "\n\e[1;34m4. You can now safely run nvim to complete AstroNvim setup\e[0m"
-        echo -e "\n\e[1;35mEnjoy your complete development environment! 🚀\e[0m\n"
+        printf "\n\033[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\033[0m\n"
+        printf "\033[1;36m║                     LANGUAGE SETUP COMPLETE!                                ║\033[0m\n"
+        printf "\033[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\033[0m\n"
+        printf "\n\033[1;33mNext Steps:\033[0m\n"
+        printf "\n\033[1;34m1. Restart your terminal or run:\033[0m\n"
+        printf "   \033[32msource ~/.bash_profile\033[0m\n"
+        printf "\n\033[1;34m2. Verify installations:\033[0m\n"
+        printf "   \033[32mnode --version && npm --version\033[0m\n"
+        printf "   \033[32mpython --version && pip --version\033[0m\n"
+        printf "\n\033[1;34m3. Configure Claude Code:\033[0m\n"
+        printf "   \033[32mclaude auth login\033[0m\n"
+        printf "\n\033[1;34m4. You can now safely run nvim to complete AstroNvim setup\033[0m\n"
+        printf "\n\033[1;35mEnjoy your complete development environment! 🚀\033[0m\n\n"
     else
         echo ""
         echo "=============================================================================="
