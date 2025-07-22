@@ -959,7 +959,7 @@ change_default_shell() {
 show_final_instructions() {
     if supports_color; then
         printf "\n\033[1;36m╔══════════════════════════════════════════════════════════════════════════════╗\033[0m\n"
-        printf "\033[1;36m║                            SETUP COMPLETE!                                   ║\033[0m\n"
+        printf "\033[1;36m║                             SETUP COMPLETE                                   ║\033[0m\n"
         printf "\033[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\033[0m\n"
         printf "\n\033[1;33mNext Steps:\033[0m\n"
         printf "\n\033[1;34m1. Restart your terminal or run:\033[0m\n"
@@ -982,7 +982,7 @@ show_final_instructions() {
     else
         echo ""
         echo "=============================================================================="
-        echo "                           SETUP COMPLETE!"
+        echo "                            SETUP COMPLETE                                    "
         echo "=============================================================================="
         echo ""
         echo "Next Steps:"
