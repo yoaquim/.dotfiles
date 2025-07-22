@@ -176,7 +176,15 @@ setup_nvm() {
         
         # Add nvm to local bash profile if not already present
         local bash_profile_local="$HOME/.config/bash/bash_profile_local"
-        if [[ -f "${bash_profile_local}" ]] && ! grep -q "NVM_DIR" "${bash_profile_local}"; then
+        
+        # Create bash_profile_local if it doesn't exist
+        if [[ ! -f "${bash_profile_local}" ]]; then
+            mkdir -p "$(dirname "${bash_profile_local}")"
+            touch "${bash_profile_local}"
+            print_info "Created bash_profile_local"
+        fi
+        
+        if ! grep -q "NVM_DIR" "${bash_profile_local}"; then
             print_info "Adding nvm configuration to local bash profile"
             cat >> "${bash_profile_local}" << 'EOF'
 
@@ -186,6 +194,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
 EOF
             print_success "nvm configuration added to local bash profile"
+        else
+            print_info "nvm configuration already exists in bash_profile_local"
         fi
         
     else
@@ -223,7 +233,15 @@ setup_pyenv() {
         
         # Add pyenv to local bash profile if not already present
         local bash_profile_local="$HOME/.config/bash/bash_profile_local"
-        if [[ -f "${bash_profile_local}" ]] && ! grep -q "pyenv init" "${bash_profile_local}"; then
+        
+        # Create bash_profile_local if it doesn't exist
+        if [[ ! -f "${bash_profile_local}" ]]; then
+            mkdir -p "$(dirname "${bash_profile_local}")"
+            touch "${bash_profile_local}"
+            print_info "Created bash_profile_local"
+        fi
+        
+        if ! grep -q "pyenv init" "${bash_profile_local}"; then
             print_info "Adding pyenv configuration to local bash profile"
             cat >> "${bash_profile_local}" << 'EOF'
 
@@ -233,6 +251,8 @@ eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 EOF
             print_success "pyenv configuration added to local bash profile"
+        else
+            print_info "pyenv configuration already exists in bash_profile_local"
         fi
         
     else
@@ -306,6 +326,102 @@ install_claude_code() {
         fi
     else
         print_warning "npm not found - cannot install Claude Code"
+        return 1
+    fi
+}
+
+# ───────────────────────────────────────────────────
+# Claude Code Installation
+# ───────────────────────────────────────────────────
+
+install_claude_code() {
+    print_info "Installing Claude Code CLI"
+    
+    if command -v claude &> /dev/null; then
+        print_info "Claude Code already installed"
+        return 0
+    fi
+    
+    # Check if npm is available (Node.js installed)
+    if command -v npm &> /dev/null; then
+        print_info "Installing Claude Code via npm"
+        if npm install -g @anthropic-ai/claude-code; then
+            # Verify installation
+            if command -v claude &> /dev/null; then
+                local version
+                version=$(claude --version 2>/dev/null || echo "unknown")
+                print_success "Claude Code installed successfully (version: ${version})"
+            else
+                print_warning "Claude Code installation verification failed"
+                return 1
+            fi
+        else
+            print_warning "Failed to install Claude Code via npm"
+            return 1
+        fi
+    else
+        print_warning "npm not found. Cannot install Claude Code"
+        return 1
+    fi
+}
+
+# ───────────────────────────────────────────────────
+# Utility Functions (needed for AstroNvim setup)
+# ───────────────────────────────────────────────────
+
+backup_directory() {
+    local dir="${1}"
+    if [[ -d "${dir}" ]]; then
+        local backup="${dir}.backup.$(date +%Y%m%d_%H%M%S)"
+        print_info "Backing up '${dir}' to '${backup}'"
+        mv "${dir}" "${backup}"
+        print_success "Backup created at '${backup}'"
+    fi
+}
+
+create_symlink() {
+    local source="${1}"
+    local target="${2}"
+    local force="${3:-false}"
+    
+    # Create parent directory if it doesn't exist
+    local parent_dir="$(dirname "${target}")"
+    if [[ ! -d "${parent_dir}" ]]; then
+        mkdir -p "${parent_dir}"
+    fi
+    
+    # Remove existing file/symlink if force is true
+    if [[ "${force}" == "true" ]] && [[ -e "${target}" || -L "${target}" ]]; then
+        rm -f "${target}"
+    fi
+    
+    # Create symlink if it doesn't exist
+    if [[ ! -e "${target}" ]]; then
+        ln -s "${source}" "${target}"
+        print_success "Created symlink: ${target} -> ${source}"
+    else
+        print_info "Symlink already exists: ${target}"
+    fi
+}
+
+confirm_action() {
+    local message="${1}"
+    local response
+    
+    if [[ "${FORCE_REINSTALL:-false}" == "true" ]]; then
+        return 0
+    fi
+    
+    if supports_color; then
+        printf "\n\033[1;33m[CONFIRM]\033[0m %s (y/N): " "${message}"
+    else
+        printf "\n[CONFIRM] %s (y/N): " "${message}"
+    fi
+    read -r response
+    
+    if [[ "${response}" =~ ^[Yy]$ ]]; then
+        return 0
+    else
         return 1
     fi
 }
