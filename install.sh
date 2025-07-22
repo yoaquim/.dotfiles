@@ -478,6 +478,7 @@ install_brew_list() {
         "diff-so-fancy"
         "git"
         "jq"
+        "neovim"
         "pipx"
         "tmux"
         "vim"

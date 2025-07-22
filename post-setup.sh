@@ -174,18 +174,18 @@ setup_nvm() {
         # Install Claude Code now that npm is available
         install_claude_code
         
-        # Add nvm to bash profile if not already present
-        local bash_profile="$HOME/.bash_profile"
-        if [[ -f "${bash_profile}" ]] && ! grep -q "NVM_DIR" "${bash_profile}"; then
-            print_info "Adding nvm configuration to bash profile"
-            cat >> "${bash_profile}" << 'EOF'
+        # Add nvm to local bash profile if not already present
+        local bash_profile_local="$HOME/.config/bash/bash_profile_local"
+        if [[ -f "${bash_profile_local}" ]] && ! grep -q "NVM_DIR" "${bash_profile_local}"; then
+            print_info "Adding nvm configuration to local bash profile"
+            cat >> "${bash_profile_local}" << 'EOF'
 
 # NVM Configuration
 export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
 EOF
-            print_success "nvm configuration added to bash profile"
+            print_success "nvm configuration added to local bash profile"
         fi
         
     else
@@ -221,18 +221,18 @@ setup_pyenv() {
             print_warning "Could not determine latest Python version"
         fi
         
-        # Add pyenv to bash profile if not already present
-        local bash_profile="$HOME/.bash_profile"
-        if [[ -f "${bash_profile}" ]] && ! grep -q "pyenv init" "${bash_profile}"; then
-            print_info "Adding pyenv configuration to bash profile"
-            cat >> "${bash_profile}" << 'EOF'
+        # Add pyenv to local bash profile if not already present
+        local bash_profile_local="$HOME/.config/bash/bash_profile_local"
+        if [[ -f "${bash_profile_local}" ]] && ! grep -q "pyenv init" "${bash_profile_local}"; then
+            print_info "Adding pyenv configuration to local bash profile"
+            cat >> "${bash_profile_local}" << 'EOF'
 
 # Pyenv Configuration
 export PATH="$HOME/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 EOF
-            print_success "pyenv configuration added to bash profile"
+            print_success "pyenv configuration added to local bash profile"
         fi
         
     else
