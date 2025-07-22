@@ -248,7 +248,6 @@ setup_pyenv() {
 # Pyenv Configuration
 export PATH="$HOME/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
 EOF
             print_success "pyenv configuration added to local bash profile"
         else
