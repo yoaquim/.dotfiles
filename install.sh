@@ -481,6 +481,7 @@ install_brew_list() {
         "neovim"
         "pipx"
         "tmux"
+        "lazygit"
         "vim"
         "tldr"
         "gh"
