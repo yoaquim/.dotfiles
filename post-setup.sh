@@ -329,40 +329,6 @@ install_claude_code() {
     fi
 }
 
-# ───────────────────────────────────────────────────
-# Claude Code Installation
-# ───────────────────────────────────────────────────
-
-install_claude_code() {
-    print_info "Installing Claude Code CLI"
-    
-    if command -v claude &> /dev/null; then
-        print_info "Claude Code already installed"
-        return 0
-    fi
-    
-    # Check if npm is available (Node.js installed)
-    if command -v npm &> /dev/null; then
-        print_info "Installing Claude Code via npm"
-        if npm install -g @anthropic-ai/claude-code; then
-            # Verify installation
-            if command -v claude &> /dev/null; then
-                local version
-                version=$(claude --version 2>/dev/null || echo "unknown")
-                print_success "Claude Code installed successfully (version: ${version})"
-            else
-                print_warning "Claude Code installation verification failed"
-                return 1
-            fi
-        else
-            print_warning "Failed to install Claude Code via npm"
-            return 1
-        fi
-    else
-        print_warning "npm not found. Cannot install Claude Code"
-        return 1
-    fi
-}
 
 # ───────────────────────────────────────────────────
 # Utility Functions (needed for AstroNvim setup)

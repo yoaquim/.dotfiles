@@ -148,6 +148,8 @@ The `install.sh` script provides several installation modes:
 ~/.dotfiles/
 ├── 📄 README.md                    # This comprehensive guide
 ├── 🚀 install.sh                   # Automated installation script
+├── 🚀 post-setup.sh                # Language environment setup script
+├── 🔧 change-shell.sh              # Shell change helper script
 ├── 🙈 .gitignore                   # Git ignore rules
 └── 📁 config/                      # Configuration files
     ├── 🐚 bash/                    # Bash shell configuration
@@ -177,8 +179,7 @@ The `install.sh` script provides several installation modes:
     ├── 🔨 hammerspoon/             # Hammerspoon automation
     │   ├── 📄 init.lua             # Hotkey and automation config
     │   └── 📄 README.md            # Hammerspoon user guide
-    ├── 📄 gitconfig                # Git configuration
-    └── 🚀 post-setup.sh            # Language environment setup script
+    └── 📄 gitconfig                # Git configuration
 ```
 
 ### 🔗 Symlink Structure
@@ -225,9 +226,11 @@ After installation, configurations are linked to standard locations:
 - **Rectangle** - Window management
 
 #### **Development**
-- **Docker** - Containerization platform
 - **Postman** - API testing tool
 - **Claude** - AI coding assistant
+- **1Password** - Password manager
+
+> **Note**: Docker is currently disabled in the installation due to package conflicts. Install manually with `brew install --cask docker` if needed.
 
 #### **Communication**
 - **Slack** - Team communication
@@ -236,12 +239,18 @@ After installation, configurations are linked to standard locations:
 #### **Creative & Media**
 - **Adobe Creative Cloud** - Design tools
 - **Spotify** - Music streaming
+- **Notion** - Note-taking and productivity
 
 #### **Utilities**
 - **Google Chrome** - Web browser
 - **TlDr** - Simplified man pages
 - **Bottom** - System monitor
 - **Lazygit** - Git TUI
+- **Ripgrep** - Fast text search
+- **fd** - Fast file finder
+- **Tree-sitter** - Parser generator
+- **Go** - Programming language
+- **gdu** - Disk usage analyzer
 
 ---
 
