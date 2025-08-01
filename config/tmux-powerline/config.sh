@@ -89,6 +89,17 @@ export TMUX_POWERLINE_STATUS_RIGHT_LENGTH="0"
 	# export TMUX_POWERLINE_SEG_WAN_IP_SYMBOL_COLOUR="255"
 # }
 
+# vcs_branch.sh {
+	# Max length of the branch name.
+	export TMUX_POWERLINE_SEG_VCS_BRANCH_MAX_LEN="32"
+	# Symbol when branch length exceeds max length
+	export TMUX_POWERLINE_SEG_VCS_BRANCH_TRUNCATE_SYMBOL="…"
+	# Branch symbol for git repositories
+	export TMUX_POWERLINE_SEG_VCS_BRANCH_GIT_SYMBOL=""
+	# Branch symbol colour for git repositories
+	export TMUX_POWERLINE_SEG_VCS_BRANCH_GIT_SYMBOL_COLOUR="15"
+# }
+
 
 # Bottom-Bar Segments
 # ───────────────────────────────────────────────────
@@ -100,6 +111,7 @@ if [ -z "$TMUX_POWERLINE_LEFT_STATUS_SEGMENTS" ]; then
     "lan_ip             208 0 ${TMUX_POWERLINE_SEPARATOR_RIGHT_THIN}"
     "wan_ip             84  0 ${TMUX_POWERLINE_SEPARATOR_RIGHT_THIN}"
     "pwd                99  255"
+    "vcs_branch         197 15"
   )
 fi
 
