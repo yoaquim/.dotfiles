@@ -91,7 +91,7 @@ export TMUX_POWERLINE_STATUS_RIGHT_LENGTH="0"
 
 # vcs_branch.sh {
 	# Max length of the branch name.
-	export TMUX_POWERLINE_SEG_VCS_BRANCH_MAX_LEN="32"
+	export TMUX_POWERLINE_SEG_VCS_BRANCH_MAX_LEN=""
 	# Symbol when branch length exceeds max length
 	export TMUX_POWERLINE_SEG_VCS_BRANCH_TRUNCATE_SYMBOL="…"
 	# Branch symbol for git repositories
