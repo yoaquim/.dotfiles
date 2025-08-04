@@ -41,25 +41,20 @@ return {
   },
   {
     "echasnovski/mini.move",
-    keys = {
-      { "<C-M-h>", desc = "Move left" },
-      { "<C-M-l>", desc = "Move right" },
-      { "<C-M-j>", desc = "Move down" },
-      { "<C-M-k>", desc = "Move up" },
-    },
+    event = "VeryLazy",
     config = function()
-      require("mini.move").setup {
+      require("mini.move").setup({
         mappings = {
-          left       = "<C-M-h>",
-          right      = "<C-M-l>",
-          down       = "<C-M-j>",
-          up         = "<C-M-k>",
-          line_left  = "<C-M-h>",
-          line_right = "<C-M-l>",
-          line_down  = "<C-M-j>",
-          line_up    = "<C-M-k>",
+          left = '<C-M-h>',
+          right = '<C-M-l>',
+          down = '<C-M-j>',
+          up = '<C-M-k>',
+          line_left = '<C-M-h>',
+          line_right = '<C-M-l>',
+          line_down = '<C-M-j>',
+          line_up = '<C-M-k>',
         },
-      }
+      })
     end,
   },
 
