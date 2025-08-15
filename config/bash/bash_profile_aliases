@@ -5,9 +5,20 @@
 alias c="clear"
 alias cl="clear"
 
-# clipboard copy and paste
-alias pbc="pbcopy"
-alias pbp="pbpaste"
+# clipboard copy and paste (OS-aware)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    alias pbc="pbcopy"
+    alias pbp="pbpaste"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux (Wayland)
+    alias pbc="wl-copy"
+    alias pbp="wl-paste"
+else
+    # Fallback
+    alias pbc="echo 'Clipboard copy not available on this system'"
+    alias pbp="echo 'Clipboard paste not available on this system'"
+fi
 
 # Vim aliases
 alias v="nvim"
@@ -60,7 +71,7 @@ alias cdp="cd ~/Projects/"
 alias cds="cd ~/Scratches/"
 
 # copy current dir to clipboard
-alias cwd="pwd | pbcopy"
+alias cwd="pwd | pbc"
 
 # `touch` alias (create new file)
 alias t="touch"

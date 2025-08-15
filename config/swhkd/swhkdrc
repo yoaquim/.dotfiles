@@ -1,0 +1,283 @@
+# ═══════════════════════════════════════════════════
+# swhkd Configuration - Global Hotkey Daemon
+# Hammerspoon replacement for Wayland/Linux
+# ═══════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────
+# Application Shortcuts
+# ───────────────────────────────────────────────────
+
+# Terminal
+super + return
+    kitty
+
+# App launcher (replaces Alfred)
+super + space
+    rofi -show drun
+
+# File manager
+super + e
+    thunar
+
+# Web browser
+super + w
+    firefox
+
+# Text editor
+super + v
+    neovim
+
+# Screenshot utilities
+Print
+    grim - | wl-copy
+
+super + Print
+    grim -g "$(slurp)" - | wl-copy
+
+# ───────────────────────────────────────────────────
+# System Controls
+# ───────────────────────────────────────────────────
+
+# Lock screen
+super + l
+    swaylock-effects
+
+# System power menu
+super + shift + q
+    ~/.config/rofi/scripts/power-menu.sh
+
+# Restart waybar
+super + ctrl + r
+    killall waybar && waybar &
+
+# ───────────────────────────────────────────────────
+# Window Management (Hyprland specific)
+# ───────────────────────────────────────────────────
+
+# Close active window
+super + q
+    hyprctl dispatch killactive
+
+# Toggle floating
+super + shift + v
+    hyprctl dispatch togglefloating
+
+# Fullscreen toggle
+super + f
+    hyprctl dispatch fullscreen
+
+# Move focus
+super + h
+    hyprctl dispatch movefocus l
+
+super + j
+    hyprctl dispatch movefocus d
+
+super + k
+    hyprctl dispatch movefocus u
+
+super + l
+    hyprctl dispatch movefocus r
+
+# Move windows
+super + shift + h
+    hyprctl dispatch movewindow l
+
+super + shift + j
+    hyprctl dispatch movewindow d
+
+super + shift + k
+    hyprctl dispatch movewindow u
+
+super + shift + l
+    hyprctl dispatch movewindow r
+
+# Resize windows
+super + ctrl + h
+    hyprctl dispatch resizeactive -50 0
+
+super + ctrl + j
+    hyprctl dispatch resizeactive 0 50
+
+super + ctrl + k
+    hyprctl dispatch resizeactive 0 -50
+
+super + ctrl + l
+    hyprctl dispatch resizeactive 50 0
+
+# ───────────────────────────────────────────────────
+# Workspace Management
+# ───────────────────────────────────────────────────
+
+# Switch to workspace
+super + 1
+    hyprctl dispatch workspace 1
+
+super + 2
+    hyprctl dispatch workspace 2
+
+super + 3
+    hyprctl dispatch workspace 3
+
+super + 4
+    hyprctl dispatch workspace 4
+
+super + 5
+    hyprctl dispatch workspace 5
+
+super + 6
+    hyprctl dispatch workspace 6
+
+super + 7
+    hyprctl dispatch workspace 7
+
+super + 8
+    hyprctl dispatch workspace 8
+
+super + 9
+    hyprctl dispatch workspace 9
+
+super + 0
+    hyprctl dispatch workspace 10
+
+# Move window to workspace
+super + shift + 1
+    hyprctl dispatch movetoworkspace 1
+
+super + shift + 2
+    hyprctl dispatch movetoworkspace 2
+
+super + shift + 3
+    hyprctl dispatch movetoworkspace 3
+
+super + shift + 4
+    hyprctl dispatch movetoworkspace 4
+
+super + shift + 5
+    hyprctl dispatch movetoworkspace 5
+
+super + shift + 6
+    hyprctl dispatch movetoworkspace 6
+
+super + shift + 7
+    hyprctl dispatch movetoworkspace 7
+
+super + shift + 8
+    hyprctl dispatch movetoworkspace 8
+
+super + shift + 9
+    hyprctl dispatch movetoworkspace 9
+
+super + shift + 0
+    hyprctl dispatch movetoworkspace 10
+
+# Special workspace (scratchpad)
+super + s
+    hyprctl dispatch togglespecialworkspace magic
+
+super + shift + s
+    hyprctl dispatch movetospecialworkspace magic
+
+# ───────────────────────────────────────────────────
+# Audio Controls
+# ───────────────────────────────────────────────────
+
+# Volume controls
+XF86AudioRaiseVolume
+    wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+
+XF86AudioLowerVolume
+    wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+
+XF86AudioMute
+    wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+
+XF86AudioMicMute
+    wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+
+# Media controls
+XF86AudioPlay
+    playerctl play-pause
+
+XF86AudioNext
+    playerctl next
+
+XF86AudioPrev
+    playerctl previous
+
+XF86AudioStop
+    playerctl stop
+
+# ───────────────────────────────────────────────────
+# Brightness Controls
+# ───────────────────────────────────────────────────
+
+XF86MonBrightnessUp
+    brightnessctl set 10%+
+
+XF86MonBrightnessDown
+    brightnessctl set 10%-
+
+# ───────────────────────────────────────────────────
+# Wallpaper Controls
+# ───────────────────────────────────────────────────
+
+# Next wallpaper (Variety)
+super + alt + n
+    variety --next
+
+# Previous wallpaper (Variety)
+super + alt + p
+    variety --previous
+
+# Favorite current wallpaper
+super + alt + f
+    variety --favorite
+
+# Trash current wallpaper
+super + alt + t
+    variety --trash
+
+# ───────────────────────────────────────────────────
+# Development Shortcuts
+# ───────────────────────────────────────────────────
+
+# Quick terminal in home
+super + alt + return
+    kitty --directory ~
+
+# Quick terminal in current focused window directory (if available)
+super + shift + return
+    kitty --directory "$(pwd)"
+
+# Open nvim in current directory
+super + shift + v
+    kitty -e nvim .
+
+# Git status in terminal
+super + g
+    kitty -e bash -c "git status; read"
+
+# ───────────────────────────────────────────────────
+# Custom Application Shortcuts
+# ───────────────────────────────────────────────────
+
+# VS Code (if installed)
+super + c
+    code
+
+# Calculator
+super + equal
+    rofi -show calc -modi calc -no-show-match -no-sort -calc-command "echo -n '{result}' | wl-copy"
+
+# Emoji picker (if rofi-emoji installed)
+super + period
+    rofi -show emoji -modi emoji
+
+# Password manager (if installed)
+super + p
+    rofi -show pass -modi pass:rofi-pass
+
+# Color picker (if hyprpicker installed) 
+super + shift + c
+    hyprpicker -a

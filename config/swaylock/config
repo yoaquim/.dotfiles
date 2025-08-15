@@ -1,0 +1,142 @@
+# ═══════════════════════════════════════════════════
+# Swaylock-effects Configuration
+# Modern lock screen with visual effects
+# ═══════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────
+# Display Settings
+# ───────────────────────────────────────────────────
+
+# Disable showing failed attempts
+show-failed-attempts
+
+# Show keyboard layout
+show-keyboard-layout
+
+# Don't detach from the controlling terminal
+no-unlock-indicator
+
+# Turn screen off after timeout (seconds)
+screen-off-timeout=300
+
+# ───────────────────────────────────────────────────
+# Visual Effects
+# ───────────────────────────────────────────────────
+
+# Enable blur effect
+effect-blur=7x5
+
+# Fade in effect
+fade-in=0.2
+
+# Scale effect
+effect-scale=0.5
+
+# Pixelate effect (alternative to blur)
+# effect-pixelate=5
+
+# Vignette effect
+effect-vignette=0.5:0.5
+
+# Color effects
+effect-greyscale
+
+# ───────────────────────────────────────────────────
+# Colors and Appearance
+# ───────────────────────────────────────────────────
+
+# Background color (semi-transparent dark)
+color=00000080
+
+# Ring colors
+ring-color=ffffff30
+ring-clear-color=ffffff00
+ring-caps-lock-color=ffcc0030
+ring-ver-color=00ff0030
+ring-wrong-color=ff000030
+
+# Key colors
+key-hl-color=ffffff80
+bs-hl-color=ff000080
+
+# Separator color
+separator-color=ffffff00
+
+# Inside colors
+inside-color=00000000
+inside-clear-color=ffffff00
+inside-caps-lock-color=ffcc0000
+inside-ver-color=00ff0000
+inside-wrong-color=ff000000
+
+# Text colors
+text-color=ffffff
+text-clear-color=ffffff
+text-ver-color=ffffff
+text-wrong-color=ffffff
+text-caps-lock-color=ffffff
+
+# ───────────────────────────────────────────────────
+# Layout and Positioning
+# ───────────────────────────────────────────────────
+
+# Indicator radius
+indicator-radius=100
+
+# Indicator thickness
+indicator-thickness=7
+
+# Ring position
+line-color=ffffff00
+line-clear-color=ffffff00
+line-caps-lock-color=ffcc0000
+line-ver-color=00ff0000
+line-wrong-color=ff000000
+
+# ───────────────────────────────────────────────────
+# Font Settings
+# ───────────────────────────────────────────────────
+
+# Font family
+font=JetBrainsMono Nerd Font Mono
+
+# Font size
+font-size=16
+
+# ───────────────────────────────────────────────────
+# Clock Display
+# ───────────────────────────────────────────────────
+
+# Show clock
+clock
+
+# Clock format
+datestr=%A, %B %e
+
+# Time format  
+timestr=%I:%M %p
+
+# ───────────────────────────────────────────────────
+# Images and Wallpaper
+# ───────────────────────────────────────────────────
+
+# Use current wallpaper as background
+# image=~/.config/swaylock/lockscreen.png
+
+# Scaling mode for background image
+# scaling=fill
+
+# Alternative: solid color background (enabled above with 'color')
+
+# ───────────────────────────────────────────────────
+# Security Settings
+# ───────────────────────────────────────────────────
+
+# Disable caps lock text
+disable-caps-lock-text
+
+# Grace period (seconds) - time before lock becomes active
+grace=2
+
+# Ignore empty passwords
+ignore-empty-password

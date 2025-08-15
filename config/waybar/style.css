@@ -1,0 +1,225 @@
+/*
+ * ═══════════════════════════════════════════════════
+ * Waybar Modern Theme
+ * Inspired by minimalist design with good contrast
+ * ═══════════════════════════════════════════════════
+ */
+
+/* ───────────────────────────────────────────────────
+ * Global Styles
+ * ─────────────────────────────────────────────────── */
+* {
+    font-family: "JetBrainsMono Nerd Font Mono", monospace;
+    font-size: 13px;
+    border: none;
+    border-radius: 0px;
+}
+
+/* ───────────────────────────────────────────────────
+ * Main Window
+ * ─────────────────────────────────────────────────── */
+window#waybar {
+    background-color: rgba(43, 48, 59, 0.95);
+    border-bottom: 3px solid rgba(100, 114, 125, 0.5);
+    color: #ffffff;
+    transition-property: background-color;
+    transition-duration: 0.5s;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+/* ───────────────────────────────────────────────────
+ * Workspaces
+ * ─────────────────────────────────────────────────── */
+#workspaces {
+    margin: 0 4px;
+}
+
+#workspaces button {
+    padding: 0 8px;
+    background-color: transparent;
+    color: #ffffff;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease-in-out;
+}
+
+#workspaces button:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+#workspaces button.focused {
+    background-color: #64727D;
+    border-bottom: 3px solid #ffffff;
+}
+
+#workspaces button.urgent {
+    background-color: #eb4d4b;
+    color: #ffffff;
+}
+
+/* ───────────────────────────────────────────────────
+ * Submap (Mode indicator)
+ * ─────────────────────────────────────────────────── */
+#submap {
+    background-color: #64727D;
+    color: #ffffff;
+    padding: 0 10px;
+    margin: 0 4px;
+}
+
+/* ───────────────────────────────────────────────────
+ * Clock
+ * ─────────────────────────────────────────────────── */
+#clock {
+    background-color: #64727D;
+    color: #ffffff;
+    padding: 0 15px;
+    margin: 0 4px;
+    font-weight: bold;
+}
+
+#clock:hover {
+    background-color: #5e6c75;
+}
+
+/* ───────────────────────────────────────────────────
+ * System Information Modules
+ * ─────────────────────────────────────────────────── */
+#battery,
+#network,
+#pulseaudio,
+#tray {
+    padding: 0 10px;
+    color: #ffffff;
+    margin: 0 2px;
+}
+
+/* ───────────────────────────────────────────────────
+ * Battery
+ * ─────────────────────────────────────────────────── */
+#battery {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+#battery.charging, #battery.plugged {
+    background-color: #26A65B;
+    color: #ffffff;
+}
+
+@keyframes blink {
+    to {
+        background-color: #ffffff;
+        color: #000000;
+    }
+}
+
+#battery.critical:not(.charging) {
+    background-color: #f53c3c;
+    color: #ffffff;
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+/* ───────────────────────────────────────────────────
+ * Network
+ * ─────────────────────────────────────────────────── */
+#network {
+    background-color: #2980b9;
+    color: #ffffff;
+}
+
+#network.disconnected {
+    background-color: #f53c3c;
+}
+
+/* ───────────────────────────────────────────────────
+ * Audio
+ * ─────────────────────────────────────────────────── */
+#pulseaudio {
+    background-color: #f1c40f;
+    color: #000000;
+}
+
+#pulseaudio.muted {
+    background-color: #90b1b1;
+    color: #2a5c45;
+}
+
+/* ───────────────────────────────────────────────────
+ * System Tray
+ * ─────────────────────────────────────────────────── */
+#tray {
+    background-color: #2980b9;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: #eb4d4b;
+}
+
+/* ───────────────────────────────────────────────────
+ * Custom Power Menu
+ * ─────────────────────────────────────────────────── */
+#custom-power {
+    background-color: #eb4d4b;
+    color: #ffffff;
+    padding: 0 15px;
+    margin: 0 4px;
+    font-size: 16px;
+}
+
+#custom-power:hover {
+    background-color: #c0392b;
+}
+
+/* ───────────────────────────────────────────────────
+ * Tooltip Styling
+ * ─────────────────────────────────────────────────── */
+tooltip {
+    background-color: rgba(43, 48, 59, 0.9);
+    color: #ffffff;
+    border-radius: 5px;
+    border: 1px solid rgba(100, 114, 125, 0.5);
+}
+
+tooltip label {
+    color: #ffffff;
+}
+
+/* ───────────────────────────────────────────────────
+ * Animations and Transitions
+ * ─────────────────────────────────────────────────── */
+#workspaces,
+#clock,
+#battery,
+#network,
+#pulseaudio,
+#tray,
+#custom-power {
+    transition: all 0.3s ease-in-out;
+}
+
+#workspaces button,
+#clock,
+#battery,
+#network,
+#pulseaudio,
+#custom-power {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+#workspaces button:hover,
+#clock:hover,
+#custom-power:hover {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}

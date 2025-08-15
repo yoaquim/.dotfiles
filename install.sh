@@ -135,9 +135,31 @@ check_command() {
 }
 
 check_os() {
-    if [[ "${OS}" != "Darwin" ]]; then
-        error_exit "This script is designed for macOS only. Current OS: ${OS}"
+    case "${OS}" in
+        "Darwin")
+            print_debug "Detected macOS"
+            ;;
+        "Linux")
+            print_debug "Detected Linux"
+            ;;
+        *)
+            error_exit "Unsupported OS: ${OS}. This script supports macOS and Linux only."
+            ;;
+    esac
+}
+
+get_linux_distro() {
+    if [[ -f /etc/os-release ]]; then
+        source /etc/os-release
+        echo "${ID}"
+    else
+        echo "unknown"
     fi
+}
+
+is_fedora() {
+    local distro="$(get_linux_distro)"
+    [[ "${distro}" == "fedora" ]]
 }
 
 check_directory() {
@@ -223,7 +245,7 @@ confirm_action() {
 }
 
 # ───────────────────────────────────────────────────
-# Homebrew Functions
+# Package Manager Functions
 # ───────────────────────────────────────────────────
 
 install_homebrew() {
@@ -300,6 +322,57 @@ brew_install_if_missing() {
 }
 
 # ───────────────────────────────────────────────────
+# Linux Package Manager Functions
+# ───────────────────────────────────────────────────
+
+dnf_package_exists() {
+    local package="${1}"
+    dnf list installed "${package}" &> /dev/null
+}
+
+dnf_install_if_missing() {
+    local package="${1}"
+    
+    if dnf_package_exists "${package}"; then
+        print_debug "Package '${package}' already installed"
+        return 0
+    fi
+    
+    print_info "Installing package '${package}'"
+    if sudo dnf install -y "${package}"; then
+        print_success "Successfully installed '${package}'"
+    else
+        print_warning "Failed to install package '${package}' - continuing with other packages"
+        return 1
+    fi
+}
+
+install_package_manager() {
+    if [[ "${OS}" == "Darwin" ]]; then
+        install_homebrew
+    elif [[ "${OS}" == "Linux" ]] && is_fedora; then
+        print_info "Using dnf package manager (Fedora detected)"
+        # dnf is pre-installed on Fedora, just update
+        sudo dnf update -y
+    else
+        print_error "Unsupported Linux distribution. Only Fedora is currently supported."
+        return 1
+    fi
+}
+
+install_package() {
+    local package="${1}"
+    local macos_name="${2:-$package}"
+    local linux_name="${3:-$package}"
+    
+    if [[ "${OS}" == "Darwin" ]]; then
+        brew_install_if_missing "${macos_name}" "formula"
+    elif [[ "${OS}" == "Linux" ]] && is_fedora; then
+        dnf_install_if_missing "${linux_name}"
+    fi
+}
+
+# ───────────────────────────────────────────────────
 # Symlink Functions
 # ───────────────────────────────────────────────────
 
@@ -357,10 +430,19 @@ link_symlinks() {
     # Also link for zsh users (if they want to use the same configs)
     setup_zsh_compatibility
     
-    # Link application configurations
+    # Link application configurations (cross-platform)
     create_symlink "${SCRIPT_DIR}/config/tmux" "$HOME/.config/tmux"
     create_symlink "${SCRIPT_DIR}/config/kitty" "$HOME/.config/kitty"
     create_symlink "${SCRIPT_DIR}/config/gitconfig" "$HOME/.gitconfig"
+    
+    # Link OS-specific configurations
+    if [[ "${OS}" == "Darwin" ]]; then
+        # macOS specific
+        setup_macos_symlinks
+    elif [[ "${OS}" == "Linux" ]]; then
+        # Linux specific  
+        setup_linux_symlinks
+    fi
     
     print_success "Symlinks created successfully"
 }
@@ -393,6 +475,47 @@ EOF
     else
         print_debug "Not using zsh, skipping zsh compatibility setup"
     fi
+}
+
+setup_macos_symlinks() {
+    print_info "Creating macOS-specific symlinks"
+    
+    # Hammerspoon automation
+    create_symlink "${SCRIPT_DIR}/config/hammerspoon" "$HOME/.hammerspoon"
+    
+    print_success "macOS symlinks created"
+}
+
+setup_linux_symlinks() {
+    print_info "Creating Linux-specific symlinks"
+    
+    # Hyprland compositor
+    create_symlink "${SCRIPT_DIR}/config/hyprland" "$HOME/.config/hypr"
+    
+    # Waybar status bar
+    create_symlink "${SCRIPT_DIR}/config/waybar" "$HOME/.config/waybar"
+    
+    # Rofi launcher
+    create_symlink "${SCRIPT_DIR}/config/rofi" "$HOME/.config/rofi"
+    
+    # Wallpaper management
+    create_symlink "${SCRIPT_DIR}/config/variety" "$HOME/.config/variety"
+    create_symlink "${SCRIPT_DIR}/config/hyprpaper" "$HOME/.config/hypr"
+    
+    # Screen locker
+    create_symlink "${SCRIPT_DIR}/config/swaylock" "$HOME/.config/swaylock"
+    
+    # Global hotkeys (needs system-level symlink)
+    if confirm_action "Create system-level symlink for swhkd? (requires sudo)"; then
+        sudo mkdir -p /etc/swhkd
+        sudo ln -sf "${SCRIPT_DIR}/config/swhkd/swhkdrc" /etc/swhkd/swhkdrc
+        print_info "swhkd configuration linked to /etc/swhkd/"
+    else
+        print_warning "swhkd configuration skipped - link manually with:"
+        print_warning "sudo mkdir -p /etc/swhkd && sudo ln -sf ${SCRIPT_DIR}/config/swhkd/swhkdrc /etc/swhkd/swhkdrc"
+    fi
+    
+    print_success "Linux symlinks created"
 }
 
 # ───────────────────────────────────────────────────
@@ -467,31 +590,33 @@ setup_hammerspoon() {
 # Homebrew Package Installation
 # ───────────────────────────────────────────────────
 
-install_brew_list() {
-    print_info "Installing Homebrew packages"
+install_core_packages() {
+    print_info "Installing core packages"
     
+    # Format: "cross-platform-name:macos-name:linux-name"
     local packages=(
-        "awscli"
-        "bash"
-        "bash-completion"
-        "coreutils"
-        "diff-so-fancy"
-        "git"
-        "jq"
-        "neovim"
-        "pipx"
-        "tmux"
-        "lazygit"
-        "vim"
-        "tldr"
-        "gh"
+        "awscli::awscli2"
+        "bash::bash"
+        "bash-completion::bash-completion"
+        "coreutils::coreutils"
+        "diff-so-fancy::git-delta"
+        "git::git"
+        "jq::jq"
+        "neovim::neovim"
+        "pipx::python3-pipx"
+        "tmux::tmux"
+        "lazygit::lazygit"
+        "vim::vim-enhanced"
+        "tldr::tldr"
+        "gh::gh"
     )
     
-    for package in "${packages[@]}"; do
-        brew_install_if_missing "${package}" "formula"
+    for package_spec in "${packages[@]}"; do
+        IFS=':' read -r common_name macos_name linux_name <<< "${package_spec}"
+        install_package "${common_name}" "${macos_name}" "${linux_name}"
     done
     
-    print_success "Homebrew packages installed successfully"
+    print_success "Core packages installed successfully"
 }
 
 install_xcode() {
@@ -570,6 +695,59 @@ install_brew_fonts() {
     done
     
     print_success "Homebrew fonts installed successfully"
+}
+
+install_linux_desktop_packages() {
+    print_info "Installing Linux desktop packages (Hyprland ecosystem)"
+    
+    if [[ "${OS}" != "Linux" ]] || ! is_fedora; then
+        print_debug "Skipping Linux desktop packages - not on Fedora"
+        return 0
+    fi
+    
+    # Hyprland and Wayland ecosystem
+    local hyprland_packages=(
+        "hyprland"
+        "hyprpaper" 
+        "waybar"
+        "rofi-wayland"
+        "swayidle"
+        "wl-clipboard"
+        "kitty"
+        "variety"
+        "papirus-icon-theme"
+        "papirus-icon-theme-dark"
+    )
+    
+    for package in "${hyprland_packages[@]}"; do
+        dnf_install_if_missing "${package}"
+    done
+    
+    # Install swaylock-effects from COPR
+    install_swaylock_effects
+    
+    # Note: swhkd needs to be built from source
+    print_info "Note: swhkd (hotkey daemon) needs to be built from source"
+    print_info "Run: sudo dnf install rust cargo make git polkit-devel scdoc"
+    print_info "Then: git clone https://github.com/waycrate/swhkd.git && cd swhkd && make build && sudo make install"
+    
+    print_success "Linux desktop packages installed successfully"
+}
+
+install_swaylock_effects() {
+    print_info "Installing swaylock-effects from COPR"
+    
+    if [[ "${OS}" != "Linux" ]] || ! is_fedora; then
+        return 0
+    fi
+    
+    # Enable COPR repository for swaylock-effects
+    if ! sudo dnf copr enable -y eddsalkield/swaylock-effects; then
+        print_warning "Failed to enable swaylock-effects COPR repository"
+        return 1
+    fi
+    
+    dnf_install_if_missing "swaylock-effects"
 }
 
 # ───────────────────────────────────────────────────
@@ -744,21 +922,22 @@ full_install() {
     # Validate environment
     validate_environment
     
-    # Install Homebrew if not present
-    if ! install_homebrew; then
-        print_warning "Homebrew installation failed - some features may not work"
-        print_info "You can install Homebrew manually later and re-run this script"
+    # Install package manager if needed
+    if ! install_package_manager; then
+        print_warning "Package manager setup failed - some features may not work"
         return 1
     fi
     
-    # Update Homebrew
-    print_info "Updating Homebrew"
-    brew update || print_warning "Failed to update Homebrew"
-    
     # Install packages
-    install_brew_list
-    install_brew_casks
-    install_brew_fonts
+    install_core_packages
+    
+    # Install OS-specific packages
+    if [[ "${OS}" == "Darwin" ]]; then
+        install_brew_casks
+        install_brew_fonts
+    elif [[ "${OS}" == "Linux" ]]; then
+        install_linux_desktop_packages
+    fi
     
     # Optional: Install full Xcode
     install_xcode

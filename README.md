@@ -19,9 +19,16 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **macOS** (this setup is designed for macOS only)
+
+#### macOS
+- **macOS** (any recent version)
 - **Command Line Tools** for Xcode
 - **Internet connection** for downloading tools
+
+#### Linux (Fedora)
+- **Fedora** (latest version recommended)
+- **Internet connection** for downloading packages
+- **sudo privileges** for system package installation
 
 ### Two-Step Installation
 
@@ -38,6 +45,8 @@ bash ./post-setup.sh
 ```
 
 ### Manual Installation
+
+#### macOS
 ```bash
 # 1. Clone the repository
 cd ~/
@@ -51,24 +60,46 @@ bash ./install.sh
 bash ./post-setup.sh
 ```
 
+#### Linux (Fedora)
+```bash
+# 1. Clone the repository
+cd ~/
+git clone https://github.com/yoaquim/.dotfiles.git
+
+# 2. Run installation script (automatically detects Linux)
+cd ~/.dotfiles
+bash ./install.sh
+
+# 3. Setup language environments and AstroNvim
+bash ./post-setup.sh
+
+# 4. Build swhkd hotkey daemon (manual build required)
+sudo dnf install rust cargo make git polkit-devel scdoc
+git clone https://github.com/waycrate/swhkd.git /tmp/swhkd
+cd /tmp/swhkd && make build && sudo make install
+
+# 5. Initialize wallpaper setup
+~/.config/variety/scripts/setup-wallpapers.sh
+```
+
 ---
 
 ## ⚡ What's Included
 
-### 🐚 **Shell Environment**
+### 🐚 **Shell Environment** (Cross-Platform)
 - **Modern Bash** with vim-style editing
-- **50+ custom aliases** for productivity
+- **50+ custom aliases** for productivity (OS-aware clipboard support)
 - **Advanced functions** (directory bookmarking, git workflows)
 - **Eternal history** with timestamps
 - **Base16 color schemes** integration
 
-### 🖥️ **Terminal Setup**
+### 🖥️ **Terminal Setup** (Cross-Platform)
 - **Kitty Terminal** - GPU-accelerated with ligatures
 - **Tmux** - Terminal multiplexer with custom key bindings
-- **Tmux Powerline** - Beautiful two-line status bar
+- **Tmux Powerline** - Beautiful two-line status bar (macOS)
 - **JetBrains Mono Nerd Font** - Programming font with icons
 
-### 🔧 **Development Tools**
+### 🔧 **Development Tools** (Cross-Platform)
 - **AstroNvim** - Modern Neovim distribution
 - **Git** - Enhanced with diff-so-fancy and custom aliases
 - **Node.js** - Latest LTS via nvm
@@ -76,15 +107,27 @@ bash ./post-setup.sh
 - **Claude Code** - AI-powered coding assistant
 
 ### 📦 **Package Management**
-- **Homebrew** - Package manager with curated app list
+- **macOS**: Homebrew with curated app list
+- **Linux**: dnf (Fedora) with Hyprland ecosystem packages
 - **TPM** - Tmux plugin manager
 - **Language Managers** - nvm, pyenv, pipx
 
 ### 🎨 **Applications**
+
+#### macOS
 - **Productivity**: Alfred, Todoist, Rectangle, Hammerspoon
 - **Development**: Docker, Postman, VS Code alternatives
 - **Communication**: Slack, WhatsApp
 - **Creative**: Adobe Creative Cloud, Spotify
+
+#### Linux (Hyprland Desktop)
+- **Window Manager**: Hyprland (tiling + floating compositor)
+- **Status Bar**: Waybar with modern theme
+- **App Launcher**: rofi (Alfred replacement)
+- **Wallpaper**: Variety + hyprpaper with automatic rotation
+- **Screen Lock**: swaylock-effects with blur
+- **Hotkeys**: swhkd (Hammerspoon replacement)
+- **Icons**: Papirus + Papirus Dark themes
 
 ---
 
@@ -152,39 +195,64 @@ The `install.sh` script provides several installation modes:
 ├── 🔧 change-shell.sh              # Shell change helper script
 ├── 🙈 .gitignore                   # Git ignore rules
 └── 📁 config/                      # Configuration files
-    ├── 🐚 bash/                    # Bash shell configuration
+    ├── 🐚 bash/                    # Bash shell configuration (Cross-Platform)
     │   ├── 📄 bash_profile         # Main bash profile
-    │   ├── 📄 bash_profile_aliases # Command aliases
+    │   ├── 📄 bash_profile_aliases # Command aliases (OS-aware)
     │   ├── 📄 bash_profile_functions # Custom functions
     │   ├── 📄 bash_profile_git     # Git-specific configurations
     │   ├── 📄 bash_profile_tools   # Tool integrations
     │   ├── 📄 bash_profile_local   # Local machine settings
     │   └── 📄 README.md            # Bash configuration guide
-    ├── 🐱 kitty/                   # Kitty terminal configuration
+    ├── 🐱 kitty/                   # Kitty terminal configuration (Cross-Platform)
     │   ├── 📄 kitty.conf           # Terminal settings
     │   ├── 📄 sample.conf          # Sample configuration
     │   └── 📄 README.md            # Kitty user guide
-    ├── 🖥️ tmux/                    # Tmux configuration
+    ├── 🖥️ tmux/                    # Tmux configuration (Cross-Platform)
     │   ├── 📄 tmux.conf            # Tmux settings
     │   ├── 📁 plugins/             # Tmux plugins
     │   └── 📄 README.md            # Tmux user guide
-    ├── 🔋 tmux-powerline/          # Tmux powerline theme
+    ├── 🔋 tmux-powerline/          # Tmux powerline theme (macOS)
     │   ├── 📄 config.sh            # Powerline configuration
     │   ├── 📁 themes/              # Visual themes
     │   └── 📄 README.md            # Powerline guide
-    ├── 🚀 nvim/                    # Neovim configuration
+    ├── 🚀 nvim/                    # Neovim configuration (Cross-Platform)
     │   ├── 📄 polish.lua           # AstroNvim customizations
     │   ├── 📄 user.lua             # Plugin configurations
     │   └── 📄 README.md            # AstroNvim user guide
-    ├── 🔨 hammerspoon/             # Hammerspoon automation
+    ├── 🔨 hammerspoon/             # Hammerspoon automation (macOS)
     │   ├── 📄 init.lua             # Hotkey and automation config
     │   └── 📄 README.md            # Hammerspoon user guide
-    └── 📄 gitconfig                # Git configuration
+    ├── 🏙️ hyprland/                # Hyprland compositor (Linux)
+    │   ├── 📄 hyprland.conf        # Window manager configuration
+    │   └── 📄 README.md            # Hyprland user guide
+    ├── 📊 waybar/                  # Status bar (Linux)
+    │   ├── 📄 config               # Waybar configuration
+    │   ├── 📄 style.css            # Modern theme styling
+    │   └── 📄 README.md            # Waybar user guide  
+    ├── 🚀 rofi/                    # App launcher (Linux)
+    │   ├── 📄 config.rasi          # Rofi configuration and theme
+    │   ├── 📁 scripts/             # Power menu and utilities
+    │   └── 📄 README.md            # Rofi user guide
+    ├── ⌨️ swhkd/                   # Global hotkeys (Linux)
+    │   ├── 📄 swhkdrc              # Hotkey configuration
+    │   └── 📄 README.md            # swhkd user guide
+    ├── 🖼️ variety/                 # Wallpaper manager (Linux)
+    │   ├── 📄 variety.conf         # Wallpaper rotation settings
+    │   ├── 📁 scripts/             # Setup and utility scripts
+    │   └── 📄 README.md            # Variety user guide
+    ├── 🎨 hyprpaper/               # Wallpaper utility (Linux)
+    │   ├── 📄 hyprpaper.conf       # Wallpaper display settings
+    │   └── 📄 README.md            # Hyprpaper user guide
+    ├── 🔒 swaylock/                # Screen locker (Linux)
+    │   ├── 📄 config               # Lock screen configuration
+    │   └── 📄 README.md            # Swaylock user guide
+    └── 📄 gitconfig                # Git configuration (Cross-Platform)
 ```
 
 ### 🔗 Symlink Structure
 After installation, configurations are linked to standard locations:
 
+#### Cross-Platform
 | Source | Target | Purpose |
 |--------|--------|---------|
 | `config/bash/bash_profile` | `~/.bash_profile` | Main bash configuration |
@@ -195,13 +263,27 @@ After installation, configurations are linked to standard locations:
 | `config/gitconfig` | `~/.gitconfig` | Git configuration |
 | `config/nvim/polish.lua` | `~/.config/nvim/lua/polish.lua` | Neovim customizations |
 | `config/nvim/user.lua` | `~/.config/nvim/lua/plugins/user.lua` | Neovim plugins |
+
+#### macOS Specific
+| Source | Target | Purpose |
+|--------|--------|---------|
 | `config/hammerspoon/` | `~/.config/hammerspoon/` | Hammerspoon automation |
+
+#### Linux Specific  
+| Source | Target | Purpose |
+|--------|--------|---------|
+| `config/hyprland/` | `~/.config/hypr/` | Hyprland compositor |
+| `config/waybar/` | `~/.config/waybar/` | Status bar |
+| `config/rofi/` | `~/.config/rofi/` | App launcher |
+| `config/swhkd/` | `/etc/swhkd/` | Global hotkeys |
+| `config/variety/` | `~/.config/variety/` | Wallpaper manager |
+| `config/swaylock/` | `~/.config/swaylock/` | Screen locker |
 
 ---
 
 ## 🛠️ Tools & Applications
 
-### 🔧 Development Tools
+### 🔧 Development Tools (Cross-Platform)
 | Tool | Purpose | Configuration |
 |------|---------|---------------|
 | **Bash** | Modern shell with enhancements | `config/bash/` |
@@ -209,7 +291,26 @@ After installation, configurations are linked to standard locations:
 | **Tmux** | Terminal multiplexer | `config/tmux/` |
 | **Neovim** | Modern text editor | `config/nvim/` |
 | **Kitty** | GPU-accelerated terminal | `config/kitty/` |
+
+### 🖥️ Desktop Environment Tools
+
+#### macOS
+| Tool | Purpose | Configuration |
+|------|---------|---------------|
 | **Hammerspoon** | macOS automation and hotkeys | `config/hammerspoon/` |
+| **Alfred** | App launcher and productivity | External app |
+| **Rectangle** | Window management | External app |
+
+#### Linux (Hyprland)
+| Tool | Purpose | Configuration |
+|------|---------|---------------|
+| **Hyprland** | Tiling Wayland compositor | `config/hyprland/` |
+| **Waybar** | Status bar with system info | `config/waybar/` |
+| **rofi** | App launcher (Alfred replacement) | `config/rofi/` |
+| **swhkd** | Global hotkeys (Hammerspoon replacement) | `config/swhkd/` |
+| **Variety** | Wallpaper manager with rotation | `config/variety/` |
+| **hyprpaper** | Fast wallpaper utility | `config/hyprpaper/` |
+| **swaylock** | Screen locker with effects | `config/swaylock/` |
 
 ### 📦 Package Managers
 | Tool | Purpose | Auto-Setup |
@@ -522,22 +623,68 @@ tmux list-sessions | grep -v attached | cut -d: -f1 | xargs -t -n1 tmux kill-ses
 ## 📚 Additional Resources
 
 ### 📖 Configuration Guides
+
+#### Cross-Platform
 - **[Bash Configuration Guide](config/bash/README.md)** - Complete bash setup
 - **[Kitty Terminal Guide](config/kitty/README.md)** - Terminal customization
 - **[Tmux User Guide](config/tmux/README.md)** - Terminal multiplexer
-- **[Tmux Powerline Guide](config/tmux-powerline/README.md)** - Status line setup
 - **[AstroNvim Guide](config/nvim/README.md)** - Neovim configuration
+
+#### macOS Specific
+- **[Tmux Powerline Guide](config/tmux-powerline/README.md)** - Status line setup
 - **[Hammerspoon Guide](config/hammerspoon/README.md)** - macOS automation setup
 
+#### Linux Specific
+- **[Hyprland Guide](config/hyprland/README.md)** - Window manager setup
+- **[Waybar Guide](config/waybar/README.md)** - Status bar configuration
+- **[Rofi Guide](config/rofi/README.md)** - App launcher setup
+- **[swhkd Guide](config/swhkd/README.md)** - Global hotkey configuration
+- **[Variety Guide](config/variety/README.md)** - Wallpaper management
+- **[Hyprpaper Guide](config/hyprpaper/README.md)** - Wallpaper utility
+- **[Swaylock Guide](config/swaylock/README.md)** - Screen locker
+
 ### 🔗 External Resources
-- **[Homebrew Documentation](https://brew.sh/)** - Package manager
+
+#### Cross-Platform
 - **[Base16 Colors](https://github.com/chriskempson/base16)** - Color schemes
 - **[AstroNvim Documentation](https://astronvim.github.io/)** - Neovim distribution
 - **[Tmux Wiki](https://github.com/tmux/tmux/wiki)** - Terminal multiplexer
 
+#### macOS
+- **[Homebrew Documentation](https://brew.sh/)** - Package manager
+
+#### Linux
+- **[Hyprland Wiki](https://wiki.hyprland.org/)** - Hyprland compositor
+- **[Waybar Wiki](https://github.com/Alexays/Waybar/wiki)** - Status bar
+- **[Arch Wiki Wayland](https://wiki.archlinux.org/title/Wayland)** - Wayland info
+- **[swhkd Repository](https://github.com/waycrate/swhkd)** - Hotkey daemon
+
 ---
 
-> **💡 Tip**: After installation, run `source ~/.bash_profile` or start a new terminal session to activate all configurations. Use the individual README files in each config directory for detailed usage instructions!
+## 🎯 Quick Start Guide
+
+### After Installation
+
+#### Both Systems
+1. **Restart terminal** or run `source ~/.bash_profile`
+2. **Verify installations**: Check that `nvim`, `git`, `tmux` work
+3. **Explore aliases**: Try `la`, `gs`, `pbc`/`pbp` (clipboard)
+
+#### macOS Users
+4. **Launch applications**: Open Alfred, Rectangle, Hammerspoon
+5. **Grant permissions**: Allow Hammerspoon accessibility access
+6. **Set defaults**: Make Kitty your default terminal
+
+#### Linux Users  
+4. **Start Hyprland**: Select Hyprland from your display manager
+5. **Learn shortcuts**: 
+   - `Super + Space` → App launcher
+   - `Super + Return` → Terminal
+   - `Super + L` → Lock screen
+   - `Super + Alt + N/P` → Cycle wallpapers
+6. **Check status**: Verify waybar appears at top
+
+> **💡 Tip**: Use the individual README files in each config directory for detailed usage instructions and customization options!
 
 ---
 
