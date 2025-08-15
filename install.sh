@@ -188,14 +188,34 @@ validate_environment() {
     check_command "curl"
     check_command "git"
     
-    # Check for Xcode Command Line Tools (required for Homebrew)
-    if ! xcode-select -p &> /dev/null; then
-        print_warning "Xcode Command Line Tools not found"
-        print_info "Installing Xcode Command Line Tools..."
-        print_info "You may be prompted to install them - please accept and wait for completion"
-        xcode-select --install || print_warning "Failed to trigger Xcode Command Line Tools installation"
-        print_info "Please run this script again after installing Xcode Command Line Tools"
-        exit 1
+    # OS-specific validation
+    if [[ "${OS}" == "Darwin" ]]; then
+        # Check for Xcode Command Line Tools (required for Homebrew on macOS)
+        if ! xcode-select -p &> /dev/null; then
+            print_warning "Xcode Command Line Tools not found"
+            print_info "Installing Xcode Command Line Tools..."
+            print_info "You may be prompted to install them - please accept and wait for completion"
+            xcode-select --install || print_warning "Failed to trigger Xcode Command Line Tools installation"
+            print_info "Please run this script again after installing Xcode Command Line Tools"
+            exit 1
+        fi
+    elif [[ "${OS}" == "Linux" ]]; then
+        # Check for Linux-specific requirements
+        if is_fedora_atomic; then
+            print_info "Detected Fedora Atomic - checking rpm-ostree and flatpak"
+            check_command "rpm-ostree"
+            check_command "flatpak"
+        elif is_fedora; then
+            print_info "Detected traditional Fedora - checking dnf"
+            check_command "dnf"
+        else
+            print_warning "Unknown Linux distribution - proceeding with caution"
+        fi
+        
+        # Check for sudo access
+        if ! sudo -n true 2>/dev/null; then
+            print_info "Note: sudo access required for package installation"
+        fi
     fi
     
     print_success "Environment validation complete"
@@ -918,18 +938,20 @@ post_brew_install_setup() {
 install_nvim_deps() {
     print_info "Installing Neovim dependencies"
     
+    # Cross-platform packages (package-name:macos-name:linux-name)
     local nvim_deps=(
-        "ripgrep"
-        "lazygit"
-        "fd"
-        "tree-sitter"
-        "go"
-        "bottom"
-        "gdu"
+        "ripgrep::ripgrep"
+        "lazygit::lazygit" 
+        "fd::fd-find"
+        "tree-sitter::tree-sitter"
+        "go::golang"
+        "bottom::bottom"
+        "gdu::gdu"
     )
     
-    for dep in "${nvim_deps[@]}"; do
-        brew_install_if_missing "${dep}" "formula"
+    for dep_spec in "${nvim_deps[@]}"; do
+        IFS=':' read -r common_name macos_name linux_name <<< "${dep_spec}"
+        install_package "${common_name}" "${macos_name}" "${linux_name}"
     done
     
     print_success "Neovim dependencies installed successfully"
@@ -1085,12 +1107,11 @@ full_install() {
     if [[ "${OS}" == "Darwin" ]]; then
         install_brew_casks
         install_brew_fonts
+        # Optional: Install full Xcode (macOS only)
+        install_xcode
     elif [[ "${OS}" == "Linux" ]]; then
         install_linux_desktop_packages
     fi
-    
-    # Optional: Install full Xcode
-    install_xcode
     
     # Install Neovim dependencies
     install_nvim_deps
