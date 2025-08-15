@@ -31,6 +31,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
 FORCE_REINSTALL=false
+REBOOT_REQUIRED=false
 
 # ───────────────────────────────────────────────────
 # Logging Functions
@@ -322,27 +323,55 @@ brew_install_if_missing() {
 }
 
 # ───────────────────────────────────────────────────
-# Linux Package Manager Functions
+# Linux Package Manager Functions (Fedora Atomic)
 # ───────────────────────────────────────────────────
 
-dnf_package_exists() {
-    local package="${1}"
-    dnf list installed "${package}" &> /dev/null
+is_fedora_atomic() {
+    command -v rpm-ostree &> /dev/null
 }
 
-dnf_install_if_missing() {
+rpm_ostree_package_exists() {
+    local package="${1}"
+    rpm -q "${package}" &> /dev/null
+}
+
+flatpak_package_exists() {
+    local package="${1}"
+    flatpak list | grep -q "${package}"
+}
+
+rpm_ostree_install_if_missing() {
     local package="${1}"
     
-    if dnf_package_exists "${package}"; then
+    if rpm_ostree_package_exists "${package}"; then
         print_debug "Package '${package}' already installed"
         return 0
     fi
     
-    print_info "Installing package '${package}'"
-    if sudo dnf install -y "${package}"; then
-        print_success "Successfully installed '${package}'"
+    print_info "Installing system package '${package}' (requires reboot)"
+    if sudo rpm-ostree install "${package}"; then
+        print_success "Successfully queued '${package}' for installation"
+        REBOOT_REQUIRED=true
     else
         print_warning "Failed to install package '${package}' - continuing with other packages"
+        return 1
+    fi
+}
+
+flatpak_install_if_missing() {
+    local package="${1}"
+    local repo="${2:-flathub}"
+    
+    if flatpak_package_exists "${package}"; then
+        print_debug "Flatpak '${package}' already installed"
+        return 0
+    fi
+    
+    print_info "Installing Flatpak app '${package}'"
+    if flatpak install -y "${repo}" "${package}"; then
+        print_success "Successfully installed '${package}'"
+    else
+        print_warning "Failed to install Flatpak '${package}' - continuing with other packages"
         return 1
     fi
 }
@@ -350,12 +379,18 @@ dnf_install_if_missing() {
 install_package_manager() {
     if [[ "${OS}" == "Darwin" ]]; then
         install_homebrew
+    elif [[ "${OS}" == "Linux" ]] && is_fedora_atomic; then
+        print_info "Using rpm-ostree + Flatpak (Fedora Atomic detected)"
+        # Ensure Flathub is enabled
+        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        # Update system
+        sudo rpm-ostree upgrade
     elif [[ "${OS}" == "Linux" ]] && is_fedora; then
         print_info "Using dnf package manager (Fedora detected)"
         # dnf is pre-installed on Fedora, just update
         sudo dnf update -y
     else
-        print_error "Unsupported Linux distribution. Only Fedora is currently supported."
+        print_error "Unsupported Linux distribution. Only Fedora and Fedora Atomic are supported."
         return 1
     fi
 }
@@ -367,6 +402,8 @@ install_package() {
     
     if [[ "${OS}" == "Darwin" ]]; then
         brew_install_if_missing "${macos_name}" "formula"
+    elif [[ "${OS}" == "Linux" ]] && is_fedora_atomic; then
+        rpm_ostree_install_if_missing "${linux_name}"
     elif [[ "${OS}" == "Linux" ]] && is_fedora; then
         dnf_install_if_missing "${linux_name}"
     fi
@@ -698,19 +735,87 @@ install_brew_fonts() {
 }
 
 install_linux_desktop_packages() {
-    print_info "Installing Linux desktop packages (Hyprland ecosystem)"
+    print_info "Installing Linux desktop packages (Hyprland ecosystem on Fedora Atomic)"
     
-    if [[ "${OS}" != "Linux" ]] || ! is_fedora; then
-        print_debug "Skipping Linux desktop packages - not on Fedora"
+    if [[ "${OS}" != "Linux" ]]; then
+        print_debug "Skipping Linux desktop packages - not on Linux"
         return 0
     fi
     
-    # Hyprland and Wayland ecosystem
+    if is_fedora_atomic; then
+        install_fedora_atomic_packages
+    elif is_fedora; then
+        install_fedora_traditional_packages  
+    else
+        print_error "Unsupported Linux distribution"
+        return 1
+    fi
+}
+
+install_fedora_atomic_packages() {
+    print_info "Installing packages for Fedora Atomic (rpm-ostree + Flatpak)"
+    
+    # System packages via rpm-ostree (require reboot)
+    local system_packages=(
+        "hyprland"
+        "waybar" 
+        "rofi-wayland"
+        "swayidle"
+        "wl-clipboard"
+        "kitty"
+        "papirus-icon-theme"
+        "rust"
+        "cargo"
+        "make"
+        "git"
+        "polkit-devel"
+        "gcc"
+        "gcc-c++"
+    )
+    
+    print_info "Installing system packages (will require reboot after completion)"
+    for package in "${system_packages[@]}"; do
+        rpm_ostree_install_if_missing "${package}"
+    done
+    
+    # Desktop applications via Flatpak (no reboot needed)
+    local flatpak_apps=(
+        "org.mozilla.firefox"
+        "com.spotify.Client" 
+        "com.slack.Slack"
+        "org.telegram.desktop"
+        "org.libreoffice.LibreOffice"
+        "org.gimp.GIMP"
+    )
+    
+    print_info "Installing desktop applications via Flatpak"
+    for app in "${flatpak_apps[@]}"; do
+        flatpak_install_if_missing "${app}"
+    done
+    
+    # Manual installations needed
+    install_variety_atomic
+    install_hyprpaper_atomic
+    install_swaylock_atomic
+    install_swhkd_atomic
+    
+    if [[ "${REBOOT_REQUIRED:-false}" == "true" ]]; then
+        print_warning "System packages installed - REBOOT REQUIRED to complete installation"
+        print_info "After reboot, run the script again to complete setup"
+    fi
+    
+    print_success "Fedora Atomic packages installed successfully"
+}
+
+install_fedora_traditional_packages() {
+    print_info "Installing packages for traditional Fedora (dnf)"
+    
+    # Hyprland and Wayland ecosystem  
     local hyprland_packages=(
         "hyprland"
-        "hyprpaper" 
+        "hyprpaper"
         "waybar"
-        "rofi-wayland"
+        "rofi-wayland" 
         "swayidle"
         "wl-clipboard"
         "kitty"
@@ -726,12 +831,57 @@ install_linux_desktop_packages() {
     # Install swaylock-effects from COPR
     install_swaylock_effects
     
-    # Note: swhkd needs to be built from source
-    print_info "Note: swhkd (hotkey daemon) needs to be built from source"
-    print_info "Run: sudo dnf install rust cargo make git polkit-devel scdoc"
-    print_info "Then: git clone https://github.com/waycrate/swhkd.git && cd swhkd && make build && sudo make install"
+    print_success "Traditional Fedora packages installed successfully"
+}
+
+# ───────────────────────────────────────────────────
+# Fedora Atomic Specific Installations
+# ───────────────────────────────────────────────────
+
+install_variety_atomic() {
+    print_info "Installing Variety wallpaper manager (Fedora Atomic)"
     
-    print_success "Linux desktop packages installed successfully"
+    # Variety might not be available in base repos for Atomic
+    # Try Flatpak first, fallback to manual installation
+    if ! flatpak_install_if_missing "io.github.varietywalls.variety" "flathub"; then
+        print_warning "Variety not available via Flatpak, trying pip installation"
+        pip3 install --user variety || print_warning "Failed to install Variety"
+    fi
+}
+
+install_hyprpaper_atomic() {
+    print_info "Installing hyprpaper (Fedora Atomic)"
+    
+    # hyprpaper should be available via rpm-ostree
+    rpm_ostree_install_if_missing "hyprpaper"
+}
+
+install_swaylock_atomic() {
+    print_info "Installing swaylock-effects (Fedora Atomic)"
+    
+    # Try to enable COPR and install via rpm-ostree
+    if command -v dnf &> /dev/null; then
+        # If dnf is available (even on Atomic for COPR management)
+        sudo dnf copr enable -y eddsalkield/swaylock-effects 2>/dev/null || print_warning "Could not enable COPR repo"
+    fi
+    
+    # Try rpm-ostree installation
+    if ! rpm_ostree_install_if_missing "swaylock-effects"; then
+        print_warning "swaylock-effects not available, using standard swaylock"
+        rpm_ostree_install_if_missing "swaylock"
+    fi
+}
+
+install_swhkd_atomic() {
+    print_info "Installing swhkd hotkey daemon (Fedora Atomic - build from source)"
+    
+    # swhkd needs to be built from source on Atomic
+    print_info "swhkd requires building from source on Fedora Atomic"
+    print_info "Dependencies are being installed via rpm-ostree"
+    print_info "After reboot, run these commands to build swhkd:"
+    print_info "  git clone https://github.com/waycrate/swhkd.git /tmp/swhkd"
+    print_info "  cd /tmp/swhkd && make build && sudo make install"
+    print_info "  sudo systemctl enable swhkd.service"
 }
 
 install_swaylock_effects() {

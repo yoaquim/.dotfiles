@@ -26,9 +26,10 @@
 - **Internet connection** for downloading tools
 
 #### Linux (Fedora)
-- **Fedora** (latest version recommended)
+- **Fedora** (traditional) or **Fedora Atomic** (Silverblue/Kinoite/Sericea)
 - **Internet connection** for downloading packages
 - **sudo privileges** for system package installation
+- **Flathub enabled** (for Atomic variants)
 
 ### Two-Step Installation
 
@@ -60,7 +61,7 @@ bash ./install.sh
 bash ./post-setup.sh
 ```
 
-#### Linux (Fedora)
+#### Linux (Fedora Traditional)
 ```bash
 # 1. Clone the repository
 cd ~/
@@ -79,6 +80,31 @@ git clone https://github.com/waycrate/swhkd.git /tmp/swhkd
 cd /tmp/swhkd && make build && sudo make install
 
 # 5. Initialize wallpaper setup
+~/.config/variety/scripts/setup-wallpapers.sh
+```
+
+#### Linux (Fedora Atomic/Silverblue)
+```bash
+# 1. Clone the repository
+cd ~/
+git clone https://github.com/yoaquim/.dotfiles.git
+
+# 2. Run installation script (detects Atomic automatically)
+cd ~/.dotfiles
+bash ./install.sh
+
+# 3. REBOOT REQUIRED after system package installation
+sudo systemctl reboot
+
+# 4. After reboot, complete setup
+cd ~/.dotfiles
+bash ./post-setup.sh
+
+# 5. Build swhkd hotkey daemon (dependencies already installed)
+git clone https://github.com/waycrate/swhkd.git /tmp/swhkd
+cd /tmp/swhkd && make build && sudo make install
+
+# 6. Initialize wallpaper setup
 ~/.config/variety/scripts/setup-wallpapers.sh
 ```
 
@@ -108,7 +134,8 @@ cd /tmp/swhkd && make build && sudo make install
 
 ### 📦 **Package Management**
 - **macOS**: Homebrew with curated app list
-- **Linux**: dnf (Fedora) with Hyprland ecosystem packages
+- **Fedora Traditional**: dnf with Hyprland ecosystem packages
+- **Fedora Atomic**: rpm-ostree (system) + Flatpak (apps)
 - **TPM** - Tmux plugin manager
 - **Language Managers** - nvm, pyenv, pipx
 
