@@ -791,6 +791,10 @@ install_fedora_atomic_packages() {
         "polkit-devel"
         "gcc"
         "gcc-c++"
+        "jetbrains-mono-fonts-all"
+        "google-noto-fonts"
+        "google-noto-color-emoji-fonts"
+        "fira-code-fonts"
     )
     
     print_info "Installing system packages (will require reboot after completion)"
@@ -800,9 +804,11 @@ install_fedora_atomic_packages() {
     
     # Desktop applications via Flatpak (no reboot needed)
     local flatpak_apps=(
-        "org.mozilla.firefox"
+        "com.google.Chrome"
         "com.spotify.Client" 
         "com.slack.Slack"
+        "com.getpostman.Postman"
+        "com.todoist.Todoist"
         "org.telegram.desktop"
         "org.libreoffice.LibreOffice"
         "org.gimp.GIMP"
@@ -818,6 +824,8 @@ install_fedora_atomic_packages() {
     install_hyprpaper_atomic
     install_swaylock_atomic
     install_swhkd_atomic
+    install_1password_atomic
+    install_nerd_fonts_atomic
     
     if [[ "${REBOOT_REQUIRED:-false}" == "true" ]]; then
         print_warning "System packages installed - REBOOT REQUIRED to complete installation"
@@ -842,6 +850,10 @@ install_fedora_traditional_packages() {
         "variety"
         "papirus-icon-theme"
         "papirus-icon-theme-dark"
+        "jetbrains-mono-fonts-all"
+        "google-noto-fonts"
+        "google-noto-color-emoji-fonts"
+        "fira-code-fonts"
     )
     
     for package in "${hyprland_packages[@]}"; do
@@ -850,6 +862,11 @@ install_fedora_traditional_packages() {
     
     # Install swaylock-effects from COPR
     install_swaylock_effects
+    
+    # Install additional apps and fonts
+    install_1password_traditional
+    install_nerd_fonts_traditional
+    install_flatpak_apps_traditional
     
     print_success "Traditional Fedora packages installed successfully"
 }
@@ -904,6 +921,53 @@ install_swhkd_atomic() {
     print_info "  sudo systemctl enable swhkd.service"
 }
 
+install_1password_atomic() {
+    print_info "Installing 1Password (Fedora Atomic)"
+    
+    # Create 1Password repository file
+    if [[ ! -f "/etc/yum.repos.d/1password.repo" ]]; then
+        print_info "Adding 1Password repository"
+        cat << 'EOF' | sudo tee /etc/yum.repos.d/1password.repo > /dev/null
+[1password]
+name=1Password Stable Channel
+baseurl=https://downloads.1password.com/linux/rpm/stable/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://downloads.1password.com/linux/keys/1password.asc
+EOF
+        print_success "1Password repository added"
+    fi
+    
+    # Install 1Password via rpm-ostree
+    rpm_ostree_install_if_missing "1password"
+    print_info "1Password installation requires reboot to complete"
+}
+
+install_nerd_fonts_atomic() {
+    print_info "Installing Nerd Fonts (Fedora Atomic)"
+    
+    # Install Nerd Fonts via COPR
+    if ! sudo dnf copr enable -y ryanoasis/nerd-fonts 2>/dev/null; then
+        print_warning "Failed to enable Nerd Fonts COPR repository, skipping Nerd Fonts"
+        return 0
+    fi
+    
+    # Install key Nerd Fonts
+    local nerd_fonts=(
+        "nerd-fonts-jetbrains-mono"
+        "nerd-fonts-fira-code"
+        "nerd-fonts-hack"
+        "nerd-fonts-ubuntu-mono"
+    )
+    
+    for font in "${nerd_fonts[@]}"; do
+        rpm_ostree_install_if_missing "${font}" || print_warning "Failed to install ${font}"
+    done
+    
+    print_success "Nerd Fonts installation queued (requires reboot)"
+}
+
 install_swaylock_effects() {
     print_info "Installing swaylock-effects from COPR"
     
@@ -918,6 +982,86 @@ install_swaylock_effects() {
     fi
     
     dnf_install_if_missing "swaylock-effects"
+}
+
+# ───────────────────────────────────────────────────
+# Traditional Fedora Additional Installations
+# ───────────────────────────────────────────────────
+
+install_1password_traditional() {
+    print_info "Installing 1Password (Traditional Fedora)"
+    
+    # Create 1Password repository file
+    if [[ ! -f "/etc/yum.repos.d/1password.repo" ]]; then
+        print_info "Adding 1Password repository"
+        cat << 'EOF' | sudo tee /etc/yum.repos.d/1password.repo > /dev/null
+[1password]
+name=1Password Stable Channel
+baseurl=https://downloads.1password.com/linux/rpm/stable/$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://downloads.1password.com/linux/keys/1password.asc
+EOF
+        print_success "1Password repository added"
+    fi
+    
+    # Install 1Password via dnf
+    dnf_install_if_missing "1password"
+}
+
+install_nerd_fonts_traditional() {
+    print_info "Installing Nerd Fonts (Traditional Fedora)"
+    
+    # Install Nerd Fonts via COPR
+    if ! sudo dnf copr enable -y ryanoasis/nerd-fonts 2>/dev/null; then
+        print_warning "Failed to enable Nerd Fonts COPR repository, skipping Nerd Fonts"
+        return 0
+    fi
+    
+    # Install key Nerd Fonts
+    local nerd_fonts=(
+        "nerd-fonts-jetbrains-mono"
+        "nerd-fonts-fira-code"
+        "nerd-fonts-hack"
+        "nerd-fonts-ubuntu-mono"
+    )
+    
+    for font in "${nerd_fonts[@]}"; do
+        dnf_install_if_missing "${font}" || print_warning "Failed to install ${font}"
+    done
+    
+    print_success "Nerd Fonts installed successfully"
+}
+
+install_flatpak_apps_traditional() {
+    print_info "Installing desktop applications via Flatpak (Traditional Fedora)"
+    
+    # Ensure Flatpak is installed
+    dnf_install_if_missing "flatpak"
+    
+    # Add Flathub repository if not present
+    if ! flatpak remotes | grep -q flathub; then
+        print_info "Adding Flathub repository"
+        flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    fi
+    
+    # Desktop applications via Flatpak
+    local flatpak_apps=(
+        "com.google.Chrome"
+        "com.spotify.Client" 
+        "com.slack.Slack"
+        "com.getpostman.Postman"
+        "com.todoist.Todoist"
+        "org.telegram.desktop"
+        "org.libreoffice.LibreOffice"
+        "org.gimp.GIMP"
+    )
+    
+    print_info "Installing desktop applications via Flatpak"
+    for app in "${flatpak_apps[@]}"; do
+        flatpak_install_if_missing "${app}"
+    done
 }
 
 # ───────────────────────────────────────────────────
