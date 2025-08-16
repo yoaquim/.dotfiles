@@ -19,8 +19,10 @@
 # I. Exports
 # ───────────────────────────────────────────────────
 
-# Add Homebrew to PATH (Apple Silicon)
-eval "$(/opt/homebrew/bin/brew shellenv)"
+# Add Homebrew to PATH (macOS only)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
 
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
@@ -41,7 +43,7 @@ export HISTTIMEFORMAT='[%F %T] '
 export HISTFILE=~/.bash_eternal_history
 
 # Set prompt command so it writes history immediately
-PROMPT_COMMAND="history -a; ${PROMPT_COMMAND}"
+PROMPT_COMMAND="history -a; ${PROMPT_COMMAND:-}"
 
 
 # ───────────────────────────────────────────────────
@@ -53,6 +55,8 @@ PS1="\n[\[\033[32m\]\w\[\033[0m\]]\$(git branch 2>/dev/null | grep -e '^*' | sed
 
 # base16 shell
 BASE16_SHELL="$HOME/.config/base16-shell/"
+# Set default theme to prevent unbound variable errors
+export BASE16_DEFAULT_THEME="${BASE16_DEFAULT_THEME:-default-dark}"
 [ -n "$PS1" ] && \
     [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
         source "$BASE16_SHELL/profile_helper.sh"

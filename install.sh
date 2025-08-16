@@ -378,6 +378,23 @@ rpm_ostree_install_if_missing() {
     fi
 }
 
+dnf_install_if_missing() {
+    local package="${1}"
+    
+    if dnf list installed "${package}" &>/dev/null; then
+        print_debug "Package '${package}' already installed"
+        return 0
+    fi
+    
+    print_info "Installing package '${package}'"
+    if sudo dnf install -y "${package}"; then
+        print_success "Successfully installed '${package}'"
+    else
+        print_warning "Failed to install package '${package}' - continuing with other packages"
+        return 1
+    fi
+}
+
 flatpak_install_if_missing() {
     local package="${1}"
     local repo="${2:-flathub}"
@@ -656,7 +673,7 @@ install_core_packages() {
         "bash::bash"
         "bash-completion::bash-completion"
         "coreutils::coreutils"
-        "diff-so-fancy::git-delta"
+        "diff-so-fancy::diff-so-fancy"
         "git::git"
         "jq::jq"
         "neovim::neovim"
@@ -1089,8 +1106,8 @@ install_nvim_deps() {
         "fd::fd-find"
         "tree-sitter::tree-sitter"
         "go::golang"
-        "bottom::bottom"
-        "gdu::gdu"
+        "bottom::btop"
+        "gdu::ncdu"
     )
     
     for dep_spec in "${nvim_deps[@]}"; do

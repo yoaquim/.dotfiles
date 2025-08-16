@@ -11,8 +11,17 @@ if [ ! -d "$HOME/.nvm" ]; then
   mkdir -p "$HOME/.nvm"
 fi
 export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+
+# Load nvm (OS-aware)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS with Homebrew
+    [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
+    [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux (installed via package manager)
+    [ -s "/usr/share/nvm/nvm.sh" ] && \. "/usr/share/nvm/nvm.sh"
+    [ -s "/usr/share/nvm/bash_completion" ] && \. "/usr/share/nvm/bash_completion"
+fi
 
 
 # pyenv 

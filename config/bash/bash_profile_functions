@@ -28,18 +28,21 @@ up(){
 # toggle_hidden
 # ───────────────────────────────────────────────────
 
-# toggles if hidden (dotfiles) are shown on finder
+# toggles if hidden (dotfiles) are shown on finder (macOS only)
 toggle_hidden() {
-    TOGGLE=$HOME/.hidden-files-shown
-    if [ ! -e $TOGGLE ]; then
-        touch $TOGGLE
-        defaults write com.apple.finder AppleShowAllFiles YES
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        TOGGLE=$HOME/.hidden-files-shown
+        if [ ! -e $TOGGLE ]; then
+            touch $TOGGLE
+            defaults write com.apple.finder AppleShowAllFiles YES
+        else
+            rm -f $TOGGLE
+            defaults write com.apple.finder AppleShowAllFiles NO
+        fi
+        killall Finder
     else
-        rm -f $TOGGLE
-        defaults write com.apple.finder AppleShowAllFiles NO
+        echo "toggle_hidden: This function is macOS-specific (controls Finder)"
     fi
-
-    killall Finder
 }
 
 

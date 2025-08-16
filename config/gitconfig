@@ -18,6 +18,7 @@
 	editor = /usr/bin/vim
         pager = diff-so-fancy | less --tabs=4 -RFX 
 	autocrlf = input
+	eol = lf
 [color]
 	ui = true
 [filter "media"]
