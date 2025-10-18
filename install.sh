@@ -530,13 +530,17 @@ install_brew_casks() {
         "1password"
         "slack"
         "kitty"
-        "todoist"
+        "todoist-app"
         "claude"
         "adobe-creative-cloud"
         "google-chrome"
         "rectangle"
         "hammerspoon"
         "notion"
+        "expandrive"
+        "calibre"
+        "quarto"
+        "folx"
     )
     
     for cask in "${casks[@]}"; do

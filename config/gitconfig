@@ -29,4 +29,3 @@
         fiff = diff-tree --no-commit-id --name-only -r
 [credential]
 	helper = osxkeychain
-
