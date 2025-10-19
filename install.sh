@@ -485,6 +485,7 @@ install_brew_list() {
         "vim"
         "tldr"
         "gh"
+        "rclone"
     )
     
     for package in "${packages[@]}"; do
@@ -537,7 +538,6 @@ install_brew_casks() {
         "rectangle"
         "hammerspoon"
         "notion"
-        "expandrive"
         "calibre"
         "quarto"
         "folx"
