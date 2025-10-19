@@ -361,7 +361,8 @@ link_symlinks() {
     create_symlink "${SCRIPT_DIR}/config/tmux" "$HOME/.config/tmux"
     create_symlink "${SCRIPT_DIR}/config/kitty" "$HOME/.config/kitty"
     create_symlink "${SCRIPT_DIR}/config/gitconfig" "$HOME/.gitconfig"
-    
+    create_symlink "${SCRIPT_DIR}/config/rclone" "$HOME/.config/rclone"
+
     print_success "Symlinks created successfully"
 }
 
@@ -454,13 +455,85 @@ setup_base16() {
 
 setup_hammerspoon() {
     print_info "Setting up Hammerspoon configuration"
-    
+
     # Link hammerspoon configuration directory
     local hammerspoon_dir="$HOME/.hammerspoon"
     create_symlink "${SCRIPT_DIR}/config/hammerspoon" "${hammerspoon_dir}"
-    
+
     print_success "Hammerspoon configuration setup complete"
     print_info "Note: Launch Hammerspoon and grant accessibility permissions to enable Alt+Space hotkey"
+}
+
+# ───────────────────────────────────────────────────
+# rclone Configuration and LaunchAgent Setup
+# ───────────────────────────────────────────────────
+
+setup_rclone() {
+    print_info "Setting up rclone configuration and LaunchAgent"
+
+    # Create Cave mount point directory
+    local mount_point="$HOME/Cave"
+    if [[ ! -d "${mount_point}" ]]; then
+        mkdir -p "${mount_point}"
+        print_success "Created Cave mount point at ${mount_point}"
+    fi
+
+    # Create cache directory for rclone logs
+    mkdir -p "$HOME/.cache/rclone"
+
+    # Link LaunchAgent
+    local launch_agent_dir="$HOME/Library/LaunchAgents"
+    mkdir -p "${launch_agent_dir}"
+    create_symlink "${SCRIPT_DIR}/config/rclone/com.rclone.cave.plist" "${launch_agent_dir}/com.rclone.cave.plist"
+
+    # Check if AWS credentials are configured in bash_profile_local
+    local bash_local="${SCRIPT_DIR}/config/bash/bash_profile_local"
+    if [[ -f "${bash_local}" ]] && grep -q "CAVE_AWS_ACCESS_KEY_ID" "${bash_local}" 2>/dev/null; then
+        print_success "AWS credentials found in bash_profile_local"
+    else
+        print_warning "AWS credentials not configured yet"
+        echo
+        echo "  Add these to ~/.config/bash/bash_profile_local:"
+        echo "    export CAVE_AWS_ACCESS_KEY_ID=\"your-access-key-id\""
+        echo "    export CAVE_AWS_SECRET_ACCESS_KEY=\"your-secret-access-key\""
+        echo
+        echo "  Then reload: source ~/.bash_profile"
+        echo
+    fi
+
+    # Check if rclone and macfuse are installed
+    if ! command -v rclone &> /dev/null; then
+        print_warning "rclone not found - will be installed by Homebrew"
+    fi
+
+    if ! brew list --cask macfuse &> /dev/null 2>&1; then
+        print_warning "macfuse not found - will be installed by Homebrew"
+    fi
+
+    # Auto-load LaunchAgent if credentials are configured
+    local plist_path="$HOME/Library/LaunchAgents/com.rclone.cave.plist"
+    if [[ -f "${bash_local}" ]] && grep -q "CAVE_AWS_ACCESS_KEY_ID" "${bash_local}" 2>/dev/null; then
+        # Check if already loaded
+        if launchctl list | grep -q "com.rclone.cave"; then
+            print_success "Cave LaunchAgent already loaded"
+        else
+            print_info "Loading Cave LaunchAgent (will auto-start on future logins)"
+            if launchctl load "${plist_path}" 2>/dev/null; then
+                print_success "Cave LaunchAgent loaded - mounting in background"
+                print_info "Use 'cave' command to open in Finder or check mount status"
+            else
+                print_warning "Failed to load LaunchAgent - you may need to load it manually:"
+                print_info "  launchctl load ~/Library/LaunchAgents/com.rclone.cave.plist"
+            fi
+        fi
+    else
+        print_info "Cave LaunchAgent will auto-load after credentials are configured"
+        print_info "After adding credentials to bash_profile_local, run:"
+        print_info "  launchctl load ~/Library/LaunchAgents/com.rclone.cave.plist"
+    fi
+
+    print_success "rclone configuration setup complete"
+    print_info "See ${SCRIPT_DIR}/config/rclone/README.md for full documentation"
 }
 
 # ───────────────────────────────────────────────────
@@ -775,6 +848,7 @@ full_install() {
     setup_tmux_plugins || print_warning "Tmux plugin setup failed - continuing"
     setup_base16 || print_warning "Base16 setup failed - continuing"
     setup_hammerspoon
+    setup_rclone
     setup_git_ssh
     
     # Complete basic setup
@@ -804,6 +878,7 @@ reinstall() {
     setup_tmux_plugins || print_warning "Tmux plugin setup failed - continuing"
     setup_base16 || print_warning "Base16 setup failed - continuing"
     setup_hammerspoon
+    setup_rclone
     
     # Reinstall Claude Code if not present
     if ! command -v claude &> /dev/null; then
