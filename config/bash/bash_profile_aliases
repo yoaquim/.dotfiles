@@ -50,8 +50,8 @@ alias cd.="cd ~/.dotfiles"
 # go to desktop
 alias cdd="cd ~/Desktop/"
 
-# change directory to dropbox directory
-alias cdb="cd ~/Dropbox/"
+# change directory to cave directory
+alias cdc="cd ~/Cave/"
 
 # open Cave (rclone S3 mount) in Finder or show status
 alias cave='if mount | grep -q "on $HOME/Cave"; then open ~/Cave; else echo "Cave not mounted. Check: launchctl list | grep rclone"; fi'
