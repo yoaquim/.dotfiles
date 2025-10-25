@@ -1,0 +1,91 @@
+# Standard Operating Procedures
+
+This directory contains SOPs for the {{PROJECT_NAME}} project.
+
+---
+
+## Universal SOPs
+
+See `~/.claude/workflow/sops/` for procedures that apply to all projects:
+- [Git Workflow](~/.claude/workflow/sops/git-workflow.md) - Branching, commits, merges
+- [Testing Principles](~/.claude/workflow/sops/testing-principles.md) - Testing philosophy and patterns
+- [Documentation Standards](~/.claude/workflow/sops/documentation-standards.md) - How to document
+
+**Note**: Universal SOPs are **referenced**, not copied. They're maintained globally.
+
+---
+
+## Project-Specific SOPs
+
+These SOPs are specific to this project's technology stack and workflows:
+
+### [{{FRAMEWORK}} Setup](./{{FRAMEWORK_LOWER}}-setup.md)
+How to set up and configure {{FRAMEWORK}} for this project.
+
+**Topics**:
+- Installation and dependencies
+- Configuration files
+- Common commands
+- Best practices
+
+### [Local Development](./local-development.md)
+Day-to-day development workflows.
+
+**Topics**:
+- Starting the development environment
+- Running tests locally
+- Database migrations (if applicable)
+- Debugging tips
+
+### [Deployment](./deployment.md)
+How to deploy this project.
+
+**Topics**:
+- Deployment checklist
+- Environment setup
+- Common deployment issues
+- Rollback procedure
+
+---
+
+## When to Create New SOPs
+
+Create a new SOP when:
+- Introducing a new process or workflow
+- Documenting best practices that should be standardized
+- Complex tasks that need step-by-step instructions
+- Onboarding new developers to the project
+
+---
+
+## When to Update SOPs
+
+Update existing SOPs when:
+- Processes change or improve
+- New tools are introduced
+- Common issues are discovered and solved
+- Team feedback identifies confusing sections
+
+---
+
+## SOP Format
+
+Each SOP should include:
+1. **Purpose** - Why this SOP exists
+2. **When to Use** - What situations call for this
+3. **Prerequisites** - What's needed before starting
+4. **Step-by-Step Instructions** - Clear, numbered steps
+5. **Common Issues** - Troubleshooting tips
+6. **Related Documentation** - Links to relevant docs
+
+---
+
+## Related Documentation
+
+- [System Overview](../system/overview.md)
+- [Architecture](../system/architecture.md)
+- [Task List](../README.md#tasks--features)
+
+---
+
+**Last Updated**: {{INIT_DATE}}

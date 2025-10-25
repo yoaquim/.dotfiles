@@ -1,0 +1,167 @@
+# CLAUDE.md
+
+**Project**: {{PROJECT_NAME}}
+**Location**: This file lives in the project root
+
+---
+
+# PROJECT DOCUMENTATION
+
+We keep all important docs in the `.agent` folder using standardized lowercase directories.
+
+## Structure
+
+```
+{{PROJECT_NAME}}/
+├── CLAUDE.md           # This file - core instructions
+├── README.md           # Project overview and quick start
+├── .agent/
+│   ├── README.md           # Index of all documentation
+│   ├── task-template.md    # Template for new task documents
+│   ├── tasks/              # PRDs and implementation plans (lowercase)
+│   ├── system/             # Current state documentation (lowercase)
+│   ├── sops/               # Project-specific procedures (lowercase)
+│   └── known-issues/       # Troubleshooting knowledge base (lowercase)
+└── .claude/
+    └── commands/           # Optional: project-specific commands
+```
+
+## Documentation Standards
+
+### Before ANY implementation:
+1. **Always read `.agent/README.md` first** - Get full context
+2. **Read the specific task document** - Understand the plan
+3. **Read referenced SOPs** - Follow established patterns
+4. **Read relevant system docs** - Understand current state
+
+### Task Documents (`.agent/tasks/`)
+- **Numbering**: 3-digit zero-padded (000-999)
+- **Naming**: `NNN-feature-name.md` (lowercase, kebab-case)
+- **Template**: Use `.agent/task-template.md` for consistency
+- **Status markers**:
+  - ⚠️ Planned - Not started yet
+  - 🔄 In Progress - Currently being worked on
+  - ✅ Complete - Finished and merged
+- **Required sections**: Problem, Solution, Implementation Plan, Success Criteria
+- **After completion**: Add Implementation Summary with test results
+
+### System Documents (`.agent/system/`)
+- `overview.md` - Project goals, status, tech stack decisions
+- `architecture.md` - Technical architecture and design
+- **When to update**: After features that change architecture or tech stack
+- **Keep current**: Should always reflect actual state
+
+### SOPs (`.agent/sops/`)
+**Universal SOPs** (referenced from `~/.claude/workflow/sops/`):
+- Git Workflow
+- Testing Principles
+- Documentation Standards
+
+**Project-Specific SOPs** (in `.agent/sops/`):
+- {{FRAMEWORK}} Setup
+- Deployment
+- Local Development
+
+### Known Issues (`.agent/known-issues/`)
+- **Numbering**: 2-digit zero-padded (01-99)
+- **Naming**: `NN-issue-name.md` (lowercase, kebab-case)
+- **Content**: Problem, root cause, solution, prevention tips
+- **Searchable**: Across all projects in ~/Projects
+
+## Slash Commands Workflow
+
+Use these global commands (available in all projects):
+
+1. **`/init-project`** - Initialize project documentation
+2. **`/plan-task <description>`** - Create a new task document
+3. **`/implement-task [NNN]`** - Implement a task (defaults to latest)
+4. **`/test-task [NNN]`** - Test implementation
+5. **`/complete-task [NNN]`** - Finalize docs and git workflow
+6. **`/fix-bug <description>`** - Quick bug fix workflow
+7. **`/document-issue`** - Document a known issue
+8. **`/status`** - Show project status
+9. **`/review-docs`** - Review documentation
+10. **`/update-doc`** - Update documentation
+
+## Technology Stack
+
+**Language**: {{LANGUAGE}}
+**Framework**: {{FRAMEWORK}}
+**Testing**: {{TEST_FRAMEWORK}}
+**Database**: {{DATABASE}}
+
+## Common Commands
+
+```bash
+# Development
+{{DEV_COMMAND}}
+
+# Testing
+{{TEST_COMMAND}}
+
+# Build
+{{BUILD_COMMAND}}
+
+# Git workflow (see ~/.claude/workflow/sops/git-workflow.md)
+git checkout -b feature/name
+git commit -m "feat: description"
+git checkout main && git merge feature/name
+```
+
+## Quick Reference
+
+### Task Statuses
+- ⚠️ **Planned** - Task documented, not started
+- 🔄 **In Progress** - Currently being implemented
+- ✅ **Complete** - Finished, tested, merged, documented
+
+### Testing
+- Write tests for new features
+- Target 80%+ coverage
+- Run tests before merging
+- See: `~/.claude/workflow/sops/testing-principles.md`
+
+### Documentation
+- Update `.agent/` docs after every feature
+- Use lowercase directory names
+- Follow naming conventions
+- See: `~/.claude/workflow/sops/documentation-standards.md`
+
+## Standard Operating Procedures
+
+### Universal SOPs
+See `~/.claude/workflow/sops/` for procedures that apply to all projects:
+- [Git Workflow](~/.claude/workflow/sops/git-workflow.md)
+- [Testing Principles](~/.claude/workflow/sops/testing-principles.md)
+- [Documentation Standards](~/.claude/workflow/sops/documentation-standards.md)
+
+### Project-Specific SOPs
+See `.agent/sops/` for this project's procedures:
+- {{FRAMEWORK}} Setup
+- Deployment
+- Local Development
+
+## Guiding Principle
+
+**SIMPLICITY FIRST**: This project prioritizes simplicity above all else.
+
+- If documentation becomes verbose, break it down
+- If implementation becomes complex, simplify
+- Don't over-engineer solutions
+- Follow existing patterns
+- Keep code readable and maintainable
+
+## After Implementation
+
+**ALWAYS update the `.agent` docs** after implementing features.
+
+Required updates:
+1. Task document (status, completion date, results)
+2. System docs (if architecture/tech stack changed)
+3. SOPs (if new processes introduced)
+4. `.agent/README.md` (task status in index)
+
+---
+
+**Configuration**: See `~/.claude/workflow/config.yml` for global settings
+**Last Updated**: {{INIT_DATE}}
