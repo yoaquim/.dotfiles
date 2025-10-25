@@ -1,3 +1,8 @@
+---
+description: Comprehensive review of .agent documentation for accuracy and consistency
+allowed-tools: Read, Grep, Glob, Bash(ls*), Bash(git*)
+---
+
 You are performing a comprehensive review of `.agent` documentation for accuracy, consistency, and completeness.
 
 **Review all documentation in:**

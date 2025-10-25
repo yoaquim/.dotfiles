@@ -1,3 +1,9 @@
+---
+description: Plan a feature with detailed implementation plan and task documentation
+argument-hint: <feature description>
+allowed-tools: Read, Write, Grep, Glob, AskUserQuestion
+---
+
 You are in PLAN MODE. Generate a detailed implementation plan for the requested feature, then offer to capture it as a task document.
 
 **This command combines planning and documentation in one flow.**

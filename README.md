@@ -10,6 +10,7 @@
 - [📁 Configuration Structure](#-configuration-structure)
 - [🛠️ Tools & Applications](#️-tools--applications)
 - [🎨 Customization](#-customization)
+- [🤖 Claude Code Workflow](#-claude-code-workflow)
 - [🔄 Management](#-management)
 - [💡 Pro Tips](#-pro-tips)
 - [🔍 Troubleshooting](#-troubleshooting)
@@ -73,7 +74,7 @@ bash ./post-setup.sh
 - **Git** - Enhanced with diff-so-fancy and custom aliases
 - **Node.js** - Latest LTS via nvm
 - **Python** - Latest stable via pyenv
-- **Claude Code** - AI-powered coding assistant
+- **Claude Code** - AI-powered coding assistant with custom workflow
 
 ### 📦 **Package Management**
 - **Homebrew** - Package manager with curated app list
@@ -179,6 +180,13 @@ The `install.sh` script provides several installation modes:
     ├── 🔨 hammerspoon/             # Hammerspoon automation
     │   ├── 📄 init.lua             # Hotkey and automation config
     │   └── 📄 README.md            # Hammerspoon user guide
+    ├── 🤖 claude/                  # Claude Code configuration
+    │   ├── 📄 setup.sh             # Claude setup script
+    │   ├── 📁 commands/            # Custom slash commands
+    │   └── 📁 workflow/            # Universal workflows and templates
+    │       ├── 📄 README.md        # Complete workflow documentation
+    │       ├── 📁 sops/            # Standard operating procedures
+    │       └── 📁 templates/       # Project initialization templates
     └── 📄 gitconfig                # Git configuration
 ```
 
@@ -196,6 +204,7 @@ After installation, configurations are linked to standard locations:
 | `config/nvim/polish.lua` | `~/.config/nvim/lua/polish.lua` | Neovim customizations |
 | `config/nvim/user.lua` | `~/.config/nvim/lua/plugins/user.lua` | Neovim plugins |
 | `config/hammerspoon/` | `~/.config/hammerspoon/` | Hammerspoon automation |
+| `claude/` | `~/.claude/` | Claude Code global configuration |
 
 ---
 
@@ -210,6 +219,7 @@ After installation, configurations are linked to standard locations:
 | **Neovim** | Modern text editor | `config/nvim/` |
 | **Kitty** | GPU-accelerated terminal | `config/kitty/` |
 | **Hammerspoon** | macOS automation and hotkeys | `config/hammerspoon/` |
+| **Claude Code** | AI coding assistant with workflow | `claude/` |
 
 ### 📦 Package Managers
 | Tool | Purpose | Auto-Setup |
@@ -304,6 +314,133 @@ nvim ~/.config/kitty/kitty.conf
 # Inside neovim
 :Lazy    # Open plugin manager
 ```
+
+---
+
+## 🤖 Claude Code Workflow
+
+This dotfiles setup includes a **custom Claude Code configuration** that provides standardized workflows, slash commands, and documentation templates for all projects.
+
+### 🎯 What's Included
+
+**Custom Slash Commands** (available globally in any project):
+- `/init-project` - Initialize `.agent/` documentation system for new/existing projects
+- `/plan-task` - Plan features with detailed implementation plans
+- `/implement-task` - Implement documented tasks with git workflow
+- `/fix-bug` - Intelligent bug fixing (quick hotfix or full bug task workflow)
+- `/test-task` - Test implementations with automated and manual verification
+- `/complete-task` - Finalize tasks with documentation updates
+- `/document-issue` - Document known issues for future reference
+- `/status` - Comprehensive project status report
+- `/review-docs` - Review documentation for accuracy and consistency
+- `/update-doc` - Update project documentation
+
+**Universal SOPs** (Standard Operating Procedures):
+- Git workflow and branching strategies
+- Testing principles and best practices
+- Documentation standards
+- Project structure conventions
+
+**Project Templates**:
+- `.agent/` directory structure templates
+- Task documentation templates
+- System documentation templates
+- Automatic cross-project known-issues search
+
+### ⚙️ Setup
+
+The Claude configuration is automatically symlinked during dotfiles installation:
+
+```bash
+# Symlink created by install.sh
+~/.claude → ~/.dotfiles/claude/
+```
+
+All slash commands and workflows are immediately available in any project after installation.
+
+### 🚀 Quick Start
+
+**Initialize a new project:**
+```bash
+# In any project directory
+/init-project
+```
+
+This creates a complete `.agent/` documentation system with:
+- Project overview and architecture docs
+- Task management system
+- Known issues tracking
+- References to universal SOPs
+
+**Start working on a feature:**
+```bash
+/plan-task <feature description>    # Plan the feature
+/implement-task                     # Implement the latest task
+/test-task                          # Test the implementation
+/complete-task                      # Finalize and document
+```
+
+**Quick bug fix:**
+```bash
+/fix-bug <bug description>          # Intelligently routes to hotfix or full workflow
+```
+
+**Check project status:**
+```bash
+/status                             # View tasks, health, and next steps
+```
+
+### 🎨 Customization
+
+Since the configuration is symlinked from your dotfiles:
+
+1. **Edit commands** in `~/.dotfiles/claude/commands/`
+2. **Changes apply globally** to all projects immediately
+3. **No need to restart** - just start a new Claude chat or invoke the command
+
+Example - updating a slash command:
+```bash
+# Edit any slash command
+nvim ~/.dotfiles/claude/commands/fix-bug.md
+
+# Changes are immediately available in all projects
+# (start new chat or type / to see updates)
+```
+
+### 📚 Documentation
+
+For complete documentation on the workflow system, templates, and SOPs:
+
+**→ See [claude/workflow/README.md](claude/workflow/README.md)**
+
+This includes:
+- Complete workflow system overview
+- Template customization guide
+- Universal SOPs documentation
+- Cross-project features
+- Maintenance and troubleshooting
+
+### 🔧 Supported Languages & Tools
+
+The slash commands support multi-language projects:
+- **Python**: pytest, docker
+- **JavaScript/Node**: npm, docker
+- **Git**: All git operations
+- **Docker**: Containerized workflows
+
+Commands automatically detect and use the appropriate tools for your project.
+
+### 💡 Key Features
+
+**Cross-Project Search**: Search known-issues across all your projects to learn from past solutions
+
+**Symlinked Architecture**: Edit once in dotfiles, applies everywhere instantly
+
+**Standardized Naming**: Consistent lowercase directories, kebab-case files, numbered tasks (000-999)
+
+**Git Integration**: Built-in git workflow support with branch management and commit helpers
+
+**Multi-Language Support**: Works with Python, Node, Docker, and more
 
 ---
 
@@ -528,6 +665,7 @@ tmux list-sessions | grep -v attached | cut -d: -f1 | xargs -t -n1 tmux kill-ses
 - **[Tmux Powerline Guide](config/tmux-powerline/README.md)** - Status line setup
 - **[AstroNvim Guide](config/nvim/README.md)** - Neovim configuration
 - **[Hammerspoon Guide](config/hammerspoon/README.md)** - macOS automation setup
+- **[Claude Code Workflow Guide](claude/workflow/README.md)** - AI coding workflow system
 
 ### 🔗 External Resources
 - **[Homebrew Documentation](https://brew.sh/)** - Package manager

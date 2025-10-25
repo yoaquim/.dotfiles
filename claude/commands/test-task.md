@@ -1,6 +1,12 @@
+---
+description: Test a completed task implementation with automated and manual verification
+argument-hint: [task-number]
+allowed-tools: Read, Bash(docker*), Bash(pytest*), Bash(npm*), Bash(git*), Bash(ls*), Grep, Glob
+---
+
 You are testing a completed task implementation.
 
-**Parameter**: Task number (optional)
+**Parameter**: Task number (optional, accessed via `$1`)
 - If provided, test that specific task
 - If not provided, test the most recently implemented task
 

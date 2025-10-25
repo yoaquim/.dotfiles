@@ -1,3 +1,9 @@
+---
+description: Intelligently fix bugs with quick hotfix or full bug task workflow
+argument-hint: <bug description>
+allowed-tools: Read, Edit, Write, Bash(git*), Bash(docker*), Bash(pytest*), Bash(npm*), Bash(find*), Bash(ls*), Grep, Glob
+---
+
 You are fixing a bug. This command intelligently routes between quick hotfixes and full bug task workflow based on complexity.
 
 **How this command works:**
@@ -28,14 +34,7 @@ You are fixing a bug. This command intelligently routes between quick hotfixes a
 
 ## Step 1.5: Search for Similar Issues
 
-**Search known-issues across ALL projects** to see if this bug has been encountered before:
-
-```bash
-# Search all projects in ~/Projects for similar issues
-find ~/Projects -type f -path "*/\.agent/known-issues/*.md" -exec grep -l "keyword1\|keyword2" {} \;
-```
-
-Replace `keyword1|keyword2` with relevant keywords from the bug description (e.g., "timezone", "upload", "database").
+**Search known-issues across ALL projects** to see if this bug has been encountered before using relevant keywords from the bug description (e.g., "timezone", "upload", "database").
 
 **If similar issue found:**
 - Read the documented solution

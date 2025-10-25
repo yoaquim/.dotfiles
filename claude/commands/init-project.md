@@ -1,3 +1,8 @@
+---
+description: Initialize project with Claude Code documentation system
+allowed-tools: Read, Write, Bash(ls*), Bash(git*), Bash(mkdir*), Bash(grep*), AskUserQuestion, Glob
+---
+
 You are initializing a project with the Claude Code documentation system.
 
 **This command:**

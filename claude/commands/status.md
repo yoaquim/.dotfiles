@@ -1,3 +1,11 @@
+---
+description: Comprehensive project status report with tasks, health, and next steps
+allowed-tools: Read, Bash(git*), Bash(ls*), Glob
+---
+
+!git branch
+!git status
+
 You are providing a comprehensive project status report.
 
 **Read these documents:**

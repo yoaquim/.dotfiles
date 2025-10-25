@@ -3,7 +3,7 @@
 # Claude Code Workflow Setup Script
 # Symlinks commands and workflow files to ~/.claude/
 
-set -e  # Exit on error
+set -e -o pipefail  # Exit on error
 
 # Colors for output
 RED='\033[0;31m'
@@ -102,7 +102,7 @@ for cmd in "${COMMANDS[@]}"; do
         CURRENT_TARGET="$(readlink "$TARGET")"
         if [[ "$CURRENT_TARGET" == "$SOURCE" ]]; then
             echo "  ✓ $cmd (already linked)"
-            ((SKIPPED++))
+            SKIPPED=$((SKIPPED + 1))
         else
             warning "$cmd is symlinked to: $CURRENT_TARGET"
             read -p "  Replace with our version? (y/n) " -n 1 -r
@@ -111,10 +111,10 @@ for cmd in "${COMMANDS[@]}"; do
                 rm "$TARGET"
                 ln -s "$SOURCE" "$TARGET"
                 echo "  ✓ $cmd (replaced)"
-                ((LINKED++))
+                LINKED=$((LINKED + 1))
             else
                 echo "  ✗ $cmd (skipped)"
-                ((SKIPPED++))
+                SKIPPED=$((SKIPPED + 1))
             fi
         fi
     elif [[ -f "$TARGET" ]]; then
@@ -126,16 +126,16 @@ for cmd in "${COMMANDS[@]}"; do
             mv "$TARGET" "$TARGET.backup.$(date +%Y%m%d_%H%M%S)"
             ln -s "$SOURCE" "$TARGET"
             echo "  ✓ $cmd (backed up and linked)"
-            ((LINKED++))
+            LINKED=$((LINKED + 1))
         else
             echo "  ✗ $cmd (skipped)"
-            ((SKIPPED++))
+            SKIPPED=$((SKIPPED + 1))
         fi
     else
         # Doesn't exist - create symlink
         ln -s "$SOURCE" "$TARGET"
         echo "  ✓ $cmd"
-        ((LINKED++))
+        LINKED=$((LINKED + 1))
     fi
 done
 

@@ -1,3 +1,9 @@
+---
+description: Document known issues, bugs, or troubleshooting insights for future reference
+argument-hint: <issue description>
+allowed-tools: Read, Write, Edit, Bash(find*), Bash(ls*), Bash(git*), Grep, Glob
+---
+
 You are documenting a known issue, bug, or troubleshooting insight for future reference.
 
 **Use this when:**
@@ -18,14 +24,7 @@ You are documenting a known issue, bug, or troubleshooting insight for future re
 
 ## Step 0.5: Search for Similar Issues Across Projects
 
-**IMPORTANT: Search ALL projects** to see if a similar issue has been documented before:
-
-```bash
-# Search all projects in ~/Projects for similar issues
-find ~/Projects -type f -path "*/\.agent/known-issues/*.md" -exec grep -l "keyword1\|keyword2" {} \;
-```
-
-Replace `keyword1|keyword2` with relevant keywords from the issue (e.g., "admin", "fieldsets", "timezone").
+**IMPORTANT: Search ALL projects** to see if a similar issue has been documented before using relevant keywords from the issue (e.g., "admin", "fieldsets", "timezone").
 
 **Report findings:**
 ```

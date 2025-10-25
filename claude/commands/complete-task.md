@@ -1,6 +1,12 @@
+---
+description: Complete a task by updating documentation and verifying git workflow
+argument-hint: [task-number]
+allowed-tools: Read, Edit, Bash(git*), Bash(docker*), Bash(pytest*), Bash(npm*)
+---
+
 You are completing a task by updating documentation and verifying git workflow.
 
-**Parameter**: Task number (e.g., `03`)
+**Parameter**: Task number (e.g., `03` or use `$1` for the first argument)
 - If not provided, complete the most recently implemented task
 
 **CRITICAL: Read these first:**

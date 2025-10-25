@@ -1,6 +1,12 @@
+---
+description: Implement a documented task with feature branch workflow
+argument-hint: [task-number|feature-name]
+allowed-tools: Read, Edit, Write, Bash(git*), Bash(docker*), Bash(pytest*), Bash(npm*), Grep, Glob
+---
+
 You are implementing a documented task.
 
-**Parameter**: Task number (e.g., `03`) or feature name (e.g., `authentication`)
+**Parameter**: Task number (e.g., `03`, accessed via `$1`) or feature name (e.g., `authentication`)
 - If no parameter provided, find the most recently created task (highest number in `.agent/tasks/`)
 - If parameter is a number, use that task (e.g., `03` → `.agent/tasks/03-authentication.md`)
 - If parameter is text, search for task with matching filename
