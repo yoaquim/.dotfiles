@@ -43,8 +43,11 @@ The symlink `~/.claude` → `~/.dotfiles/config/claude/` is already created.
 **Available commands in any project:**
 ```
 /init-project   - Initialize .agent/ for new or existing project
-/plan-task      - Plan a new feature
+/feature        - Define WHAT to build (feature requirements)
+/plan-task      - Plan HOW to build it (implementation)
 /implement-task - Implement a task
+/test-task      - Test implementation
+/complete-task  - Finalize task
 /fix-bug        - Quick bug fix workflow
 /document-issue - Document known issues
 /status         - Show project status
@@ -73,8 +76,11 @@ This will:
 ├── config.yml                     # Global configuration
 ├── setup.sh                       # Setup script for new machines
 ├── commands/                      # Slash commands (global)
+│   ├── feature.md
 │   ├── plan-task.md
 │   ├── implement-task.md
+│   ├── test-task.md
+│   ├── complete-task.md
 │   ├── fix-bug.md
 │   ├── document-issue.md
 │   ├── status.md
@@ -109,9 +115,14 @@ your-project/
 ├── .agent/
 │   ├── README.md                   # Documentation index
 │   ├── task-template.md            # Template for new tasks
-│   ├── tasks/                      # Tasks (000-999)
+│   ├── .last-feature               # Tracks last feature for /plan-task
+│   ├── features/                   # Feature requirements (WHAT)
+│   │   ├── asset-upload.md
+│   │   └── user-permissions.md
+│   ├── tasks/                      # Implementation tasks (HOW) (000-999)
 │   │   ├── 000-initial-setup.md
-│   │   └── 001-feature-name.md
+│   │   ├── 001-asset-upload-backend.md
+│   │   └── 002-asset-upload-frontend.md
 │   ├── system/                     # System documentation
 │   │   ├── overview.md
 │   │   └── architecture.md
@@ -223,19 +234,40 @@ Edit templates to match your preferred structure or add new sections.
 
 All commands are available globally in any project.
 
-### Planning & Documentation
+### Project Setup
 
 - **`/init-project`** - Initialize `.agent/` directory for new or existing project
-- **`/plan-task <description>`** - Create a new task document with implementation plan
-- **`/status`** - Show project status, active tasks, recent changes
-- **`/review-docs`** - Review documentation for issues or outdated info
-- **`/update-doc`** - Manually update documentation
+  - Creates `features/`, `tasks/`, `system/`, `sops/`, `known-issues/` directories
+  - Generates project documentation templates
+  - References universal SOPs
 
-### Implementation
+### Feature Requirements (WHAT to Build)
+
+- **`/feature <description>`** - Define feature requirements through interactive conversation
+  - Uses EARS format for acceptance criteria
+  - Creates `.agent/features/<feature-name>.md`
+  - Tracks as last feature for `/plan-task` auto-detection
+  - Focuses on WHAT users need, not HOW to implement
+
+### Implementation Planning (HOW to Build)
+
+- **`/plan-task [description]`** - Create technical implementation plan
+  - Auto-detects last feature if no argument provided
+  - Reads feature requirements if available
+  - Creates `.agent/tasks/XXX-task-name.md`
+  - Breaks complex features into multiple tasks if needed
+
+### Building & Testing
 
 - **`/implement-task [XXX]`** - Implement a task (defaults to latest)
 - **`/test-task [XXX]`** - Test a task implementation
 - **`/complete-task [XXX]`** - Finalize task, update docs, git workflow
+
+### Status & Documentation
+
+- **`/status`** - Show project status, features, active tasks, recent changes
+- **`/review-docs`** - Review documentation for issues or outdated info
+- **`/update-doc`** - Manually update documentation
 
 ### Bug Fixes
 
@@ -258,6 +290,84 @@ All commands are available globally in any project.
 2. **Global** (`~/.claude/commands/`)
 
 This allows project-specific overrides while maintaining global defaults.
+
+---
+
+## Typical Workflow
+
+### Complete Feature Development Flow
+
+```bash
+# 1. Initialize project (once per project)
+/init-project
+
+# 2. Define WHAT to build (feature requirements)
+/feature "Asset upload with metadata extraction"
+  → Interactive conversation about user needs
+  → Creates .agent/features/asset-upload.md
+  → EARS format acceptance criteria
+  → Tracks as last feature
+
+# 3. Plan HOW to build it (implementation)
+/plan-task
+  → Auto-detects last feature (asset-upload)
+  → Reads feature requirements
+  → Creates technical implementation plan
+  → May create multiple tasks if complex
+  → Creates .agent/tasks/001-asset-upload-backend.md
+
+# 4. Implement the task
+/implement-task 001
+  → Reads task doc and feature requirements
+  → Creates feature branch
+  → Implements according to plan
+  → Commits work
+
+# 5. Test the implementation
+/test-task 001
+  → Runs automated tests
+  → Verifies acceptance criteria from feature requirements
+  → Manual testing checklist
+
+# 6. Complete and finalize
+/complete-task 001
+  → Updates task status to Complete
+  → Updates system documentation
+  → Merges branch
+  → Cleans up
+```
+
+### Quick Feature (No Formal Requirements)
+
+For simple features, skip `/feature`:
+
+```bash
+/plan-task "Add user logout button"
+  → Plans directly without requirements doc
+/implement-task
+/test-task
+/complete-task
+```
+
+### Bug Fix Flow
+
+```bash
+/fix-bug "Upload fails for files > 10MB"
+  → Auto-searches similar issues across projects
+  → Routes to quick hotfix OR full bug task
+  → Implements fix
+  → Tests and documents
+```
+
+### Check Status
+
+```bash
+/status
+  → Shows defined features
+  → Shows task progress
+  → Shows git status
+  → Suggests next steps
+```
 
 ---
 

@@ -325,11 +325,12 @@ This dotfiles setup includes a **custom Claude Code configuration** that provide
 
 **Custom Slash Commands** (available globally in any project):
 - `/init-project` - Initialize `.agent/` documentation system for new/existing projects
-- `/plan-task` - Plan features with detailed implementation plans
+- `/feature` - Define WHAT to build (feature requirements with EARS format)
+- `/plan-task` - Plan HOW to build it (technical implementation, auto-detects last feature)
 - `/implement-task` - Implement documented tasks with git workflow
-- `/fix-bug` - Intelligent bug fixing (quick hotfix or full bug task workflow)
 - `/test-task` - Test implementations with automated and manual verification
 - `/complete-task` - Finalize tasks with documentation updates
+- `/fix-bug` - Intelligent bug fixing (quick hotfix or full bug task workflow)
 - `/document-issue` - Document known issues for future reference
 - `/status` - Comprehensive project status report
 - `/review-docs` - Review documentation for accuracy and consistency
@@ -368,16 +369,24 @@ All slash commands and workflows are immediately available in any project after 
 
 This creates a complete `.agent/` documentation system with:
 - Project overview and architecture docs
+- Feature requirements directory
 - Task management system
 - Known issues tracking
 - References to universal SOPs
 
-**Start working on a feature:**
+**Define and build a feature:**
 ```bash
-/plan-task <feature description>    # Plan the feature
+/feature "asset upload"             # Define WHAT to build (user requirements)
+/plan-task                          # Plan HOW to build (auto-uses last feature)
 /implement-task                     # Implement the latest task
 /test-task                          # Test the implementation
 /complete-task                      # Finalize and document
+```
+
+**Quick feature (skip requirements):**
+```bash
+/plan-task "simple feature"         # Plan directly without requirements
+/implement-task
 ```
 
 **Quick bug fix:**

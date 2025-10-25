@@ -11,10 +11,18 @@ You are providing a comprehensive project status report.
 **Read these documents:**
 1. `.agent/README.md` - Documentation index
 2. `.agent/system/overview.md` - Project overview and status
-3. `.agent/tasks/` - All task documents (focus on recent ones)
-4. Git branch status (run `git branch` and `git status`)
+3. `.agent/features/` - Feature requirements (if exists)
+4. `.agent/tasks/` - All task documents (focus on recent ones)
+5. Git branch status (already captured via ! commands above)
 
 **Generate a status report with:**
+
+## 📋 Feature Requirements
+
+Check `.agent/features/` directory:
+- List defined features
+- Note which features have tasks (link tasks to features)
+- Show last defined feature (from `.agent/.last-feature`)
 
 ## 📋 Recent Tasks (Last 5)
 For each task, show:
@@ -85,6 +93,7 @@ Quick Stats:
 
 **After showing status:**
 Ask if user wants to:
-- Start a new feature (`/plan-task`)
+- Define a new feature (`/feature`)
+- Plan a task (`/plan-task`)
 - Review documentation (`/review-docs`)
 - View specific task details

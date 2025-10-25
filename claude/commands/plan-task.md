@@ -1,19 +1,54 @@
 ---
 description: Plan a feature with detailed implementation plan and task documentation
-argument-hint: <feature description>
-allowed-tools: Read, Write, Grep, Glob, AskUserQuestion
+argument-hint: [feature description]
+allowed-tools: Read, Write, Grep, Glob, AskUserQuestion, Bash(ls*)
 ---
 
-You are in PLAN MODE. Generate a detailed implementation plan for the requested feature, then offer to capture it as a task document.
+You are in PLAN MODE. Generate a detailed implementation plan (HOW to build) for the requested feature, then offer to capture it as a task document.
 
 **This command combines planning and documentation in one flow.**
 
 **Use this when:**
-- Planning a feature you intend to build
+- Planning HOW to implement a feature
 - Need structured approach before implementation
 - Want to document the plan for future reference
 
-**Note:** If you just want to explore ideas without documentation, you can say "no" when asked to capture, or use the plan informally.
+**Note:** For defining WHAT to build (user requirements), use `/feature` first. This command focuses on HOW to implement.
+
+---
+
+## Step 0: Determine Feature to Plan
+
+**If user provided argument** (e.g., `/plan-task "asset upload backend"`):
+- Use that as the feature to plan
+- Check if matching feature requirements exist in `.agent/features/`
+
+**If NO argument provided:**
+- Check for `.agent/.last-feature` file
+- If exists, read it to get the last defined feature
+- Confirm with user: "Planning implementation for feature: [feature-name]. Correct? (yes/no)"
+- If user says no or file doesn't exist, ask: "What feature would you like to plan?"
+
+**Check for existing feature requirements:**
+```bash
+# Look for matching features
+ls -la .agent/features/ 2>/dev/null
+```
+
+**If matching feature requirements found:**
+- Read `.agent/features/<feature-name>.md` FIRST
+- Use requirements as guide for planning
+- Ensure implementation plan addresses all requirements
+- Reference the requirements doc in the task
+
+**If no feature requirements found:**
+- Plan based on user's description
+- Focus on technical implementation
+- May suggest running `/feature` first for complex features
+
+---
+
+## Step 1: Read Context
 
 **CRITICAL: Before planning, you MUST read:**
 1. `CLAUDE.md` (project root) - Core project instructions
@@ -103,6 +138,7 @@ Use the plan just generated and format it according to `.agent/task-template.md`
 **Branch**: `feature/feature-name`
 **Priority**: [Determined from plan]
 **Planned**: [Today's date]
+**Feature Requirements**: [Link to .agent/features/<feature>.md if exists, otherwise "N/A"]
 
 ## Problem
 

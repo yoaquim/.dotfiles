@@ -18,7 +18,9 @@ We keep all important docs in the `.agent` folder using standardized lowercase d
 ├── .agent/
 │   ├── README.md           # Index of all documentation
 │   ├── task-template.md    # Template for new task documents
-│   ├── tasks/              # PRDs and implementation plans (lowercase)
+│   ├── .last-feature       # Tracks last feature for /plan-task
+│   ├── features/           # Feature requirements - WHAT to build (lowercase)
+│   ├── tasks/              # Implementation plans - HOW to build (lowercase)
 │   ├── system/             # Current state documentation (lowercase)
 │   ├── sops/               # Project-specific procedures (lowercase)
 │   └── known-issues/       # Troubleshooting knowledge base (lowercase)
@@ -73,15 +75,18 @@ We keep all important docs in the `.agent` folder using standardized lowercase d
 Use these global commands (available in all projects):
 
 1. **`/init-project`** - Initialize project documentation
-2. **`/plan-task <description>`** - Create a new task document
-3. **`/implement-task [NNN]`** - Implement a task (defaults to latest)
-4. **`/test-task [NNN]`** - Test implementation
-5. **`/complete-task [NNN]`** - Finalize docs and git workflow
-6. **`/fix-bug <description>`** - Quick bug fix workflow
-7. **`/document-issue`** - Document a known issue
-8. **`/status`** - Show project status
-9. **`/review-docs`** - Review documentation
-10. **`/update-doc`** - Update documentation
+2. **`/feature <description>`** - Define WHAT to build (feature requirements)
+3. **`/plan-task [description]`** - Plan HOW to build (auto-detects last feature)
+4. **`/implement-task [NNN]`** - Implement a task (defaults to latest)
+5. **`/test-task [NNN]`** - Test implementation
+6. **`/complete-task [NNN]`** - Finalize docs and git workflow
+7. **`/fix-bug <description>`** - Quick bug fix workflow
+8. **`/document-issue`** - Document a known issue
+9. **`/status`** - Show project status
+10. **`/review-docs`** - Review documentation
+11. **`/update-doc`** - Update documentation
+
+**Typical workflow**: `/feature` → `/plan-task` → `/implement-task` → `/test-task` → `/complete-task`
 
 ## Technology Stack
 

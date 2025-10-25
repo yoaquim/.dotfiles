@@ -223,6 +223,7 @@ Create all directories with lowercase naming:
 
 ```bash
 mkdir -p .agent/tasks
+mkdir -p .agent/features
 mkdir -p .agent/system
 mkdir -p .agent/sops
 mkdir -p .agent/known-issues
@@ -233,6 +234,7 @@ mkdir -p .agent/known-issues
 📁 Creating directory structure...
   ✓ .agent/
   ✓ .agent/tasks/
+  ✓ .agent/features/
   ✓ .agent/system/
   ✓ .agent/sops/
   ✓ .agent/known-issues/
@@ -479,6 +481,9 @@ Create basic `.gitignore`:
 
 ```
 # Claude Code
+.agent/.last-feature
+
+# OS
 .DS_Store
 
 # Environment
@@ -511,7 +516,11 @@ __pycache__/
 ```
 
 **If .gitignore exists:**
-Check if it has Claude Code patterns. If not, offer to append them.
+Check if it has `.agent/.last-feature`. If not, offer to append:
+```
+# Claude Code
+.agent/.last-feature
+```
 
 ---
 
@@ -585,6 +594,8 @@ Root:
   ✓ task-template.md - Task template
   ✓ tasks/
     ✓ 000-initial-setup.md - Initial setup task ✅
+  ✓ features/
+    (Empty - ready for feature requirements via /feature)
   ✓ system/
     ✓ overview.md - Project overview
     ✓ architecture.md - Architecture docs
@@ -599,8 +610,9 @@ Root:
   → ~/.claude/workflow/sops/documentation-standards.md
 
 ✅ FEATURES ENABLED:
-  ✓ Lowercase directory naming (tasks, system, sops, known-issues)
-  ✓ 3-digit task numbering (000-999)
+  ✓ Lowercase directory naming (tasks, features, system, sops, known-issues)
+  ✓ Feature requirements system (WHAT to build)
+  ✓ 3-digit task numbering (000-999) (HOW to build)
   ✓ 2-digit issue numbering (01-99)
   ✓ Cross-project known-issues search
   ✓ Universal SOPs referenced
@@ -619,13 +631,17 @@ Root:
    - Verify development commands work
 
 3. Start building:
-   /plan-task <your first feature>
+   /feature <your first feature idea>
+   /plan-task  (auto-uses last feature)
 
 📖 QUICK REFERENCE:
 
-Commands available:
-  /plan-task <description>  - Plan a new feature
+Workflow commands:
+  /feature <description>    - Define WHAT to build (requirements)
+  /plan-task [description]  - Plan HOW to build it (implementation)
   /implement-task [XXX]     - Implement a task
+  /test-task [XXX]          - Test implementation
+  /complete-task [XXX]      - Finalize task
   /fix-bug <description>    - Quick bug fix
   /document-issue           - Document known issue
   /status                   - Show project status
