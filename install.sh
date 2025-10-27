@@ -629,6 +629,7 @@ install_brew_fonts() {
     local fonts=(
         "font-source-code-pro"
         "font-fantasque-sans-mono"
+        "font-cascadia-code"
         "font-inconsolata"
         "font-hack"
         "font-fira-code"
