@@ -116,6 +116,11 @@ fi
 # always keep this sourcing at end in case some
 # tools and settings need sourcing to be at end
 
+# source SSH agent configuration
+if [ -f ~/.config/bash/bash_profile_ssh ]; then
+    source ~/.config/bash/bash_profile_ssh
+fi
+
 # source tool exports settings
 if [ -f ~/.config/bash/bash_tools ]; then
     source ~/.config/bash/bash_tools

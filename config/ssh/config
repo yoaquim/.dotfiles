@@ -1,0 +1,17 @@
+# SSH Configuration
+# Integrates with macOS Keychain for automatic key management
+
+Host *
+    # Use Apple Keychain to store passphrases
+    UseKeychain yes
+
+    # Automatically add keys to ssh-agent on first use
+    AddKeysToAgent yes
+
+    # Specify your SSH keys
+    IdentityFile ~/.ssh/git
+    IdentityFile ~/.ssh/dokploy.pem
+
+    # Keep connections alive
+    ServerAliveInterval 60
+    ServerAliveCountMax 10

@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# ============================================================================
+# SSH Agent Configuration
+# ============================================================================
+# Ensures a single ssh-agent runs across all shells and tmux panes.
+# Keys added in one pane are available in all panes.
+#
+# macOS Integration:
+# - Uses Apple Keychain for persistent key storage via ~/.ssh/config
+# - Keys are automatically loaded from Keychain on first use
+# - No need to ssh-add after reboot
+# ============================================================================
+
+# Check if we're on macOS
+if [[ "$(uname)" == "Darwin" ]]; then
+    # On macOS, we don't rely on the system ssh-agent (which can be flaky in tmux)
+    # Instead, we start our own persistent agent that all shells can share
+
+    SSH_ENV="$HOME/.ssh/agent-environment"
+
+    start_agent() {
+        echo "Starting persistent SSH agent..."
+        ssh-agent -s | sed 's/^echo/#echo/' > "${SSH_ENV}"
+        chmod 600 "${SSH_ENV}"
+    }
+
+    # If agent env file exists, source it
+    if [ -f "${SSH_ENV}" ]; then
+        . "${SSH_ENV}" > /dev/null
+
+        # Check if agent is actually running
+        if ! ps -p ${SSH_AGENT_PID} > /dev/null 2>&1; then
+            # Agent died, start a new one
+            start_agent
+            . "${SSH_ENV}" > /dev/null
+        fi
+    else
+        # No agent env file, start fresh
+        start_agent
+        . "${SSH_ENV}" > /dev/null
+    fi
+else
+    # Linux/other Unix: Manual agent management
+    SSH_ENV="$HOME/.ssh/agent-environment"
+
+    start_agent() {
+        echo "Starting new SSH agent..."
+        ssh-agent -s | sed 's/^echo/#echo/' > "${SSH_ENV}"
+        chmod 600 "${SSH_ENV}"
+        . "${SSH_ENV}" > /dev/null
+    }
+
+    # Check if agent socket exists and is valid
+    if [ -f "${SSH_ENV}" ]; then
+        . "${SSH_ENV}" > /dev/null
+        # Verify the agent is actually running
+        ps -p ${SSH_AGENT_PID} > /dev/null 2>&1 || {
+            start_agent
+        }
+    else
+        start_agent
+    fi
+fi
+
+# ============================================================================
+# SSH Agent Helpers
+# ============================================================================
+
+# List all currently loaded SSH keys
+alias ssh-keys='ssh-add -l'
+
+# Add all SSH keys from ~/.ssh (with Keychain integration on macOS)
+alias ssh-add-all='ssh-add --apple-use-keychain ~/.ssh/git ~/.ssh/dokploy.pem 2>/dev/null || ssh-add ~/.ssh/git ~/.ssh/dokploy.pem'
+
+# Remove all keys from agent
+alias ssh-clear='ssh-add -D'
+
+# Add a key to agent and Keychain (macOS)
+ssh-add-key() {
+    if [ -z "$1" ]; then
+        echo "Usage: ssh-add-key <path-to-key>"
+        return 1
+    fi
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+        ssh-add --apple-use-keychain "$1"
+    else
+        ssh-add "$1"
+    fi
+}

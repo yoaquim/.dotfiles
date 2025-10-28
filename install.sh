@@ -363,6 +363,11 @@ link_symlinks() {
     create_symlink "${SCRIPT_DIR}/config/gitconfig" "$HOME/.gitconfig"
     create_symlink "${SCRIPT_DIR}/config/rclone" "$HOME/.config/rclone"
 
+    # Link SSH configuration
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+    create_symlink "${SCRIPT_DIR}/config/ssh/config" "$HOME/.ssh/config"
+
     print_success "Symlinks created successfully"
 }
 
