@@ -8,8 +8,68 @@ This guide walks you through building a complete product using Vibe Kanban + Cla
 
 ---
 
+## 🚀 Quickstart (TLDR)
+
+**Want to build a product fast? Here's the 5-minute version:**
+
+```bash
+cd your-project
+
+# 1. Setup (10 min)
+/vk-init
+# → Provide: product vision, tech stack, goals
+# → Creates: .agent/ docs, CLAUDE.md
+
+# 2. Complete Kickoff (1-2 hours, interactive)
+/vk-kickoff
+# → Identifies all features needed
+# → For each: asks questions, gathers requirements
+# → Creates: .agent/features/*.md, all VK tasks
+
+# 3. Set Dependencies (5 min)
+/vk-prioritize
+# → Analyzes tasks, asks about dependencies
+# → Creates execution waves (Wave 1, Wave 2...)
+
+# 4. Start Execution (automated)
+/vk-start --watch
+# → VK spawns Claude instances in parallel
+# → Each works in isolated git worktree
+# → Auto-starts next wave as tasks complete
+
+# 5. Monitor Progress (anytime)
+/vk-status
+# → Shows what's done, in-progress, blocked
+# → Suggests next actions
+```
+
+**That's it!** Your active time: ~2 hours. VK execution: runs in parallel.
+
+**Key Points:**
+- `/vk-init` = Project setup (once)
+- `/vk-kickoff` = Define ALL features + create ALL tasks (once)
+- `/vk-prioritize` = Set dependencies (once per batch)
+- `/vk-start --watch` = Let VK work (runs continuously)
+- `/vk-status` = Check progress (anytime)
+
+**Alternative (Manual Control):**
+```bash
+/vk-init                      # Setup
+/vk-feature "Feature 1"       # Define one feature
+/vk-plan                      # Create tasks for it
+/vk-feature "Feature 2"       # Define another
+/vk-plan "Feature 2"          # Create tasks for it
+/vk-prioritize                # Set dependencies
+/vk-start --watch             # Execute
+```
+
+**Need details?** Read on below ↓
+
+---
+
 ## Table of Contents
 
+- [Quickstart (TLDR)](#-quickstart-tldr)
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [The 5-Phase Workflow](#the-5-phase-workflow)
