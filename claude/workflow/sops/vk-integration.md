@@ -659,7 +659,7 @@ VK subtask commits should:
 ### Slash Commands
 
 **Planning phase (before execution):**
-- `/vk-init-project` - Initialize VK workflow
+- `/vk-init` - Initialize VK workflow
 - `/vk-kickoff` - Complete project kickoff (features → requirements → tasks)
 - `/vk-feature <description>` - Define feature requirements
 - `/vk-plan [feature]` - Create VK tasks from feature

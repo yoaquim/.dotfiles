@@ -35,7 +35,7 @@ If not exists:
 ```
 ⚠️ VK workflow not enabled.
 
-Run /vk-init-project first.
+Run /vk-init first.
 ```
 
 **Check VK connection:**

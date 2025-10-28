@@ -33,7 +33,7 @@ If not exists:
 ```
 ⚠️ VK workflow not enabled.
 
-Run /vk-init-project first.
+Run /vk-init first.
 ```
 
 **Check VK connection:**
@@ -57,7 +57,7 @@ If not exists:
 ```
 ⚠️ No product vision found.
 
-Run /vk-init-project first to capture product vision.
+Run /vk-init first to capture product vision.
 ```
 
 ---
@@ -331,7 +331,7 @@ Propose 6-8 features
 ```
 ❌ Cannot identify features without product vision.
 
-Run /vk-init-project first to capture:
+Run /vk-init first to capture:
 - Product description
 - Target users
 - Key goals
@@ -398,15 +398,15 @@ If you add features later:
 
 ## Integration
 
-### With /vk-init-project
+### With /vk-init
 
 User can run:
 ```bash
-/vk-init-project    # Setup
+/vk-init    # Setup
 /vk-kickoff         # Complete planning
 ```
 
-Or `/vk-init-project` can offer to run this automatically at end.
+Or `/vk-init` can offer to run this automatically at end.
 
 ### With Standard Commands
 

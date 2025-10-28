@@ -32,7 +32,7 @@ If not exists:
 ```
 ⚠️ VK workflow not enabled.
 
-Run /vk-init-project first, or use /plan-task for standard workflow.
+Run /vk-init first, or use /plan-task for standard workflow.
 ```
 
 **Check VK connection:**

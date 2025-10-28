@@ -71,7 +71,7 @@ claude --version
 ls ~/.claude/commands/vk-*
 
 # Should see:
-# vk-init-project.md
+# vk-init.md
 # vk-feature.md
 # vk-plan.md
 # vk-status.md
@@ -86,7 +86,7 @@ ls ~/.claude/commands/vk-*
 
 **What**: Define your product vision and context
 
-**Command**: `/vk-init-project`
+**Command**: `/vk-init`
 
 **You provide**:
 - Product description and goals
@@ -234,7 +234,7 @@ ls ~/.claude/commands/vk-*
 
 ```bash
 cd ~/Projects/my-blog
-/vk-init-project
+/vk-init
 ```
 
 **Claude asks questions:**
@@ -621,7 +621,7 @@ Next: Epic 2 (Registration) in progress
 
 ```bash
 cd ~/Projects/new-project
-/vk-init-project
+/vk-init
 /vk-feature "First feature"
 /vk-plan
 # VK executes
@@ -638,7 +638,7 @@ cd ~/Projects/new-project
 
 ```bash
 cd ~/Projects/existing-project
-/vk-init-project
+/vk-init
 # Choose: "Existing project, integrate VK"
 ```
 
@@ -984,7 +984,7 @@ VK is flexible tool, not rigid system.
 ```bash
 # Initialize new project
 cd ~/Projects/my-idea
-/vk-init-project
+/vk-init
 
 # Define first feature
 /vk-feature "User can sign up with email and password"

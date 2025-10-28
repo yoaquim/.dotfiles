@@ -24,7 +24,7 @@ If `.agent/.vk-enabled` file doesn't exist:
 
 This project doesn't appear to be VK-enabled.
 
-Please run /vk-init-project first to set up VK workflow.
+Please run /vk-init first to set up VK workflow.
 
 Alternatively, use /feature for standard workflow.
 ```
