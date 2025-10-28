@@ -41,9 +41,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 info "Script location: $SCRIPT_DIR"
 
 # Verify we're in the right place
-if [[ ! -d "$SCRIPT_DIR/commands" ]] || [[ ! -d "$SCRIPT_DIR/workflow" ]]; then
+if [[ ! -d "$SCRIPT_DIR/commands" ]] || [[ ! -d "$SCRIPT_DIR/workflow" ]] || [[ ! -d "$SCRIPT_DIR/guides" ]]; then
     error "Expected structure not found!"
     error "Make sure you're running this from ~/.dotfiles/claude/"
+    error "Required directories: commands/, workflow/, guides/"
     exit 1
 fi
 
@@ -58,7 +59,60 @@ fi
 info "Found ~/.claude directory"
 
 # ============================================================
-# Step 1: Create ~/.claude/commands if needed
+# Helper function to symlink a directory
+# ============================================================
+symlink_directory() {
+    local SOURCE="$1"
+    local TARGET="$2"
+    local NAME="$3"
+
+    if [[ -L "$TARGET" ]]; then
+        # It's a symlink
+        CURRENT_TARGET="$(readlink "$TARGET")"
+        if [[ "$CURRENT_TARGET" == "$SOURCE" ]]; then
+            success "$NAME → $SOURCE (already linked)"
+        else
+            warning "$NAME is symlinked to: $CURRENT_TARGET"
+            read -p "Replace with our version? (y/n) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                rm "$TARGET"
+                ln -s "$SOURCE" "$TARGET"
+                success "$NAME → $SOURCE (replaced)"
+            else
+                warning "Keeping existing $NAME symlink"
+            fi
+        fi
+    elif [[ -d "$TARGET" ]]; then
+        # It's a directory
+        warning "$NAME exists as a directory"
+        echo "Contents:"
+        ls -la "$TARGET" | head -10
+        echo ""
+        read -p "Backup and replace with symlink? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            BACKUP_DIR="$TARGET.backup.$(date +%Y%m%d_%H%M%S)"
+            mv "$TARGET" "$BACKUP_DIR"
+            ln -s "$SOURCE" "$TARGET"
+            success "Backed up to: $BACKUP_DIR"
+            success "$NAME → $SOURCE"
+        else
+            error "Setup incomplete - $NAME not linked"
+            return 1
+        fi
+    elif [[ -f "$TARGET" ]]; then
+        error "$NAME exists as a file (unexpected)"
+        return 1
+    else
+        # Doesn't exist - create symlink
+        ln -s "$SOURCE" "$TARGET"
+        success "$NAME → $SOURCE"
+    fi
+}
+
+# ============================================================
+# Step 1: Ensure ~/.claude/commands exists
 # ============================================================
 if [[ ! -d "$HOME/.claude/commands" ]]; then
     info "Creating ~/.claude/commands/"
@@ -66,81 +120,16 @@ if [[ ! -d "$HOME/.claude/commands" ]]; then
 fi
 
 # ============================================================
-# Step 2: Symlink each command individually
+# Step 2: Symlink command subdirectories
 # ============================================================
 echo ""
-info "Symlinking commands to ~/.claude/commands/..."
+info "Symlinking command subdirectories..."
 
-COMMANDS=(
-    "complete-task.md"
-    "document-issue.md"
-    "feature.md"
-    "fix-bug.md"
-    "implement-task.md"
-    "init-project.md"
-    "plan-task.md"
-    "review-docs.md"
-    "status.md"
-    "test-task.md"
-    "update-doc.md"
-)
+# Symlink workflow commands
+symlink_directory "$SCRIPT_DIR/commands/workflow" "$HOME/.claude/commands/workflow" "~/.claude/commands/workflow"
 
-LINKED=0
-SKIPPED=0
-
-for cmd in "${COMMANDS[@]}"; do
-    SOURCE="$SCRIPT_DIR/commands/$cmd"
-    TARGET="$HOME/.claude/commands/$cmd"
-
-    if [[ ! -f "$SOURCE" ]]; then
-        warning "Source not found: $cmd"
-        continue
-    fi
-
-    # Check if target exists
-    if [[ -L "$TARGET" ]]; then
-        # It's a symlink - check if it points to our source
-        CURRENT_TARGET="$(readlink "$TARGET")"
-        if [[ "$CURRENT_TARGET" == "$SOURCE" ]]; then
-            echo "  ✓ $cmd (already linked)"
-            SKIPPED=$((SKIPPED + 1))
-        else
-            warning "$cmd is symlinked to: $CURRENT_TARGET"
-            read -p "  Replace with our version? (y/n) " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                rm "$TARGET"
-                ln -s "$SOURCE" "$TARGET"
-                echo "  ✓ $cmd (replaced)"
-                LINKED=$((LINKED + 1))
-            else
-                echo "  ✗ $cmd (skipped)"
-                SKIPPED=$((SKIPPED + 1))
-            fi
-        fi
-    elif [[ -f "$TARGET" ]]; then
-        # It's a regular file
-        warning "$cmd exists as a regular file"
-        read -p "  Backup and replace with symlink? (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            mv "$TARGET" "$TARGET.backup.$(date +%Y%m%d_%H%M%S)"
-            ln -s "$SOURCE" "$TARGET"
-            echo "  ✓ $cmd (backed up and linked)"
-            LINKED=$((LINKED + 1))
-        else
-            echo "  ✗ $cmd (skipped)"
-            SKIPPED=$((SKIPPED + 1))
-        fi
-    else
-        # Doesn't exist - create symlink
-        ln -s "$SOURCE" "$TARGET"
-        echo "  ✓ $cmd"
-        LINKED=$((LINKED + 1))
-    fi
-done
-
-success "Commands: $LINKED linked, $SKIPPED skipped"
+# Symlink VK commands
+symlink_directory "$SCRIPT_DIR/commands/vk" "$HOME/.claude/commands/vk" "~/.claude/commands/vk"
 
 # ============================================================
 # Step 3: Symlink workflow directory
@@ -148,68 +137,46 @@ success "Commands: $LINKED linked, $SKIPPED skipped"
 echo ""
 info "Symlinking workflow directory to ~/.claude/workflow/..."
 
-WORKFLOW_SOURCE="$SCRIPT_DIR/workflow"
-WORKFLOW_TARGET="$HOME/.claude/workflow"
-
-if [[ -L "$WORKFLOW_TARGET" ]]; then
-    # It's a symlink
-    CURRENT_TARGET="$(readlink "$WORKFLOW_TARGET")"
-    if [[ "$CURRENT_TARGET" == "$WORKFLOW_SOURCE" ]]; then
-        success "~/.claude/workflow → $WORKFLOW_SOURCE (already linked)"
-    else
-        warning "~/.claude/workflow is symlinked to: $CURRENT_TARGET"
-        read -p "Replace with our version? (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            rm "$WORKFLOW_TARGET"
-            ln -s "$WORKFLOW_SOURCE" "$WORKFLOW_TARGET"
-            success "~/.claude/workflow → $WORKFLOW_SOURCE (replaced)"
-        else
-            warning "Keeping existing workflow symlink"
-        fi
-    fi
-elif [[ -d "$WORKFLOW_TARGET" ]]; then
-    # It's a directory
-    warning "~/.claude/workflow exists as a directory"
-    echo "Contents:"
-    ls -la "$WORKFLOW_TARGET"
-    echo ""
-    read -p "Backup and replace with symlink? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        BACKUP_DIR="$HOME/.claude/workflow.backup.$(date +%Y%m%d_%H%M%S)"
-        mv "$WORKFLOW_TARGET" "$BACKUP_DIR"
-        ln -s "$WORKFLOW_SOURCE" "$WORKFLOW_TARGET"
-        success "Backed up to: $BACKUP_DIR"
-        success "~/.claude/workflow → $WORKFLOW_SOURCE"
-    else
-        error "Setup incomplete - workflow not linked"
-        exit 1
-    fi
-elif [[ -f "$WORKFLOW_TARGET" ]]; then
-    error "~/.claude/workflow exists as a file (unexpected)"
-    exit 1
-else
-    # Doesn't exist - create symlink
-    ln -s "$WORKFLOW_SOURCE" "$WORKFLOW_TARGET"
-    success "~/.claude/workflow → $WORKFLOW_SOURCE"
-fi
+symlink_directory "$SCRIPT_DIR/workflow" "$HOME/.claude/workflow" "~/.claude/workflow"
 
 # ============================================================
-# Step 4: Verify setup
+# Step 4: Symlink guides directory
+# ============================================================
+echo ""
+info "Symlinking guides directory to ~/.claude/guides/..."
+
+symlink_directory "$SCRIPT_DIR/guides" "$HOME/.claude/guides" "~/.claude/guides"
+
+# ============================================================
+# Step 5: Verify setup
 # ============================================================
 echo ""
 info "Verifying setup..."
 
-# Check commands
-VERIFIED=0
-for cmd in "${COMMANDS[@]}"; do
-    if [[ -L "$HOME/.claude/commands/$cmd" ]]; then
-        ((VERIFIED++))
-    fi
-done
+# Check command subdirectories
+WORKFLOW_OK=false
+VK_OK=false
 
-echo "  ✓ Commands: $VERIFIED/${#COMMANDS[@]} symlinked"
+if [[ -L "$HOME/.claude/commands/workflow" ]]; then
+    WORKFLOW_COUNT=$(find "$SCRIPT_DIR/commands/workflow" -name "*.md" -type f | wc -l | tr -d ' ')
+    echo "  ✓ Workflow commands symlinked ($WORKFLOW_COUNT commands)"
+    WORKFLOW_OK=true
+else
+    error "Workflow commands NOT symlinked"
+fi
+
+if [[ -L "$HOME/.claude/commands/vk" ]]; then
+    VK_COUNT=$(find "$SCRIPT_DIR/commands/vk" -name "*.md" -type f | wc -l | tr -d ' ')
+    echo "  ✓ VK commands symlinked ($VK_COUNT commands)"
+    VK_OK=true
+else
+    error "VK commands NOT symlinked"
+fi
+
+if [[ "$WORKFLOW_OK" != true ]] || [[ "$VK_OK" != true ]]; then
+    error "Command symlinks incomplete"
+    exit 1
+fi
 
 # Check workflow
 if [[ -L "$HOME/.claude/workflow" ]]; then
@@ -219,8 +186,15 @@ else
     exit 1
 fi
 
+# Check guides
+if [[ -L "$HOME/.claude/guides" ]]; then
+    echo "  ✓ Guides directory symlinked"
+else
+    warning "Guides directory NOT symlinked (optional)"
+fi
+
 # ============================================================
-# Step 5: Display what's available
+# Step 6: Display what's available
 # ============================================================
 echo ""
 echo "╔════════════════════════════════════════╗"
@@ -231,49 +205,79 @@ echo ""
 info "Structure created:"
 echo ""
 echo "~/.claude/"
-echo "├── commands/              # Slash commands (${#COMMANDS[@]} total)"
-echo "│   ├── init-project.md → $SCRIPT_DIR/commands/init-project.md"
-echo "│   ├── feature.md"
-echo "│   ├── plan-task.md"
-echo "│   ├── implement-task.md"
-echo "│   ├── fix-bug.md"
-echo "│   └── ..."
+echo "├── commands/"
+echo "│   ├── workflow/ → $SCRIPT_DIR/commands/workflow"
+echo "│   │   ├── init-project.md"
+echo "│   │   ├── feature.md"
+echo "│   │   ├── plan-task.md"
+echo "│   │   ├── implement-task.md"
+echo "│   │   ├── test-task.md"
+echo "│   │   ├── complete-task.md"
+echo "│   │   ├── fix-bug.md"
+echo "│   │   ├── document-issue.md"
+echo "│   │   ├── review-docs.md"
+echo "│   │   ├── status.md"
+echo "│   │   └── update-doc.md"
+echo "│   └── vk/ → $SCRIPT_DIR/commands/vk"
+echo "│       ├── vk-init-project.md"
+echo "│       ├── vk-kickoff.md"
+echo "│       ├── vk-feature.md"
+echo "│       ├── vk-plan.md"
+echo "│       ├── vk-prioritize.md"
+echo "│       ├── vk-execute.md"
+echo "│       ├── vk-start.md"
+echo "│       ├── vk-status.md"
+echo "│       └── vk-sync-docs.md"
 echo "├── workflow/ → $SCRIPT_DIR/workflow"
-echo "│   ├── sops/             # Universal SOPs"
-echo "│   ├── templates/        # Project templates"
-echo "│   └── README.md         # Documentation"
+echo "│   ├── sops/                  # Universal SOPs"
+echo "│   ├── templates/             # Project templates"
+echo "│   └── README.md"
+echo "├── guides/ → $SCRIPT_DIR/guides"
+echo "│   ├── vk-product-workflow.md # Complete VK guide"
+echo "│   └── vk-execution-model.md  # Tasks vs Attempts"
 echo "└── ... (Claude Code app data)"
 echo ""
 
 info "Available slash commands:"
 echo ""
+echo "Standard Workflow:"
 echo "  /init-project      - Initialize .agent/ for new/existing project"
 echo "  /feature           - Define WHAT to build (feature requirements)"
-echo "  /plan-task         - Plan HOW to build it (auto-detects last feature)"
+echo "  /plan-task         - Plan HOW to build it"
 echo "  /implement-task    - Implement a task"
 echo "  /test-task         - Test implementation"
 echo "  /complete-task     - Finalize and document"
-echo "  /fix-bug           - Quick bug fix (with cross-project search)"
-echo "  /document-issue    - Document known issue (with cross-project search)"
-echo "  /status            - Show project status and features"
+echo "  /fix-bug           - Quick bug fix"
+echo "  /document-issue    - Document known issue"
+echo "  /status            - Show project status"
+echo ""
+echo "VK Workflow (Vibe Kanban integration):"
+echo "  /vk-init-project   - Initialize VK-enabled project"
+echo "  /vk-kickoff        - Complete project kickoff (features → requirements → tasks)"
+echo "  /vk-feature        - Define feature requirements"
+echo "  /vk-plan           - Create VK tasks from feature"
+echo "  /vk-prioritize     - Set dependencies and execution order"
+echo "  /vk-start          - Start ready tasks (smart orchestration)"
+echo "  /vk-execute        - Start single task manually"
+echo "  /vk-status         - Check VK progress and readiness"
+echo "  /vk-sync-docs      - Sync documentation"
 echo ""
 
-info "Workflow documentation:"
+info "Documentation:"
 echo ""
-echo "  ~/.claude/workflow/README.md          - Full documentation"
-echo "  ~/.claude/workflow/sops/              - Universal SOPs"
-echo "  ~/.claude/workflow/templates/         - Project templates"
+echo "  ~/.claude/guides/vk-product-workflow.md  - Complete VK workflow guide"
+echo "  ~/.claude/guides/vk-execution-model.md   - Tasks vs Attempts explained"
+echo "  ~/.claude/workflow/README.md             - Standard workflow docs"
+echo "  ~/.claude/workflow/sops/                 - Universal SOPs"
 echo ""
 
-info "To use in a project:"
+info "Typical workflows:"
 echo ""
-echo "  1. Navigate to project directory"
-echo "  2. Run: /init-project"
-echo "  3. Define feature: /feature \"your feature idea\""
-echo "  4. Plan implementation: /plan-task"
-echo "  5. Build: /implement-task → /test-task → /complete-task"
+echo "Standard (manual):"
+echo "  /init-project → /feature → /plan-task → /implement-task → /test-task → /complete-task"
 echo ""
-echo "  Typical workflow: /feature → /plan-task → /implement-task → /test-task → /complete-task"
+echo "VK (orchestrated):"
+echo "  /vk-init-project → /vk-kickoff → /vk-prioritize → /vk-start --watch"
 echo ""
 
 success "Setup complete! Happy coding!"
