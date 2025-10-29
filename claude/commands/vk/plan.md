@@ -32,7 +32,7 @@ If not exists:
 ```
 ⚠️ VK workflow not enabled.
 
-Run /vk-init first, or use /plan-task for standard workflow.
+Run /vk:init first, or use /plan-task for standard workflow.
 ```
 
 **Check VK connection:**
@@ -77,7 +77,7 @@ ls -la .agent/features/ 2>/dev/null
 ⚠️ No feature requirements found for: [feature-name]
 
 Would you like to:
-A) Run /vk-feature first to define requirements
+A) Run /vk:feature first to define requirements
 B) Continue with planning anyway (less structured)
 C) Cancel
 
@@ -283,9 +283,9 @@ mcp__vibe_kanban__create_task
 **Feature**: [feature-name] (.agent/features/[feature-name].md)
 **Epic**: [Epic Name]
 **Points**: 1
-**Wave**: (Set by /vk-prioritize)
+**Wave**: (Set by /vk:prioritize)
 **Depends On**:
-(Set by /vk-prioritize - initially empty)
+(Set by /vk:prioritize - initially empty)
 
 ---
 
@@ -353,7 +353,7 @@ WHEN [event]:
 **Epic Context:** [What epic this belongs to]
 **Estimated Time:** 1-2 hours
 
-This task will be started via /vk-execute or /vk-start.
+This task will be started via /vk:execute or /vk:start.
 During execution, VK spawns CC instance with full project context.
 ```
 
@@ -427,7 +427,7 @@ For each task in plan:
 
 **Set dependencies and execution order:**
 ```bash
-/vk-prioritize
+/vk:prioritize
 ```
 
 This will:
@@ -440,25 +440,25 @@ This will:
 
 **Option A: Start all ready tasks**
 ```bash
-/vk-start              # One-shot: start ready tasks, exit
-/vk-start --watch      # Continuous: auto-start as tasks complete
+/vk:start              # One-shot: start ready tasks, exit
+/vk:start --watch      # Continuous: auto-start as tasks complete
 ```
 
 **Option B: Start specific task**
 ```bash
-/vk-execute <task-id>  # Manual single-task execution
+/vk:execute <task-id>  # Manual single-task execution
 ```
 
 **Option C: Limit concurrency**
 ```bash
-/vk-start --batch-size=5      # Start 5 at a time
-/vk-start --feature="name"    # Only start specific feature
+/vk:start --batch-size=5      # Start 5 at a time
+/vk:start --feature="name"    # Only start specific feature
 ```
 
 ### 4. Monitor Progress
 
 ```bash
-/vk-status
+/vk:status
 ```
 
 Shows:
@@ -477,12 +477,12 @@ Shows:
 - Tasks are not started yet
 - Just planning artifacts
 
-**Prioritization (/vk-prioritize):**
+**Prioritization (/vk:prioritize):**
 - Analyzes dependencies
 - Sets execution order
 - Updates task metadata
 
-**Execution (/vk-start or /vk-execute):**
+**Execution (/vk:start or /vk:execute):**
 - You trigger execution via commands
 - VK starts **Attempt** for each Task
 - Attempt = Execution instance (spawns CC, creates git worktree)
@@ -490,7 +490,7 @@ Shows:
 - Attempt completes or fails
 - VK marks task done, unblocks dependent tasks
 
-**You control when tasks start** - via /vk-start or /vk-execute.
+**You control when tasks start** - via /vk:start or /vk:execute.
 
 **VK handles execution** - spawning instances, worktrees, parallelization.
 
@@ -525,7 +525,7 @@ Shows:
 
 **Ready to execute!**
 
-Next: /vk-prioritize (set dependencies) then /vk-start (begin execution)
+Next: /vk:prioritize (set dependencies) then /vk:start (begin execution)
 ```
 
 ---
@@ -596,15 +596,15 @@ Retry? (yes/no)
 
 ## Integration
 
-**Before `/vk-plan`:**
-- `/vk-feature` - Define requirements
+**Before `/vk:plan`:**
+- `/vk:feature` - Define requirements
 
-**After `/vk-plan`:**
-- `/vk-prioritize` - Set dependencies and execution order (recommended)
-- `/vk-start` - Begin task execution
-- `/vk-execute` - Execute specific tasks manually
-- `/vk-status` - Monitor progress
-- `/vk-sync-docs` - Sync docs if needed
+**After `/vk:plan`:**
+- `/vk:prioritize` - Set dependencies and execution order (recommended)
+- `/vk:start` - Begin task execution
+- `/vk:execute` - Execute specific tasks manually
+- `/vk:status` - Monitor progress
+- `/vk:sync-docs` - Sync docs if needed
 
 ---
 

@@ -28,7 +28,7 @@ If not exists:
 ```
 ⚠️ VK workflow not enabled.
 
-Run /vk-init first.
+Run /vk:init first.
 ```
 
 **Check VK connection:**
@@ -65,7 +65,7 @@ mcp__vibe_kanban__list_tasks project_id=<project_id> status=todo
 
 All tasks are either in progress or completed.
 
-Run /vk-status to see current state.
+Run /vk:status to see current state.
 ```
 
 ---
@@ -363,24 +363,24 @@ Depends on: All implementation complete
 
 ```bash
 # Option 1: Start all ready tasks, then call again for next wave
-/vk-start
+/vk:start
 
 # Option 2: Continuous - auto-start as tasks complete
-/vk-start --watch
+/vk:start --watch
 
 # Option 3: Start specific feature only
-/vk-start --feature="user-authentication"
+/vk:start --feature="user-authentication"
 
 # Option 4: Limit concurrency (5 tasks at a time)
-/vk-start --batch-size=5
+/vk:start --batch-size=5
 
 # Option 5: Start single task manually
-/vk-execute <task-id>
+/vk:execute <task-id>
 ```
 
 **To monitor:**
 ```bash
-/vk-status
+/vk:status
 ```
 
 ---
@@ -472,7 +472,7 @@ Choose: (a/b/c/d)
 
 **This command doesn't start tasks** - it only sets up the execution order.
 
-After prioritization, use `/vk-start` to begin execution.
+After prioritization, use `/vk:start` to begin execution.
 
 **Dependencies are stored in task descriptions** - VK has no native dependency support via MCP.
 

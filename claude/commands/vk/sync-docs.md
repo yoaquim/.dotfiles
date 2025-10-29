@@ -488,14 +488,14 @@ This makes documentation automatic and reduces need for manual sync.
 **Next Steps:**
 1. Review updated documentation
 2. Commit doc updates to git (if applicable)
-3. Ensure future VK plans include doc subtasks (/vk-plan does this automatically)
+3. Ensure future VK plans include doc subtasks (/vk:plan does this automatically)
 
 ---
 
 Would you like to:
 A) Review updated docs
 B) Commit documentation updates
-C) Check VK status (/vk-status)
+C) Check VK status (/vk:status)
 D) Continue
 
 Choose: (A/B/C/D)
@@ -533,7 +533,7 @@ Commit message:
 - Update database schema
 - Sync reflects [X] completed VK epics
 
-🤖 Generated with Claude Code /vk-sync-docs"
+🤖 Generated with Claude Code /vk:sync-docs"
 
 Commit? (yes/no)
 ```
@@ -557,7 +557,7 @@ Cannot retrieve task status.
 Try:
 1. Check VK is running
 2. Verify MCP connection
-3. Run /vk-status to test
+3. Run /vk:status to test
 
 Cannot complete sync without VK data.
 ```
@@ -621,9 +621,9 @@ It's a **sync helper**, not a replacement for proper documentation discipline.
 ### Making Documentation Subtasks Work
 
 **Best approach:**
-1. Use `/vk-plan` (auto-generates doc subtasks per epic)
+1. Use `/vk:plan` (auto-generates doc subtasks per epic)
 2. Let VK execute doc subtasks (documentation stays current automatically)
-3. Use `/vk-sync-docs` as backup/verification
+3. Use `/vk:sync-docs` as backup/verification
 
 **This way:**
 - Documentation is part of the workflow
@@ -635,8 +635,8 @@ It's a **sync helper**, not a replacement for proper documentation discipline.
 ## Integration with VK Workflow
 
 **This command complements:**
-- `/vk-plan` - Which creates doc subtasks
-- `/vk-status` - Which shows VK progress
+- `/vk:plan` - Which creates doc subtasks
+- `/vk:status` - Which shows VK progress
 - VK doc subtasks - Which update docs automatically
 
 **Use when:**

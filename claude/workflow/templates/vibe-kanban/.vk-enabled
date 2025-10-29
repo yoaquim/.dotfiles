@@ -10,8 +10,8 @@ This marker file indicates this project uses Vibe Kanban workflow.
 - TDD-friendly (separate test subtasks)
 
 **Commands:**
-- `/vk-feature` - Define feature requirements
-- `/vk-plan` - Create VK task hierarchy
+- `/vk:feature` - Define feature requirements
+- `/vk:plan` - Create VK task hierarchy
 - `/vk-status` - Check progress
 - `/vk-sync-docs` - Sync documentation
 

@@ -12,7 +12,7 @@ You are initializing a project with the Vibe Kanban + Claude Code workflow syste
 - Creates `.agent/` directory structure WITHOUT `tasks/` directory (VK is source of truth for tasks)
 - Creates `.agent/.vk-enabled` marker file
 - Generates documentation from templates
-- Suggests running `/vk-feature` to define first feature
+- Suggests running `/vk:feature` to define first feature
 
 **Key Difference from `/init-project`:**
 - NO `.agent/tasks/` directory (VK manages tasks)
@@ -406,10 +406,10 @@ Read each template from `~/.claude/workflow/templates/vibe-kanban/` and replace 
 
 ## Next Steps
 
-1. Define features with `/vk-feature <description>`
-2. Plan implementation with `/vk-plan`
+1. Define features with `/vk:feature <description>`
+2. Plan implementation with `/vk:plan`
 3. Let Vibe Kanban orchestrate development
-4. Monitor progress with `/vk-status`
+4. Monitor progress with `/vk:status`
 ```
 
 ### 7.5 .agent/system/architecture.md
@@ -501,10 +501,10 @@ These apply to ALL projects and live in `~/.claude/workflow/sops/`:
 
 ### Workflow Commands
 
-- `/vk-feature <description>` - Define feature requirements
-- `/vk-plan [feature]` - Create agile plan and VK tasks
-- `/vk-status` - Check progress
-- `/vk-sync-docs` - Sync documentation
+- `/vk:feature <description>` - Define feature requirements
+- `/vk:plan [feature]` - Create agile plan and VK tasks
+- `/vk:status` - Check progress
+- `/vk:sync-docs` - Sync documentation
 
 For detailed guidance, see: `~/.claude/guides/vk-product-workflow.md`
 ```
@@ -590,10 +590,10 @@ Create a basic one:
 
 This project uses **Vibe Kanban + Claude Code** workflow:
 
-- `/vk-feature <description>` - Define feature requirements
-- `/vk-plan` - Create agile plan and VK tasks
-- `/vk-status` - Show project status
-- `/vk-sync-docs` - Sync documentation
+- `/vk:feature <description>` - Define feature requirements
+- `/vk:plan` - Create agile plan and VK tasks
+- `/vk:status` - Show project status
+- `/vk:sync-docs` - Sync documentation
 
 For detailed workflow guide, see: `~/.claude/guides/vk-product-workflow.md`
 
@@ -727,21 +727,21 @@ Would you like to complete feature planning now?
 
 Options:
 
-A) **FULL KICKOFF** (/vk-kickoff)
+A) **FULL KICKOFF** (/vk:kickoff)
    → I'll identify ALL features needed
    → Gather requirements for each (interactive)
    → Create VK tasks for everything
    → Complete project setup in one go
    → Time: ~15-20 min per feature
 
-B) **MANUAL** (/vk-feature, /vk-plan)
+B) **MANUAL** (/vk:feature, /vk:plan)
    → Define features one at a time yourself
    → More control, slower
-   → Use /vk-feature then /vk-plan per feature
+   → Use /vk:feature then /vk:plan per feature
 
 C) **LATER**
    → Skip for now
-   → Run /vk-kickoff or /vk-feature when ready
+   → Run /vk:kickoff or /vk:feature when ready
 
 Recommended: Option A (Full Kickoff)
 
@@ -763,19 +763,19 @@ Ready? (yes/no)
 ```
 
 If yes:
-- Run `/vk-kickoff` workflow inline
+- Run `/vk:kickoff` workflow inline
 - When complete, show final summary
 
 If no:
-- Proceed to final summary with note about /vk-kickoff
+- Proceed to final summary with note about /vk:kickoff
 
 **If B (Manual):**
 - Proceed to final summary
-- Mention /vk-feature and /vk-plan commands
+- Mention /vk:feature and /vk:plan commands
 
 **If C (Later):**
 - Proceed to final summary
-- Mention /vk-kickoff as recommended next step
+- Mention /vk:kickoff as recommended next step
 
 ---
 
@@ -802,7 +802,7 @@ Root:
   ✓ README.md - Documentation index
   ✓ .vk-enabled - VK workflow marker
   ✓ features/
-    (Empty - define with /vk-feature)
+    (Empty - define with /vk:feature)
   ✓ system/
     ✓ overview.md - Product vision & tech stack
     ✓ architecture.md - Technical architecture
@@ -829,7 +829,7 @@ Root:
 🚀 NEXT STEPS:
 
 **RECOMMENDED: Complete Project Kickoff**
-   /vk-kickoff
+   /vk:kickoff
 
    This will:
    → Identify all features needed
@@ -840,11 +840,11 @@ Root:
 **OR Manual Approach:**
 
 1. **Define Features** (WHAT to build):
-   /vk-feature "Your first feature description"
-   /vk-feature "Another feature"
+   /vk:feature "Your first feature description"
+   /vk:feature "Another feature"
 
 2. **Plan Implementation** (HOW to build):
-   /vk-plan
+   /vk:plan
 
    This breaks features into VK epics and 1-point subtasks.
 
@@ -853,8 +853,8 @@ Root:
    Each instance has access to .agent/ context and slash commands.
 
 4. **Monitor Progress**:
-   /vk-status - Check VK progress and doc health
-   /vk-sync-docs - Sync system docs (if needed)
+   /vk:status - Check VK progress and doc health
+   /vk:sync-docs - Sync system docs (if needed)
 
 📖 LEARNING RESOURCES:
 
@@ -872,11 +872,11 @@ For project context:
 
 🎯 WORKFLOW COMMANDS:
 
-  /vk-kickoff                   - Complete project kickoff (RECOMMENDED)
-  /vk-feature <description>     - Define feature requirements (manual)
-  /vk-plan [feature]            - Create VK task hierarchy (manual)
-  /vk-status                    - Show progress and next steps
-  /vk-sync-docs                 - Sync documentation
+  /vk:kickoff                   - Complete project kickoff (RECOMMENDED)
+  /vk:feature <description>     - Define feature requirements (manual)
+  /vk:plan [feature]            - Create VK task hierarchy (manual)
+  /vk:status                    - Show progress and next steps
+  /vk:sync-docs                 - Sync documentation
 
   [Standard commands still available:]
   /fix-bug <description>        - Quick bug fix
@@ -886,7 +886,7 @@ For project context:
 
 [If user didn't define first feature]
 Suggestion: Start by defining your first feature!
-  → /vk-feature "your feature description"
+  → /vk:feature "your feature description"
 ```
 
 ---

@@ -53,7 +53,7 @@
 
 **Feature Definition (WHAT to build):**
 ```bash
-/vk-feature <feature description>
+/vk:feature <feature description>
 ```
 - Interactive requirements gathering
 - Creates `.agent/features/<name>.md`
@@ -61,7 +61,7 @@
 
 **Implementation Planning (HOW to build):**
 ```bash
-/vk-plan [feature-name]
+/vk:plan [feature-name]
 ```
 - Creates VK epics and 1-point subtasks
 - Auto-generates documentation subtasks
@@ -110,7 +110,7 @@ When Vibe Kanban spawns a Claude Code instance to work on a subtask, that instan
 ├── README.md                 # Project overview
 ├── .agent/                   # VK-enabled documentation
 │   ├── .vk-enabled           # VK workflow marker
-│   ├── .last-feature         # Tracks last feature for /vk-plan
+│   ├── .last-feature         # Tracks last feature for /vk:plan
 │   ├── features/             # Feature requirements (WHAT)
 │   │   └── [feature-name].md
 │   ├── system/               # System documentation
@@ -187,7 +187,7 @@ For learning the VK-Claude workflow:
 
 ### 1. Define Feature (WHAT)
 ```bash
-/vk-feature "User authentication with email and password"
+/vk:feature "User authentication with email and password"
 ```
 - Interactive requirements gathering
 - Creates `.agent/features/user-authentication.md`
@@ -196,7 +196,7 @@ For learning the VK-Claude workflow:
 
 ### 2. Plan Implementation (HOW)
 ```bash
-/vk-plan
+/vk:plan
 ```
 - Reads feature requirements
 - Breaks into epics (VK Tasks)
@@ -308,8 +308,8 @@ For learning the VK-Claude workflow:
 ### Commands
 
 - `/vk-status` - What's the current state?
-- `/vk-feature` - Define new feature
-- `/vk-plan` - Create VK tasks
+- `/vk:feature` - Define new feature
+- `/vk:plan` - Create VK tasks
 - `/vk-sync-docs` - Update documentation
 
 ### Troubleshooting

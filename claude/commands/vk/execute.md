@@ -31,7 +31,7 @@ If not exists:
 ```
 ⚠️ VK workflow not enabled.
 
-Run /vk-init first.
+Run /vk:init first.
 ```
 
 **Check VK connection:**
@@ -57,14 +57,14 @@ Use that.
 ```
 ❌ Task ID required.
 
-Usage: /vk-execute <task-id>
+Usage: /vk:execute <task-id>
 
 To find task IDs:
-- Run /vk-status (shows all tasks with IDs)
+- Run /vk:status (shows all tasks with IDs)
 - Check VK UI
-- Run /vk-start (shows ready tasks with IDs)
+- Run /vk:start (shows ready tasks with IDs)
 
-Example: /vk-execute abc123-def456-789
+Example: /vk:execute abc123-def456-789
 ```
 
 ---
@@ -92,7 +92,7 @@ Possible reasons:
 - Task from different project
 - Task was deleted
 
-Run /vk-status to see all available tasks.
+Run /vk:status to see all available tasks.
 ```
 
 **Check task status:**
@@ -103,7 +103,7 @@ If status is `done`:
 
 Status: done
 
-Run /vk-status to see pending tasks.
+Run /vk:status to see pending tasks.
 ```
 
 If status is `inprogress`:
@@ -165,7 +165,7 @@ Starting this task may fail or have issues because dependencies aren't complete.
 Options:
 A) Start anyway (I know what I'm doing)
 B) Wait for dependencies
-C) Start dependencies first (run /vk-start for dependency tasks)
+C) Start dependencies first (run /vk:start for dependency tasks)
 D) Cancel
 
 Choose: (a/b/c/d)
@@ -272,7 +272,7 @@ Check VK UI for:
 
 Or run:
 ```bash
-/vk-status
+/vk:status
 ```
 
 ---
@@ -286,8 +286,8 @@ VK will:
 - Unblock dependent tasks
 
 Then you can:
-- Start next tasks (/vk-start)
-- Check status (/vk-status)
+- Start next tasks (/vk:start)
+- Check status (/vk:status)
 - Review changes in VK UI
 ```
 
@@ -324,12 +324,12 @@ Attempt: Running
 
 Next steps:
 1. Monitor in VK UI (see real-time progress)
-2. Run /vk-status (check overall progress)
+2. Run /vk:status (check overall progress)
 3. Wait for completion, then start more tasks
 
 When this task completes:
-- Run /vk-start to start newly-unblocked tasks
-- Or /vk-execute <next-task-id> for specific task
+- Run /vk:start to start newly-unblocked tasks
+- Or /vk:execute <next-task-id> for specific task
 ```
 
 ---
@@ -344,8 +344,8 @@ When this task completes:
 Task IDs are UUIDs like: abc123-def456-789012
 
 Get task IDs from:
-- /vk-status
-- /vk-start (shows ready tasks)
+- /vk:status
+- /vk:start (shows ready tasks)
 - VK UI
 ```
 
@@ -385,7 +385,7 @@ Choose: (a/b/c)
 
 ## Best Practices
 
-### When to Use `/vk-execute`
+### When to Use `/vk:execute`
 
 ✅ Testing single task execution
 ✅ High-priority urgent task
@@ -395,32 +395,32 @@ Choose: (a/b/c)
 
 ### When NOT to Use
 
-❌ Starting many tasks (use `/vk-start` instead)
+❌ Starting many tasks (use `/vk:start` instead)
 ❌ Starting tasks with unmet dependencies (will likely fail)
-❌ Batch execution (use `/vk-start --batch-size` instead)
+❌ Batch execution (use `/vk:start --batch-size` instead)
 
 ### Pro Tips
 
 💡 **Check dependencies first** - Saves failed attempts
-💡 **Use /vk-status** - See all task IDs and statuses
+💡 **Use /vk:status** - See all task IDs and statuses
 💡 **Monitor in VK UI** - Real-time logs and progress
-💡 **Let VK orchestrate** - /vk-start is usually better for multiple tasks
+💡 **Let VK orchestrate** - /vk:start is usually better for multiple tasks
 
 ---
 
 ## Integration
 
-**Before `/vk-execute`:**
-- `/vk-plan` - Create tasks
-- `/vk-prioritize` - Set dependencies (optional)
+**Before `/vk:execute`:**
+- `/vk:plan` - Create tasks
+- `/vk:prioritize` - Set dependencies (optional)
 
-**After `/vk-execute`:**
-- Monitor in VK UI or `/vk-status`
+**After `/vk:execute`:**
+- Monitor in VK UI or `/vk:status`
 - Wait for completion
-- Start next tasks with `/vk-start` or `/vk-execute`
+- Start next tasks with `/vk:start` or `/vk:execute`
 
 **Alternative:**
-Use `/vk-start` for automated batch execution instead of manual task-by-task.
+Use `/vk:start` for automated batch execution instead of manual task-by-task.
 
 ---
 
@@ -428,7 +428,7 @@ Use `/vk-start` for automated batch execution instead of manual task-by-task.
 
 ```bash
 # See all tasks
-/vk-status
+/vk:status
 
 # Output shows:
 # Ready: 5 tasks
@@ -437,23 +437,23 @@ Use `/vk-start` for automated batch execution instead of manual task-by-task.
 # ...
 
 # Execute specific task
-/vk-execute abc123
+/vk:execute abc123
 
 # Claude validates, checks dependencies, starts attempt
 # Monitor progress in VK UI
 
 # When done, start next task
-/vk-execute def456
+/vk:execute def456
 
 # Or start all ready tasks
-/vk-start
+/vk:start
 ```
 
 ---
 
 ## Notes
 
-**This starts ONE task only** - for batch execution, use `/vk-start`.
+**This starts ONE task only** - for batch execution, use `/vk:start`.
 
 **VK manages the attempt** - Claude Code instance, worktree, execution all handled by VK.
 

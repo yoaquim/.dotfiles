@@ -16,29 +16,29 @@ This guide walks you through building a complete product using Vibe Kanban + Cla
 cd your-project
 
 # 1. Setup (10 min)
-/vk-init
+/vk:init
 # → Provide: product vision, tech stack, goals
 # → Creates: .agent/ docs, CLAUDE.md
 
 # 2. Complete Kickoff (1-2 hours, interactive)
-/vk-kickoff
+/vk:kickoff
 # → Identifies all features needed
 # → For each: asks questions, gathers requirements
 # → Creates: .agent/features/*.md, all VK tasks
 
 # 3. Set Dependencies (5 min)
-/vk-prioritize
+/vk:prioritize
 # → Analyzes tasks, asks about dependencies
 # → Creates execution waves (Wave 1, Wave 2...)
 
 # 4. Start Execution (automated)
-/vk-start --watch
+/vk:start --watch
 # → VK spawns Claude instances in parallel
 # → Each works in isolated git worktree
 # → Auto-starts next wave as tasks complete
 
 # 5. Monitor Progress (anytime)
-/vk-status
+/vk:status
 # → Shows what's done, in-progress, blocked
 # → Suggests next actions
 ```
@@ -46,21 +46,21 @@ cd your-project
 **That's it!** Your active time: ~2 hours. VK execution: runs in parallel.
 
 **Key Points:**
-- `/vk-init` = Project setup (once)
-- `/vk-kickoff` = Define ALL features + create ALL tasks (once)
-- `/vk-prioritize` = Set dependencies (once per batch)
-- `/vk-start --watch` = Let VK work (runs continuously)
-- `/vk-status` = Check progress (anytime)
+- `/vk:init` = Project setup (once)
+- `/vk:kickoff` = Define ALL features + create ALL tasks (once)
+- `/vk:prioritize` = Set dependencies (once per batch)
+- `/vk:start --watch` = Let VK work (runs continuously)
+- `/vk:status` = Check progress (anytime)
 
 **Alternative (Manual Control):**
 ```bash
-/vk-init                      # Setup
-/vk-feature "Feature 1"       # Define one feature
-/vk-plan                      # Create tasks for it
-/vk-feature "Feature 2"       # Define another
-/vk-plan "Feature 2"          # Create tasks for it
-/vk-prioritize                # Set dependencies
-/vk-start --watch             # Execute
+/vk:init                      # Setup
+/vk:feature "Feature 1"       # Define one feature
+/vk:plan                      # Create tasks for it
+/vk:feature "Feature 2"       # Define another
+/vk:plan "Feature 2"          # Create tasks for it
+/vk:prioritize                # Set dependencies
+/vk:start --watch             # Execute
 ```
 
 **Need details?** Read on below ↓
@@ -131,11 +131,11 @@ claude --version
 ls ~/.claude/commands/vk-*
 
 # Should see:
-# vk-init.md
-# vk-feature.md
-# vk-plan.md
-# vk-status.md
-# vk-sync-docs.md
+# init.md
+# feature.md
+# plan.md
+# status.md
+# sync-docs.md
 ```
 
 ---
@@ -146,7 +146,7 @@ ls ~/.claude/commands/vk-*
 
 **What**: Define your product vision and context
 
-**Command**: `/vk-init`
+**Command**: `/vk:init`
 
 **You provide**:
 - Product description and goals
@@ -168,7 +168,7 @@ ls ~/.claude/commands/vk-*
 
 **What**: Break product into features with detailed requirements
 
-**Command**: `/vk-feature <description>`
+**Command**: `/vk:feature <description>`
 
 **For each major feature**:
 - Interactive conversation about user needs
@@ -192,7 +192,7 @@ ls ~/.claude/commands/vk-*
 
 **What**: Turn feature requirements into VK task hierarchy
 
-**Command**: `/vk-plan [feature-name]`
+**Command**: `/vk:plan [feature-name]`
 
 **Claude does**:
 1. Reads feature requirements
@@ -218,7 +218,7 @@ ls ~/.claude/commands/vk-*
 
 **Phase 4a: Prioritization**
 
-**Command**: `/vk-prioritize`
+**Command**: `/vk:prioritize`
 
 **What happens**:
 - Analyzes all pending tasks
@@ -235,11 +235,11 @@ ls ~/.claude/commands/vk-*
 **Phase 4b: Execution**
 
 **Commands**:
-- `/vk-start` - Start all ready tasks (one-shot)
-- `/vk-start --watch` - Continuous mode (auto-start as tasks complete)
-- `/vk-execute <task-id>` - Start specific task manually
+- `/vk:start` - Start all ready tasks (one-shot)
+- `/vk:start --watch` - Continuous mode (auto-start as tasks complete)
+- `/vk:execute <task-id>` - Start specific task manually
 
-**What happens when you run /vk-start**:
+**What happens when you run /vk:start**:
 - Reads all tasks and parses dependencies
 - Identifies tasks where all dependencies are done
 - Starts Attempts for ready tasks via VK
@@ -257,9 +257,9 @@ ls ~/.claude/commands/vk-*
 - Project documentation (`.agent/` context)
 - Available tools (slash commands)
 
-**You monitor** with: `/vk-status`
+**You monitor** with: `/vk:status`
 
-**Next wave**: Call `/vk-start` again when ready, or use `--watch` mode for automatic continuation.
+**Next wave**: Call `/vk:start` again when ready, or use `--watch` mode for automatic continuation.
 
 **Time**: Varies (but parallel = much faster)
 
@@ -270,8 +270,8 @@ ls ~/.claude/commands/vk-*
 **What**: Track progress, sync docs, repeat for next features
 
 **Commands**:
-- `/vk-status` - Check progress anytime
-- `/vk-sync-docs` - Sync documentation if needed
+- `/vk:status` - Check progress anytime
+- `/vk:sync-docs` - Sync documentation if needed
 
 **When done with features**:
 - Review completed work
@@ -294,7 +294,7 @@ ls ~/.claude/commands/vk-*
 
 ```bash
 cd ~/Projects/my-blog
-/vk-init
+/vk:init
 ```
 
 **Claude asks questions:**
@@ -346,7 +346,7 @@ Language? Framework? Database?
 #### Feature 1: User Accounts
 
 ```bash
-/vk-feature "User account management with registration and authentication"
+/vk:feature "User account management with registration and authentication"
 ```
 
 **Claude asks:**
@@ -379,7 +379,7 @@ Language? Framework? Database?
 #### Feature 2: Blog Posts
 
 ```bash
-/vk-feature "Blog post creation, editing, and publishing"
+/vk:feature "Blog post creation, editing, and publishing"
 ```
 
 **Conversation about:**
@@ -397,7 +397,7 @@ Language? Framework? Database?
 #### Feature 3: Comments
 
 ```bash
-/vk-feature "Comment system for blog posts"
+/vk:feature "Comment system for blog posts"
 ```
 
 **Time**: ~10 minutes
@@ -407,7 +407,7 @@ Language? Framework? Database?
 #### Feature 4: Search
 
 ```bash
-/vk-feature "Full-text search for posts and users"
+/vk:feature "Full-text search for posts and users"
 ```
 
 **Time**: ~10 minutes
@@ -426,13 +426,13 @@ Each has user stories, acceptance criteria, edge cases.
 ### Step 3: Plan First Feature
 
 ```bash
-/vk-plan
+/vk:plan
 ```
 
 **Claude detects last feature (Search), but you want to start with accounts:**
 
 ```bash
-/vk-plan "user account management"
+/vk:plan "user account management"
 ```
 
 **Claude:**
@@ -511,7 +511,7 @@ CREATE
 **Step 4a: Set Dependencies**
 
 ```bash
-/vk-prioritize
+/vk:prioritize
 ```
 
 **Claude analyzes** the 17 tasks and proposes:
@@ -543,7 +543,7 @@ Wave 4 (After Wave 3):
 **Step 4b: Start Execution**
 
 ```bash
-/vk-start --watch
+/vk:start --watch
 ```
 
 **VK starts working:**
@@ -561,7 +561,7 @@ Wave 4 (After Wave 3):
 **You monitor:**
 
 ```bash
-/vk-status
+/vk:status
 ```
 
 **Output:**
@@ -600,7 +600,7 @@ Blocked: 6 (Wave 4 - waiting on Wave 3)
 **After epic completes:**
 
 ```bash
-/vk-status
+/vk:status
 ```
 
 ```
@@ -625,7 +625,7 @@ Next: Epic 2 (Registration) in progress
 **When User Accounts feature complete:**
 
 ```bash
-/vk-plan "blog post management"
+/vk:plan "blog post management"
 ```
 
 **Repeat cycle:**
@@ -681,11 +681,11 @@ Next: Epic 2 (Registration) in progress
 
 ```bash
 cd ~/Projects/new-project
-/vk-init
-/vk-feature "First feature"
-/vk-plan
+/vk:init
+/vk:feature "First feature"
+/vk:plan
 # VK executes
-/vk-status
+/vk:status
 ```
 
 **Time**: ~1 hour to define and plan, then VK builds
@@ -698,15 +698,15 @@ cd ~/Projects/new-project
 
 ```bash
 cd ~/Projects/existing-project
-/vk-init
+/vk:init
 # Choose: "Existing project, integrate VK"
 ```
 
 **Then:**
 
 ```bash
-/vk-feature "New feature"
-/vk-plan
+/vk:feature "New feature"
+/vk:plan
 # VK executes new work
 ```
 
@@ -716,7 +716,7 @@ cd ~/Projects/existing-project
 
 ### Scenario 3: Complex Feature Needs Phasing
 
-**If `/vk-plan` shows 50+ subtasks:**
+**If `/vk:plan` shows 50+ subtasks:**
 
 ```
 ⚠️ This feature appears very complex.
@@ -765,7 +765,7 @@ Plan Phase 1 now?
 **If doc subtasks not executed:**
 
 ```bash
-/vk-sync-docs
+/vk:sync-docs
 ```
 
 **Claude reads VK progress, updates `.agent/system/`**
@@ -798,7 +798,7 @@ Plan Phase 1 now?
 - Take time for thorough requirements
 - Include edge cases
 - Define success metrics
-- Use EARS format (guided by `/vk-feature`)
+- Use EARS format (guided by `/vk:feature`)
 
 ❌ **DON'T:**
 - Jump straight to implementation
@@ -829,7 +829,7 @@ Plan Phase 1 now?
 
 ✅ **DO:**
 - Let VK work (it's automated)
-- Check `/vk-status` periodically
+- Check `/vk:status` periodically
 - Review completed work
 - Run tests
 - Check documentation updates
@@ -845,7 +845,7 @@ Plan Phase 1 now?
 ### Monitoring (Phase 5)
 
 ✅ **DO:**
-- Run `/vk-status` regularly
+- Run `/vk:status` regularly
 - Celebrate completed epics
 - Plan next features proactively
 - Keep documentation synced
@@ -880,7 +880,7 @@ Plan Phase 1 now?
 
 ### "Feature is too complex"
 
-**Issue**: `/vk-plan` generating 50+ subtasks
+**Issue**: `/vk:plan` generating 50+ subtasks
 
 **Solution:**
 - Break feature into phases
@@ -897,7 +897,7 @@ Plan Phase 1 now?
 
 **Solution:**
 ```bash
-/vk-sync-docs
+/vk:sync-docs
 ```
 
 **Prevention**: Don't skip doc subtasks in VK
@@ -925,7 +925,7 @@ Plan Phase 1 now?
 
 **Solution:**
 ```bash
-/vk-status
+/vk:status
 ```
 
 **Shows:**
@@ -1011,7 +1011,7 @@ VK is flexible tool, not rigid system.
 - This guide (you're reading it!)
 - Technical SOP: `~/.claude/workflow/sops/vk-integration.md`
 - Project CLAUDE.md (per-project instructions)
-- Run `/vk-status` (it guides you)
+- Run `/vk:status` (it guides you)
 
 ---
 
@@ -1032,7 +1032,7 @@ VK is flexible tool, not rigid system.
 
 1. **Start small**: Simple project, 1-2 features
 2. **Run through phases**: Init → Feature → Plan → Execute
-3. **Monitor with `/vk-status`**
+3. **Monitor with `/vk:status`**
 4. **Learn and adjust**: Iterate on process
 
 **Then scale up** to more complex products.
@@ -1044,19 +1044,19 @@ VK is flexible tool, not rigid system.
 ```bash
 # Initialize new project
 cd ~/Projects/my-idea
-/vk-init
+/vk:init
 
 # Define first feature
-/vk-feature "User can sign up with email and password"
+/vk:feature "User can sign up with email and password"
 
 # Plan it
-/vk-plan
+/vk:plan
 
 # Check status
-/vk-status
+/vk:status
 
 # Sync docs
-/vk-sync-docs
+/vk:sync-docs
 ```
 
 **That's it! You're building with VK-Claude workflow.**
@@ -1066,7 +1066,7 @@ cd ~/Projects/my-idea
 **Happy Building!** 🚀
 
 **Questions?** Check:
-- `/vk-status` (guidance)
+- `/vk:status` (guidance)
 - `~/.claude/workflow/sops/vk-integration.md` (technical)
 - `CLAUDE.md` (per-project)
 

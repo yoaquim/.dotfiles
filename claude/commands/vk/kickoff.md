@@ -8,8 +8,8 @@ You are orchestrating a complete project kickoff for VK-Claude workflow.
 **What this does:**
 1. Read product vision from `.agent/system/overview.md`
 2. Analyze and identify ALL needed features
-3. **Automatically run `/vk-feature` for each feature** (gather requirements)
-4. **Automatically run `/vk-plan` for each feature** (create flat VK tasks with [Epic] prefixes)
+3. **Automatically run `/vk:feature` for each feature** (gather requirements)
+4. **Automatically run `/vk:plan` for each feature** (create flat VK tasks with [Epic] prefixes)
 5. Report complete setup
 
 **VK Task Structure:**
@@ -33,7 +33,7 @@ If not exists:
 ```
 ⚠️ VK workflow not enabled.
 
-Run /vk-init first.
+Run /vk:init first.
 ```
 
 **Check VK connection:**
@@ -57,7 +57,7 @@ If not exists:
 ```
 ⚠️ No product vision found.
 
-Run /vk-init first to capture product vision.
+Run /vk:init first to capture product vision.
 ```
 
 ---
@@ -132,10 +132,10 @@ Choose: (A/B/C)
 ```
 🔄 Feature 1/X: [Feature Name]
 
-Running /vk-feature workflow...
+Running /vk:feature workflow...
 ```
 
-**Execute full /vk-feature workflow inline:**
+**Execute full /vk:feature workflow inline:**
 1. Ask clarifying questions (problem, users, outcome)
 2. Iterative discovery (roles, journeys, edge cases)
 3. Validate requirements summary
@@ -159,10 +159,10 @@ Running /vk-feature workflow...
 ```
 🔄 Planning 1/X: [Feature Name]
 
-Running /vk-plan workflow...
+Running /vk:plan workflow...
 ```
 
-**Execute full /vk-plan workflow inline:**
+**Execute full /vk:plan workflow inline:**
 1. Read feature requirements
 2. Break into epics (logical grouping)
 3. Break epics into 1-point tasks (flat structure)
@@ -220,11 +220,11 @@ Running /vk-plan workflow...
 🎯 NEXT STEPS
 ───────────────────────────────────────────────
 Would you like to:
-A) **PRIORITIZE NOW** (/vk-prioritize)
+A) **PRIORITIZE NOW** (/vk:prioritize)
    → Set dependencies and execution order
    → Then start execution
 
-B) **START EXECUTION** (/vk-start)
+B) **START EXECUTION** (/vk:start)
    → Skip prioritization, start all tasks
 
 C) **REVIEW IN VK UI FIRST**
@@ -235,14 +235,14 @@ C) **REVIEW IN VK UI FIRST**
 Choose: (a/b/c)
 ```
 
-**If A chosen:** Run `/vk-prioritize` workflow inline.
+**If A chosen:** Run `/vk:prioritize` workflow inline.
 
-**If B chosen:** Offer `/vk-start` options:
+**If B chosen:** Offer `/vk:start` options:
 ```
 Start execution how?
-A) Start all ready tasks (/vk-start)
-B) Watch mode (/vk-start --watch)
-C) Batch mode (/vk-start --batch-size=5)
+A) Start all ready tasks (/vk:start)
+B) Watch mode (/vk:start --watch)
+C) Batch mode (/vk:start --batch-size=5)
 
 Choose: (a/b/c)
 ```
@@ -252,9 +252,9 @@ Choose: (a/b/c)
 ✅ Tasks created! Review in VK UI.
 
 When ready:
-- /vk-prioritize (set dependencies)
-- /vk-start (begin execution)
-- /vk-status (monitor progress)
+- /vk:prioritize (set dependencies)
+- /vk:start (begin execution)
+- /vk:status (monitor progress)
 
 Ready to build! 🚀
 ```
@@ -331,7 +331,7 @@ Propose 6-8 features
 ```
 ❌ Cannot identify features without product vision.
 
-Run /vk-init first to capture:
+Run /vk:init first to capture:
 - Product description
 - Target users
 - Key goals
@@ -360,8 +360,8 @@ Progress so far:
 - VK tasks created: A/B
 
 You can:
-- Resume with /vk-kickoff (will skip completed features)
-- Continue manually with /vk-feature and /vk-plan
+- Resume with /vk:kickoff (will skip completed features)
+- Continue manually with /vk:feature and /vk:plan
 ```
 
 ---
@@ -382,15 +382,15 @@ This command takes time (intentional):
 ### Interaction Required
 
 This is **not** fire-and-forget:
-- You answer questions during /vk-feature
-- You approve plans during /vk-plan
+- You answer questions during /vk:feature
+- You approve plans during /vk:plan
 
 **Interactive by design** - ensures quality requirements.
 
 ### Can Be Re-Run
 
 If you add features later:
-- Run /vk-kickoff again
+- Run /vk:kickoff again
 - Will detect existing features
 - Only process new ones
 
@@ -398,22 +398,22 @@ If you add features later:
 
 ## Integration
 
-### With /vk-init
+### With /vk:init
 
 User can run:
 ```bash
-/vk-init    # Setup
-/vk-kickoff         # Complete planning
+/vk:init    # Setup
+/vk:kickoff         # Complete planning
 ```
 
-Or `/vk-init` can offer to run this automatically at end.
+Or `/vk:init` can offer to run this automatically at end.
 
 ### With Standard Commands
 
 Can still use:
 ```bash
-/vk-feature "new feature"  # Add one feature manually
-/vk-plan "specific feature"  # Plan one feature
+/vk:feature "new feature"  # Add one feature manually
+/vk:plan "specific feature"  # Plan one feature
 ```
 
 Kickoff just automates running these for all features.
@@ -423,7 +423,7 @@ Kickoff just automates running these for all features.
 ## Example Session
 
 ```bash
-/vk-kickoff
+/vk:kickoff
 ```
 
 **Output:**
@@ -470,7 +470,7 @@ Ready? (yes/no)
 Feature 1/8: User Authentication
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Running /vk-feature workflow...
+Running /vk:feature workflow...
 
 What problem does authentication solve?
 [Your answer]
@@ -513,8 +513,8 @@ Tasks: 96 created (all 1-point)
 ---
 
 Would you like to:
-A) PRIORITIZE NOW (/vk-prioritize)
-B) START EXECUTION (/vk-start)
+A) PRIORITIZE NOW (/vk:prioritize)
+B) START EXECUTION (/vk:start)
 C) REVIEW IN VK UI FIRST
 
 [Interactive choice follows - see Step 5 above]
@@ -527,8 +527,8 @@ C) REVIEW IN VK UI FIRST
 **This command orchestrates other commands** - it's a meta-command.
 
 **Calls:**
-- `/vk-feature` workflow (inline) for each feature
-- `/vk-plan` workflow (inline) for each feature
+- `/vk:feature` workflow (inline) for each feature
+- `/vk:plan` workflow (inline) for each feature
 
 **Result:** Complete project setup in one command.
 

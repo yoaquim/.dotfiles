@@ -24,7 +24,7 @@ If `.agent/.vk-enabled` file doesn't exist:
 
 This project doesn't appear to be VK-enabled.
 
-Please run /vk-init first to set up VK workflow.
+Please run /vk:init first to set up VK workflow.
 
 Alternatively, use /feature for standard workflow.
 ```
@@ -350,7 +350,7 @@ These should be answered before implementation planning.
 
 ## VK Planning Notes
 
-**For `/vk-plan` command:**
+**For `/vk:plan` command:**
 
 This feature will be broken down into:
 - **Epics** (VK Tasks): Major functional areas
@@ -376,9 +376,9 @@ Each subtask should be completable in 1-2 hours by one Claude Code instance.
 ## Next Steps
 
 1. Review and validate these requirements with stakeholders
-2. Run `/vk-plan` to create VK task hierarchy
+2. Run `/vk:plan` to create VK task hierarchy
 3. VK will orchestrate implementation
-4. Monitor progress with `/vk-status`
+4. Monitor progress with `/vk:status`
 
 ---
 
@@ -410,7 +410,7 @@ Each subtask should be completable in 1-2 hours by one Claude Code instance.
 echo "<feature-name>" > .agent/.last-feature
 ```
 
-This allows `/vk-plan` to auto-detect the last feature defined.
+This allows `/vk:plan` to auto-detect the last feature defined.
 
 ---
 
@@ -435,7 +435,7 @@ This allows `/vk-plan` to auto-detect the last feature defined.
 **Next Steps:**
 
 1. **Plan the implementation**
-   Run: /vk-plan
+   Run: /vk:plan
 
    This will:
    - Break feature into epics (VK Tasks)
@@ -449,19 +449,19 @@ This allows `/vk-plan` to auto-detect the last feature defined.
    Each instance will reference this requirements doc
 
 3. **Monitor progress**
-   Run: /vk-status
+   Run: /vk:status
    Shows epic/subtask completion and next priorities
 
 **Commands:**
 \`\`\`
-/vk-plan              # Auto-uses this feature
-/vk-plan "specific"   # Or specify different feature
+/vk:plan              # Auto-uses this feature
+/vk:plan "specific"   # Or specify different feature
 \`\`\`
 
 **Pro Tip**: You can define multiple features before planning!
-  → /vk-feature "Another feature"
-  → /vk-feature "Yet another feature"
-  → /vk-plan (choose which to plan)
+  → /vk:feature "Another feature"
+  → /vk:feature "Yet another feature"
+  → /vk:plan (choose which to plan)
 ```
 
 ---
@@ -484,7 +484,7 @@ This allows `/vk-plan` to auto-detect the last feature defined.
 ❌ Make requirements vague or untestable
 ❌ Forget to define success metrics
 ❌ Let scope creep happen
-❌ Worry about task breakdown (that's for /vk-plan)
+❌ Worry about task breakdown (that's for /vk:plan)
 
 ---
 
@@ -542,7 +542,7 @@ This allows `/vk-plan` to auto-detect the last feature defined.
 - **VK Impact**: 6+ epics, consider phased approach
 
 **Adjust questioning depth based on complexity.**
-**Note complexity in requirements doc for `/vk-plan` reference.**
+**Note complexity in requirements doc for `/vk:plan` reference.**
 
 ---
 
@@ -550,7 +550,7 @@ This allows `/vk-plan` to auto-detect the last feature defined.
 
 **This feature doc feeds into:**
 
-1. **`/vk-plan`** - Reads requirements, creates VK task hierarchy
+1. **`/vk:plan`** - Reads requirements, creates VK task hierarchy
 2. **VK Task Descriptions** - Each task/subtask references this doc
 3. **VK-spawned CC instances** - Read this for context during implementation
 4. **Testing** - Test subtasks verify acceptance criteria from this doc
@@ -572,7 +572,7 @@ This allows `/vk-plan` to auto-detect the last feature defined.
 **Different:**
 - Checks for `.agent/.vk-enabled` marker
 - Includes VK planning notes section
-- References `/vk-plan` instead of `/plan-task`
+- References `/vk:plan` instead of `/plan-task`
 - Mentions VK orchestration in next steps
 - Notes complexity estimate for VK breakdown
 

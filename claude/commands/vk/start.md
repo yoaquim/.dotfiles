@@ -35,7 +35,7 @@ If not exists:
 ```
 ⚠️ VK workflow not enabled.
 
-Run /vk-init first.
+Run /vk:init first.
 ```
 
 **Check VK connection:**
@@ -65,12 +65,12 @@ Ensure VK is running and MCP server configured.
 
 **Examples:**
 ```bash
-/vk-start                           # Start all ready tasks, exit
-/vk-start --watch                   # Continuous mode
-/vk-start --batch-size=10           # Start 10 at a time
-/vk-start --feature="user-auth"     # Only user-auth tasks
-/vk-start --all                     # Start everything (ignore deps)
-/vk-start --watch --batch-size=5    # Watch mode, 5 at a time
+/vk:start                           # Start all ready tasks, exit
+/vk:start --watch                   # Continuous mode
+/vk:start --batch-size=10           # Start 10 at a time
+/vk:start --feature="user-auth"     # Only user-auth tasks
+/vk:start --all                     # Start everything (ignore deps)
+/vk:start --watch --batch-size=5    # Watch mode, 5 at a time
 ```
 
 ---
@@ -99,7 +99,7 @@ All tasks are either:
 - Done
 - Cancelled
 
-Run /vk-status to see current state.
+Run /vk:status to see current state.
 ```
 
 **Filter by feature if specified:**
@@ -188,9 +188,9 @@ Top blockers:
 - Task B (blocks 2 other tasks)
 
 Options:
-A) Wait for running tasks to complete, then run /vk-start again
-B) Start blocker tasks manually (/vk-execute <task-id>)
-C) Remove dependencies (re-run /vk-prioritize)
+A) Wait for running tasks to complete, then run /vk:start again
+B) Start blocker tasks manually (/vk:execute <task-id>)
+C) Remove dependencies (re-run /vk:prioritize)
 D) Force start all tasks (ignores dependencies - may cause failures)
 
 Choose: (a/b/c/d)
@@ -311,17 +311,17 @@ These will become ready when dependencies complete:
 
 **Monitor progress:**
 ```bash
-/vk-status         # Check overall progress
+/vk:status         # Check overall progress
 ```
 
 **When some tasks complete, start next wave:**
 ```bash
-/vk-start          # Start newly-ready tasks
+/vk:start          # Start newly-ready tasks
 ```
 
 **Or switch to watch mode:**
 ```bash
-/vk-start --watch  # Auto-start as tasks complete
+/vk:start --watch  # Auto-start as tasks complete
 ```
 
 ---
@@ -387,7 +387,7 @@ Total tasks: X
 - Successful: Y
 - Failed: Z
 
-Run /vk-status for full report.
+Run /vk:status for full report.
 ```
 
 **Watch mode implementation:**
@@ -469,10 +469,10 @@ This might indicate:
 
 ---
 
-Run /vk-prioritize to review and fix dependencies.
+Run /vk:prioritize to review and fix dependencies.
 
 Or use --all flag to force-start everything:
-/vk-start --all
+/vk:start --all
 ```
 
 ---
@@ -543,25 +543,25 @@ Check feature name or run without --feature flag.
 
 ```bash
 # 1. Prioritize first (set dependencies)
-/vk-prioritize
+/vk:prioritize
 
 # 2. Start with small batch to test
-/vk-start --batch-size=3
+/vk:start --batch-size=3
 
 # 3. Review results in VK UI
 
 # 4. If good, scale up
-/vk-start --watch
+/vk:start --watch
 
 # 5. Monitor
-/vk-status
+/vk:status
 ```
 
 ### Pro Tips
 
 💡 **Start small** - Test with small batches first
 💡 **Use watch mode** - For large task lists
-💡 **Check /vk-status** - Before and after
+💡 **Check /vk:status** - Before and after
 💡 **Monitor VK UI** - Real-time logs are valuable
 💡 **Don't use --all** - Unless you really know dependencies don't matter
 
@@ -569,19 +569,19 @@ Check feature name or run without --feature flag.
 
 ## Integration
 
-**Before `/vk-start`:**
-- `/vk-plan` - Create tasks
-- `/vk-prioritize` - Set dependencies (HIGHLY RECOMMENDED)
+**Before `/vk:start`:**
+- `/vk:plan` - Create tasks
+- `/vk:prioritize` - Set dependencies (HIGHLY RECOMMENDED)
 
-**During `/vk-start`:**
+**During `/vk:start`:**
 - Monitor VK UI (real-time logs)
 - Watch mode handles everything automatically
-- Or manually trigger waves with repeated `/vk-start` calls
+- Or manually trigger waves with repeated `/vk:start` calls
 
-**After `/vk-start`:**
-- `/vk-status` - Check progress
+**After `/vk:start`:**
+- `/vk:status` - Check progress
 - Wait for completions
-- Call `/vk-start` again for next wave (if one-shot mode)
+- Call `/vk:start` again for next wave (if one-shot mode)
 
 ---
 
@@ -590,18 +590,18 @@ Check feature name or run without --feature flag.
 ### Example 1: Basic Usage
 
 ```bash
-/vk-prioritize     # Set dependencies
-/vk-start          # Start all ready tasks
+/vk:prioritize     # Set dependencies
+/vk:start          # Start all ready tasks
 # Wait for some to complete...
-/vk-start          # Start next wave
+/vk:start          # Start next wave
 # Repeat until done
 ```
 
 ### Example 2: Watch Mode
 
 ```bash
-/vk-prioritize
-/vk-start --watch  # Fire and forget
+/vk:prioritize
+/vk:start --watch  # Fire and forget
 # Monitor in VK UI
 # All tasks execute automatically
 ```
@@ -609,7 +609,7 @@ Check feature name or run without --feature flag.
 ### Example 3: Feature-Focused
 
 ```bash
-/vk-start --feature="user-authentication" --watch
+/vk:start --feature="user-authentication" --watch
 # Only user-auth tasks execute
 # Other features untouched
 ```
@@ -617,10 +617,10 @@ Check feature name or run without --feature flag.
 ### Example 4: Conservative Batch
 
 ```bash
-/vk-start --batch-size=3
+/vk:start --batch-size=3
 # Review in VK UI
 # If good:
-/vk-start --batch-size=10
+/vk:start --batch-size=10
 ```
 
 ---
@@ -636,7 +636,7 @@ Check feature name or run without --feature flag.
 
 **Can combine:**
 ```bash
-/vk-start --watch --batch-size=5 --feature="user-auth"
+/vk:start --watch --batch-size=5 --feature="user-auth"
 ```
 
 ---

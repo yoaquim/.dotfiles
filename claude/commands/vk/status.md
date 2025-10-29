@@ -137,7 +137,7 @@ Task C: depends on [abc123, def456] → Check both
 
 **Ready to Start**: [N] tasks
 - All dependencies met
-- Can start immediately via /vk-start
+- Can start immediately via /vk:start
 
 **Blocked**: [M] tasks
 - Waiting on dependencies
@@ -228,13 +228,13 @@ ls .agent/features/*.md 2>/dev/null
    - Defined: [Date]
    - Status: Requirements documented, not yet planned in VK
    - File: .agent/features/[name].md
-   - **Next**: Run /vk-plan to create VK tasks
+   - **Next**: Run /vk:plan to create VK tasks
 
 ### Features Without VK Tasks
 
 [If any feature requirements exist but no VK tasks created]
 ⚠️ [Feature Name] - Requirements defined but not planned
-   → Run: /vk-plan "[feature name]"
+   → Run: /vk:plan "[feature name]"
 
 ---
 ```
@@ -300,7 +300,7 @@ ls .agent/features/*.md 2>/dev/null
 2. [Doc subtask name] - Epic [epic name]
 
 **Recommendation**:
-[If gaps] → Run /vk-sync-docs to update documentation
+[If gaps] → Run /vk:sync-docs to update documentation
 [If current] → Documentation is current
 
 ---
@@ -414,29 +414,29 @@ Changes:
 ```
 1. **Define first feature** [Priority: High]
    - Reason: No features defined yet
-   - Command: /vk-feature "your feature description"
+   - Command: /vk:feature "your feature description"
 ```
 
 **If features defined but not planned:**
 ```
 1. **Plan features in VK** [Priority: High]
    - Reason: [N] features defined but not in VK
-   - Command: /vk-plan
+   - Command: /vk:plan
 ```
 
 **If tasks created but not prioritized:**
 ```
 1. **Prioritize tasks** [Priority: High]
    - Reason: [N] tasks in VK, no dependencies set
-   - Command: /vk-prioritize
+   - Command: /vk:prioritize
 ```
 
 **If tasks ready but not started:**
 ```
 1. **Start task execution** [Priority: High]
    - Reason: [N] tasks ready (dependencies met)
-   - Command: /vk-start
-   - Or: /vk-start --watch (continuous mode)
+   - Command: /vk:start
+   - Or: /vk:start --watch (continuous mode)
 ```
 
 **If VK tasks active (attempts running):**
@@ -444,7 +444,7 @@ Changes:
 1. **Monitor active attempts** [Priority: Medium]
    - Reason: [N] attempts in progress
    - Action: Check VK UI for progress
-   - Next: Run /vk-start when ready for next wave
+   - Next: Run /vk:start when ready for next wave
 ```
 
 **If tasks blocked:**
@@ -452,22 +452,22 @@ Changes:
 1. **Review blockers** [Priority: High]
    - Reason: [N] tasks blocked by dependencies
    - Action: Check if blockers can be started
-   - Command: /vk-execute <blocker-task-id>
+   - Command: /vk:execute <blocker-task-id>
 ```
 
 **If documentation outdated:**
 ```
 1. **Sync documentation** [Priority: Medium]
    - Reason: [X] completed epics not documented
-   - Command: /vk-sync-docs
+   - Command: /vk:sync-docs
 ```
 
 **If epics complete:**
 ```
 1. **Plan next feature** [Priority: High]
    - Reason: Current epics done, ready for next work
-   - Command: /vk-feature "next feature"
-   - Then: /vk-plan
+   - Command: /vk:feature "next feature"
+   - Then: /vk:plan
 ```
 
 ---
@@ -508,7 +508,7 @@ Changes:
 
 [If no doc subtasks in recent epics]
 ⚠️ Recent VK plans missing documentation subtasks
-→ Run /vk-plan again for new features to auto-generate doc tasks
+→ Run /vk:plan again for new features to auto-generate doc tasks
 
 ### Testing
 
@@ -540,14 +540,14 @@ Based on your project state, here are relevant commands:
 
 [Context-aware command suggestions]
 
-/vk-feature "..."     - Define new feature requirements
-/vk-plan              - Plan feature implementation in VK
-/vk-sync-docs         - Sync documentation with VK progress
+/vk:feature "..."     - Define new feature requirements
+/vk:plan              - Plan feature implementation in VK
+/vk:sync-docs         - Sync documentation with VK progress
 /fix-bug "..."        - Quick bug fix
 /document-issue       - Document known issue
 
 [If specific action recommended]
-→ Suggested next: /vk-feature "your next feature"
+→ Suggested next: /vk:feature "your next feature"
 
 ---
 ```
@@ -567,7 +567,7 @@ Documentation: [Current/Needs Attention]
 Git: [Clean/Changes pending]
 
 Last updated: [Date Time]
-Next status: Run /vk-status anytime
+Next status: Run /vk:status anytime
 ```
 
 ---
@@ -594,7 +594,7 @@ Showing limited status (local .agent/ only).
 To see full status:
 1. Check VK is running
 2. Verify MCP connection
-3. Run /vk-status again
+3. Run /vk:status again
 ```
 
 Continue with limited status report.
@@ -621,11 +621,11 @@ Check: mcp__vibe_kanban__list_projects
 ℹ️ No features defined yet.
 
 To get started:
-1. Define your first feature: /vk-feature "feature description"
-2. Plan implementation: /vk-plan
+1. Define your first feature: /vk:feature "feature description"
+2. Plan implementation: /vk:plan
 3. Let VK orchestrate: VK will spawn CC instances
 
-Run /vk-status after features are defined.
+Run /vk:status after features are defined.
 ```
 
 ---
@@ -684,7 +684,7 @@ Assessment: [Excellent 90+ / Good 75-89 / Fair 60-74 / Needs Attention <60]
 
 **For quick check:**
 ```
-/vk-status quick
+/vk:status quick
 ```
 
 Shows condensed version:
@@ -701,10 +701,10 @@ Next: [Primary recommendation]
 
 **For specific section:**
 ```
-/vk-status vk       - VK progress only
-/vk-status features - Feature status only
-/vk-status docs     - Documentation health only
-/vk-status git      - Git status only
+/vk:status vk       - VK progress only
+/vk:status features - Feature status only
+/vk:status docs     - Documentation health only
+/vk:status git      - Git status only
 ```
 
 ---
@@ -780,9 +780,9 @@ Next: [Primary recommendation]
 **Generate status report formats:**
 
 ```
-/vk-status --format=markdown > status-report.md
-/vk-status --format=json > status.json
-/vk-status --format=html > status.html
+/vk:status --format=markdown > status-report.md
+/vk:status --format=json > status.json
+/vk:status --format=html > status.html
 ```
 
 For:

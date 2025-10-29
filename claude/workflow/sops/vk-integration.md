@@ -37,14 +37,14 @@ Vibe Kanban (VK) orchestrates Claude Code (CC) instances for parallel task execu
 **Critical to understand:**
 
 **Task** = Work item in backlog (planning artifact)
-- Created during planning (`/vk-plan`)
+- Created during planning (`/vk:plan`)
 - Sits in VK backlog
 - Not started yet
 - Contains description, success criteria
 - May have dependencies (stored in description)
 
 **Attempt** = Execution instance (runtime)
-- Started via `/vk-execute` or `/vk-start`
+- Started via `/vk:execute` or `/vk:start`
 - VK creates Attempt for a Task
 - VK spawns CC instance
 - VK creates isolated git worktree
@@ -53,10 +53,10 @@ Vibe Kanban (VK) orchestrates Claude Code (CC) instances for parallel task execu
 - VK marks task done, unblocks dependent tasks
 
 **Our workflow:**
-1. **Planning**: Create Tasks (`/vk-plan`)
-2. **Prioritization**: Set dependencies (`/vk-prioritize`)
-3. **Execution**: Start Attempts (`/vk-start` or `/vk-execute`)
-4. **Monitoring**: Track progress (`/vk-status`)
+1. **Planning**: Create Tasks (`/vk:plan`)
+2. **Prioritization**: Set dependencies (`/vk:prioritize`)
+3. **Execution**: Start Attempts (`/vk:start` or `/vk:execute`)
+4. **Monitoring**: Track progress (`/vk:status`)
 
 **You control when tasks start** - via execution commands.
 **VK handles how tasks execute** - spawning instances, worktrees, parallelization.
@@ -137,7 +137,7 @@ Vibe Kanban (VK) orchestrates Claude Code (CC) instances for parallel task execu
 
 ### Enforcement
 
-**The `/vk-plan` command enforces this by:**
+**The `/vk:plan` command enforces this by:**
 1. Asking for breakdown if subtask seems >1pt
 2. Validating each subtask against 1-point criteria
 3. Refusing to create multi-point subtasks
@@ -249,16 +249,16 @@ We store dependencies in task descriptions using structured metadata.
 
 ### How It Works
 
-**Planning (/vk-plan):**
+**Planning (/vk:plan):**
 - Creates tasks with empty dependencies section
-- `**Depends On**: (Set by /vk-prioritize - initially empty)`
+- `**Depends On**: (Set by /vk:prioritize - initially empty)`
 
-**Prioritization (/vk-prioritize):**
+**Prioritization (/vk:prioritize):**
 - Analyzes logical dependencies
 - Updates task descriptions with dependency IDs
 - Assigns wave numbers (execution priority)
 
-**Execution (/vk-start):**
+**Execution (/vk:start):**
 - Reads all task descriptions
 - Parses dependencies
 - Only starts tasks where all dependencies have `status: done`
@@ -267,7 +267,7 @@ We store dependencies in task descriptions using structured metadata.
 **Completion (VK):**
 - VK marks task as `done` when attempt succeeds
 - Dependent tasks become ready (dependencies met)
-- Next `/vk-start` call can start newly-ready tasks
+- Next `/vk:start` call can start newly-ready tasks
 
 ### Dependency Logic
 
@@ -396,7 +396,7 @@ Epic: "Profile API"
 
 **Location**: `.agent/features/<feature-name>.md`
 
-**Created by**: `/vk-feature` command
+**Created by**: `/vk:feature` command
 
 **Contains:**
 - User stories (prioritized)
@@ -583,7 +583,7 @@ WHEN [event]:
 - Keeps docs current continuously
 
 **Manually (backup):**
-- `/vk-sync-docs` command
+- `/vk:sync-docs` command
 - Reads VK task completion
 - Updates `.agent/system/*` accordingly
 
@@ -659,30 +659,30 @@ VK subtask commits should:
 ### Slash Commands
 
 **Planning phase (before execution):**
-- `/vk-init` - Initialize VK workflow
-- `/vk-kickoff` - Complete project kickoff (features → requirements → tasks)
-- `/vk-feature <description>` - Define feature requirements
-- `/vk-plan [feature]` - Create VK tasks from feature
-- `/vk-prioritize` - Set dependencies and execution order
+- `/vk:init` - Initialize VK workflow
+- `/vk:kickoff` - Complete project kickoff (features → requirements → tasks)
+- `/vk:feature <description>` - Define feature requirements
+- `/vk:plan [feature]` - Create VK tasks from feature
+- `/vk:prioritize` - Set dependencies and execution order
 
 **Execution phase:**
-- `/vk-start [flags]` - Start ready tasks (smart orchestration)
+- `/vk:start [flags]` - Start ready tasks (smart orchestration)
   - `--watch` - Continuous mode
   - `--batch-size=N` - Limit concurrency
   - `--feature=<name>` - Filter by feature
-- `/vk-execute <task-id>` - Start single task manually
+- `/vk:execute <task-id>` - Start single task manually
 
 **Monitoring:**
-- `/vk-status` - Check progress and readiness
-- `/vk-sync-docs` - Sync documentation (if needed)
+- `/vk:status` - Check progress and readiness
+- `/vk:sync-docs` - Sync documentation (if needed)
 
 **When VK spawns CC instance (during execution):**
 - `/fix-bug <description>` - Quick bug fix if discovered
 - `/document-issue` - Document known issues found
 
 **NOT available/needed during execution:**
-- `/vk-plan` - Planning already done
-- `/vk-feature` - Requirements already defined
+- `/vk:plan` - Planning already done
+- `/vk:feature` - Requirements already defined
 - `/implement-task` - VK attempt handles this
 
 ### Documentation Access
@@ -815,7 +815,7 @@ Epic completes, no doc subtask
 - Knowledge loss
 
 **Fix:**
-`/vk-plan` auto-generates doc subtasks - don't remove them
+`/vk:plan` auto-generates doc subtasks - don't remove them
 
 ### 4. Vague Subtask Descriptions
 
@@ -843,7 +843,7 @@ Planning VK tasks without feature requirements
 - May build wrong thing
 
 **Fix:**
-Always run `/vk-feature` before `/vk-plan`
+Always run `/vk:feature` before `/vk:plan`
 
 ---
 
@@ -911,7 +911,7 @@ Always run `/vk-feature` before `/vk-plan`
 3. Manual sync not run
 
 **Solutions:**
-- Run `/vk-sync-docs`
+- Run `/vk:sync-docs`
 - Prioritize doc subtasks
 - Don't skip doc work
 
