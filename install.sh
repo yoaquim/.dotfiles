@@ -646,6 +646,7 @@ install_brew_fonts() {
         "font-jetbrains-mono-nerd-font"
         "font-ubuntu-mono-nerd-font"
         "font-space-mono-nerd-font"
+        "font-caskaydia-cove-nerd-font"
     )
     
     for font in "${fonts[@]}"; do

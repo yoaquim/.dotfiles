@@ -73,7 +73,6 @@ shopt -s histappend
 # set commands on multilines to appear in one line in history
 shopt -s cmdhist
 
-
 # ───────────────────────────────────────────────────
 # III. Aliases
 # ───────────────────────────────────────────────────
