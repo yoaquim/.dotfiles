@@ -19,8 +19,13 @@
 # I. Exports
 # ───────────────────────────────────────────────────
 
-# Add Homebrew to PATH (Apple Silicon)
-eval "$(/opt/homebrew/bin/brew shellenv)"
+# Detect operating system
+export DOTFILES_OS=$(uname -s)
+
+# Add Homebrew to PATH (macOS Apple Silicon)
+if [[ "${DOTFILES_OS}" == "Darwin" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
 
 # Add local bin to PATH
 export PATH="$HOME/.local/bin:$PATH"
