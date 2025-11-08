@@ -280,6 +280,9 @@ create_symlink() {
 setup_bash_config() {
     print_info "Setting up bash configuration"
 
+    # Symlink entire bash config directory
+    create_symlink "${SCRIPT_DIR}/config/bash" "$HOME/.config/bash" true
+
     # Create bash profile symlink
     create_symlink "${SCRIPT_DIR}/config/bash/bash_profile" "$HOME/.bash_profile" true
 
