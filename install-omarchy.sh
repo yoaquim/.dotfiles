@@ -301,8 +301,7 @@ setup_bash_config() {
 setup_git_config() {
     print_info "Setting up git configuration"
 
-    create_symlink "${SCRIPT_DIR}/config/git/gitconfig" "$HOME/.gitconfig" true
-    create_symlink "${SCRIPT_DIR}/config/git/gitignore_global" "$HOME/.gitignore_global" true
+    create_symlink "${SCRIPT_DIR}/config/gitconfig" "$HOME/.gitconfig" true
 
     print_success "Git configuration complete"
 }
@@ -326,7 +325,6 @@ setup_kitty_config() {
     print_info "Setting up kitty configuration"
 
     create_symlink "${SCRIPT_DIR}/config/kitty/kitty.conf" "$HOME/.config/kitty/kitty.conf" true
-    create_symlink "${SCRIPT_DIR}/config/kitty/current-theme.conf" "$HOME/.config/kitty/current-theme.conf" true
 
     # Create kitty-shell.conf for Linux
     local kitty_shell_conf="$HOME/.config/kitty/kitty-shell.conf"
@@ -359,9 +357,7 @@ main() {
     echo ""
     print_success "Installation complete!"
     echo ""
-    print_info "Next steps:"
-    print_info "  1. Run 'source ~/.bash_profile' to reload bash configuration"
-    print_info "  2. Run './post-setup-omarchy.sh' to set up nvm, pyenv, and AstroNvim"
+    print_info "Next step: Run 'source ~/.bash_profile' to reload bash configuration"
     echo ""
 }
 
