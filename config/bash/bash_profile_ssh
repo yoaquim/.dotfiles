@@ -11,6 +11,10 @@
 # - No need to ssh-add after reboot
 # ============================================================================
 
+# Ensure ~/.ssh directory exists
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+
 # Check if we're on macOS
 if [[ "$(uname)" == "Darwin" ]]; then
     # On macOS, we don't rely on the system ssh-agent (which can be flaky in tmux)
