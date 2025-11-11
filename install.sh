@@ -564,6 +564,7 @@ install_brew_list() {
         "tldr"
         "gh"
         "rclone"
+        "node"
     )
     
     for package in "${packages[@]}"; do

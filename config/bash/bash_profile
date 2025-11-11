@@ -122,6 +122,6 @@ fi
 
 # source tool exports settings
 if [ -f ~/.config/bash/bash_tools ]; then
-    source ~/.config/bash/bash_tools
+    source ~/.config/bash/bash_profile_tools
 fi
 
