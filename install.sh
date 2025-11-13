@@ -620,6 +620,7 @@ install_brew_casks() {
         "calibre"
         "quarto"
         "folx"
+        "hiddenbar"
     )
     
     for cask in "${casks[@]}"; do
