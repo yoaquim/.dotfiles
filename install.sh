@@ -553,7 +553,7 @@ install_brew_list() {
         "bash"
         "bash-completion"
         "coreutils"
-        "diff-so-fancy"
+        "git-delta"
         "git"
         "jq"
         "neovim"

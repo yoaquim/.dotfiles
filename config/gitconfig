@@ -16,7 +16,7 @@
 	rebase = true
 [core]
 	; editor = $EDITOR
-  pager = diff-so-fancy | less --tabs=4 -RFX 
+	pager = delta
 	autocrlf = input
 [color]
 	ui = true
@@ -31,5 +31,19 @@
 	helper = 
 	helper = !/opt/homebrew/bin/gh auth git-credential
 [credential "https://gist.github.com"]
-	helper = 
+	helper =
 	helper = !/opt/homebrew/bin/gh auth git-credential
+[delta]
+	navigate = true
+	light = false
+	side-by-side = true
+	line-numbers = true
+	syntax-theme = base16
+	file-style = bold yellow ul
+	file-decoration-style = none
+	hunk-header-decoration-style = blue box
+	hunk-header-line-number-style = "#999999"
+	hyperlinks = true
+	keep-plus-minus-markers = false
+[interactive]
+	diffFilter = delta --color-only

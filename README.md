@@ -71,7 +71,7 @@ bash ./post-setup.sh
 
 ### 🔧 **Development Tools**
 - **AstroNvim** - Modern Neovim distribution
-- **Git** - Enhanced with diff-so-fancy and custom aliases
+- **Git** - Enhanced with git-delta and custom aliases
 - **Node.js** - Latest LTS via nvm
 - **Python** - Latest stable via pyenv
 - **Claude Code** - AI-powered coding assistant with custom workflow
