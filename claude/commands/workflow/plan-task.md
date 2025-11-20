@@ -31,15 +31,16 @@ You are in PLAN MODE. Generate a detailed implementation plan (HOW to build) for
 
 **Check for existing feature requirements:**
 ```bash
-# Look for matching features
+# Look for matching features (numbered directories)
 ls -la .agent/features/ 2>/dev/null
 ```
 
 **If matching feature requirements found:**
-- Read `.agent/features/<feature-name>.md` FIRST
+- Read `.agent/features/NNN-feature-name/README.md` FIRST (where NNN is the feature number)
 - Use requirements as guide for planning
 - Ensure implementation plan addresses all requirements
 - Reference the requirements doc in the task
+- Note: Feature directories are numbered (e.g., `001-asset-upload/`, `002-user-permissions/`)
 
 **If no feature requirements found:**
 - Plan based on user's description
@@ -138,7 +139,7 @@ Use the plan just generated and format it according to `.agent/task-template.md`
 **Branch**: `feature/feature-name`
 **Priority**: [Determined from plan]
 **Planned**: [Today's date]
-**Feature Requirements**: [Link to .agent/features/<feature>.md if exists, otherwise "N/A"]
+**Feature Requirements**: [Link to .agent/features/NNN-feature-name/README.md if exists, otherwise "N/A"]
 
 ## Problem
 

@@ -15,7 +15,7 @@ You are implementing a documented task.
 1. `CLAUDE.md` - Core project instructions and principles
 2. `.agent/README.md` - Documentation index
 3. The specific task document being implemented (`.agent/tasks/XX-*.md`)
-4. Feature requirements if referenced in task (`.agent/features/<feature>.md`)
+4. Feature requirements if referenced in task (`.agent/features/NNN-feature-name/README.md`)
 5. All SOP documents referenced in the task
 6. `.agent/system/architecture.md` - Technical architecture
 7. `.agent/system/database-schema.md` - Database structure (if relevant)

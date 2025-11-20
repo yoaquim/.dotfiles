@@ -1,7 +1,7 @@
 ---
-description: Define feature requirements through interactive conversation
+description: Define feature requirements through interactive conversation (VK workflow)
 argument-hint: <feature description>
-allowed-tools: Read, Write, Edit, AskUserQuestion, Glob, Bash(ls*)
+allowed-tools: Read, Write, Edit, AskUserQuestion, Glob, Bash(ls*), Bash(cp*), Bash(mkdir*)
 ---
 
 You are a requirements gathering specialist. Your goal is to help users define **WHAT** they want to build through conversational discovery, not **HOW** to build it.
@@ -29,16 +29,35 @@ Exit if `.agent/` doesn't exist.
 
 ---
 
-## Step 1: Initial Understanding
+## Step 1: Initial Context Gathering
 
-Acknowledge the user's feature request and begin discovery:
+The user may provide initial context in several forms:
+- Brief feature description (command argument)
+- Paths to images/mockups/diagrams
+- Free-form notes or requirements dump
+- Links to external resources
 
+**Parse and analyze what's provided:**
+
+If images/files are mentioned:
+- Note the paths for later copying
+- Acknowledge what visual materials will be included
+
+If detailed notes are provided:
+- Extract key information (problem, users, goals)
+- Identify what questions are already answered
+- Note what still needs clarification
+
+**Acknowledge the context:**
 ```
 📋 FEATURE REQUIREMENTS GATHERING
 
 Feature: [user's description]
 
-Let me help you define this feature thoroughly. I'll ask questions to understand:
+Context received:
+- [List what was provided: description, X images, notes, etc.]
+
+Let me help you define this feature thoroughly. I'll ask questions to understand what's not yet clear:
 - What problem this solves
 - Who will use it
 - What success looks like
@@ -46,45 +65,37 @@ Let me help you define this feature thoroughly. I'll ask questions to understand
 This will take 5-10 minutes of conversation. Ready to start?
 ```
 
-**Begin with clarifying questions:**
+---
 
-1. **The Problem**
+## Step 2: Adaptive Conversational Discovery
+
+**Based on what context was provided, ask questions to fill gaps:**
+
+### 1. **The Problem** (skip if clear from context)
    - What problem does this solve?
    - Who experiences this problem?
    - How do they currently handle it?
    - Why now? What's the urgency?
 
-2. **The Users**
+### 2. **The Users** (skip if clear from context)
    - Who are the primary users?
    - What are their roles?
    - What's their technical expertise?
    - What's their typical workflow?
 
-3. **The Outcome**
+### 3. **The Outcome** (skip if clear from context)
    - What does success look like?
    - What specific outcomes are you hoping for?
    - How will we measure success?
    - What would make this feature "done"?
 
----
-
-## Step 2: Iterative Discovery
-
-Through conversational Q&A, explore:
-
-### User Roles & Personas
-- Who will interact with this feature?
-- What are their goals?
-- What are their pain points?
-- Any user types we should consider?
-
-### User Journeys
+### 4. **User Journeys**
 - Walk me through the happy path
 - What steps do users take?
 - Where can things go wrong?
 - What are the critical moments?
 
-### Edge Cases & Constraints
+### 5. **Edge Cases & Constraints**
 - What unusual scenarios might occur?
 - What are the boundaries/limits?
 - Any technical constraints?
@@ -93,7 +104,7 @@ Through conversational Q&A, explore:
 - Security considerations?
 - Accessibility needs?
 
-### Success Definition
+### 6. **Success Definition**
 - How do we know this is working?
 - What metrics matter?
 - What does "good enough" look like?
@@ -150,13 +161,48 @@ If user has changes, iterate. If confirmed, proceed to documentation.
 
 ---
 
-## Step 4: Generate Feature Document
+## Step 4: Determine Feature Number & Create Directory
+
+**Find the next feature number:**
+
+1. List existing features: `ls -1d .agent/features/*/` or `ls .agent/features/`
+2. Extract highest number from directories like `001-name/`, `002-name/`
+3. Increment by 1 for new feature number (001 if no features exist)
+4. Format as 3-digit zero-padded number (e.g., `001`, `002`, `042`)
 
 **Determine feature name:**
 - Use kebab-case from feature description
 - Keep it concise (e.g., "asset-upload", "user-permissions")
 
-**Create: `.agent/features/<feature-name>.md`**
+**Create directory structure:**
+
+```bash
+mkdir -p .agent/features/NNN-feature-name
+mkdir -p .agent/features/NNN-feature-name/images
+```
+
+Where `NNN` is the 3-digit feature number.
+
+---
+
+## Step 5: Copy Images to Feature Directory
+
+If the user provided images/diagrams/mockups:
+
+**Copy files to images/ directory:**
+
+```bash
+cp /path/to/mockup.png .agent/features/NNN-feature-name/images/
+cp /path/to/diagram.jpg .agent/features/NNN-feature-name/images/
+```
+
+**Note the filenames** to reference in README.md.
+
+---
+
+## Step 6: Generate Feature Document
+
+**Create: `.agent/features/NNN-feature-name/README.md`**
 
 **Use this structure:**
 
@@ -178,6 +224,21 @@ If user has changes, iterate. If confirmed, proceed to documentation.
 
 **Target Users:**
 [Who this is for]
+
+---
+
+## Visual Materials
+
+[Include this section if images were provided]
+
+### Mockups/Screenshots
+![Mockup description](./images/mockup.png)
+
+### Diagrams/Flows
+![Flow diagram](./images/user-flow.png)
+
+### Reference Materials
+![Reference](./images/reference.jpg)
 
 ---
 
@@ -347,6 +408,7 @@ These should be answered before implementation planning.
 
 - Related Features: [Link to other feature docs if relevant]
 - External Resources: [Any relevant documentation, APIs, etc.]
+- Initial Context: [Reference to any source materials, links provided]
 
 ---
 
@@ -379,26 +441,31 @@ These should be answered before implementation planning.
 
 ---
 
-## Step 5: Track as Last Feature
+## Step 7: Track as Last Feature
 
 **Create/Update `.agent/.last-feature` file:**
 
+Write the directory name (e.g., `001-feature-name`) without the `.md` extension:
+
 ```bash
-echo "<feature-name>" > .agent/.last-feature
+echo "NNN-feature-name" > .agent/.last-feature
 ```
 
 This allows `/plan-task` to auto-detect the last feature defined.
 
 ---
 
-## Step 6: Report Completion
+## Step 8: Report Completion
 
 ```
 ✅ FEATURE REQUIREMENTS DOCUMENTED
 
-📄 Feature File: .agent/features/<feature-name>.md
+📁 Feature Directory: .agent/features/NNN-feature-name/
+📄 Requirements: .agent/features/NNN-feature-name/README.md
+🖼️  Images: [X images in images/ directory] (if applicable)
 📋 Status: Defined
 🎯 Priority: [Priority]
+🔢 Feature Number: NNN (chronological order)
 
 **What's Captured:**
 - [X] User roles and personas
@@ -407,11 +474,13 @@ This allows `/plan-task` to auto-detect the last feature defined.
 - [X] Edge cases and constraints
 - [X] Success metrics
 - [X] Out of scope items
+- [X] Visual materials (if provided)
 
 **Next Steps:**
 
 1. **Review the requirements**
-   - Read .agent/features/<feature-name>.md
+   - Read .agent/features/NNN-feature-name/README.md
+   - View images in .agent/features/NNN-feature-name/images/
    - Validate with stakeholders if needed
    - Clarify any open questions
 
@@ -420,15 +489,15 @@ This allows `/plan-task` to auto-detect the last feature defined.
    - This will reference the feature requirements
    - May result in one or multiple tasks
 
-3. **Start building**
+4. **Start building**
    - Run `/implement-task` once tasks are planned
    - Requirements doc will guide development
    - Use as reference for testing
 
 **Commands:**
 ```
-/plan-task              # Auto-uses this feature
-/plan-task "specific"   # Or specify task name
+/plan-task                 # Auto-uses this feature
+/plan-task "specific"      # Or specify task name
 ```
 
 ---
@@ -442,6 +511,8 @@ This allows `/plan-task` to auto-detect the last feature defined.
 ✅ Identify edge cases and constraints upfront
 ✅ Make success measurable
 ✅ Define what's out of scope
+✅ Include visual materials (mockups, diagrams) when helpful
+✅ Adapt questions based on context already provided
 
 ### DON'T:
 ❌ Jump to implementation details
@@ -450,6 +521,7 @@ This allows `/plan-task` to auto-detect the last feature defined.
 ❌ Make requirements vague or untestable
 ❌ Forget to define success metrics
 ❌ Let scope creep happen
+❌ Ignore context/images the user provides
 
 ---
 
@@ -475,6 +547,11 @@ This allows `/plan-task` to auto-detect the last feature defined.
 - Don't over-document obvious things
 - Balance thoroughness with readability
 
+**Leverage visual materials:**
+- Include mockups to clarify UI expectations
+- Use diagrams for complex flows
+- Reference screenshots from similar apps
+
 ---
 
 ## Handling Different Feature Complexities
@@ -484,6 +561,7 @@ This allows `/plan-task` to auto-detect the last feature defined.
 - Basic user stories
 - Few edge cases
 - Straightforward success metrics
+- May not need images
 
 ### Complex Feature
 - Extended conversation (15-20 min)
@@ -491,6 +569,7 @@ This allows `/plan-task` to auto-detect the last feature defined.
 - Many edge cases
 - Detailed acceptance criteria
 - May need breaking into phases
+- Benefits from mockups/diagrams
 
 **Adjust questioning depth based on complexity.**
 
@@ -505,3 +584,13 @@ This allows `/plan-task` to auto-detect the last feature defined.
 4. `/complete-task` - Completion confirms requirements met
 
 **The requirements doc is the source of truth for WHAT to build.**
+
+---
+
+## Feature Numbering System
+
+- **3-digit format**: 001, 002, 003, etc.
+- **Chronological order**: Numbers represent order of creation
+- **Loose priority**: Earlier numbers roughly indicate higher priority
+- **Zero-padded**: Ensures proper sorting in file listings
+- **Flexible**: Work on features in any order; manually reorder directories if needed (rare)

@@ -11,7 +11,7 @@ You are completing a task by updating documentation and verifying git workflow.
 
 **CRITICAL: Read these first:**
 1. The task document (`.agent/tasks/XX-*.md`)
-2. Feature requirements if referenced (`.agent/features/<feature>.md`)
+2. Feature requirements if referenced (`.agent/features/NNN-feature-name/README.md`)
 3. `CLAUDE.md` - Documentation standards
 4. `.agent/sops/branching-workflow.md` - Git workflow
 

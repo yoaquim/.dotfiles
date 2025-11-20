@@ -9,6 +9,7 @@ You are performing a comprehensive review of `.agent` documentation for accuracy
 - `.agent/README.md`
 - `.agent/CLAUDE.md` (if exists)
 - `.agent/system/*.md`
+- `.agent/features/*/README.md` (numbered feature directories)
 - `.agent/tasks/*.md`
 - `.agent/sops/*.md`
 
@@ -28,11 +29,16 @@ You are performing a comprehensive review of `.agent` documentation for accuracy
 - [ ] Different terminology for same concepts
 - [ ] Status markers differ between README and task docs
 - [ ] Git references missing or incorrect
+- [ ] Feature directories not properly numbered (001-, 002-, etc.)
+- [ ] Tasks reference non-existent features
 
 ## 3. Missing Information
+- [ ] Features without README.md in their directories
+- [ ] Features without images/ subdirectory
 - [ ] Tasks without completion dates
 - [ ] Tasks without git references (branch, commits)
 - [ ] Missing cross-references between related docs
+- [ ] Tasks don't reference their feature requirements
 - [ ] Success criteria not checked off
 - [ ] Test results not documented
 - [ ] Implementation summaries missing on complex tasks

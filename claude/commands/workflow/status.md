@@ -20,9 +20,11 @@ You are providing a comprehensive project status report.
 ## 📋 Feature Requirements
 
 Check `.agent/features/` directory:
-- List defined features
+- List defined features (numbered directories: 001-name/, 002-name/, etc.)
+- Numbers represent chronological order (loose priority)
 - Note which features have tasks (link tasks to features)
 - Show last defined feature (from `.agent/.last-feature`)
+- Display format: "001 - Feature Name (Priority: High)"
 
 ## 📋 Recent Tasks (Last 5)
 For each task, show:
