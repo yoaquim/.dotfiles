@@ -172,5 +172,5 @@ map('n', '<leader>ta', "<cmd>lua require'neotest'.run.attach()<cr>", opts)
 
 -- Set colorscheme
 -- ───────────────────────────────────────────────────
-vim.cmd('colorscheme material-oceanic')
+vim.cmd('colorscheme base16-darkmoss')
 
