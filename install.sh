@@ -491,16 +491,16 @@ setup_rclone() {
     mkdir -p "${launch_agent_dir}"
     create_symlink "${SCRIPT_DIR}/config/rclone/com.rclone.cave.plist" "${launch_agent_dir}/com.rclone.cave.plist"
 
-    # Check if AWS credentials are configured in bash_profile_local
+    # Check if WebDAV credentials are configured in bash_profile_local
     local bash_local="${SCRIPT_DIR}/config/bash/bash_profile_local"
-    if [[ -f "${bash_local}" ]] && grep -q "CAVE_AWS_ACCESS_KEY_ID" "${bash_local}" 2>/dev/null; then
-        print_success "AWS credentials found in bash_profile_local"
+    if [[ -f "${bash_local}" ]] && grep -q "CAVE_WEBDAV_USER" "${bash_local}" 2>/dev/null; then
+        print_success "WebDAV credentials found in bash_profile_local"
     else
-        print_warning "AWS credentials not configured yet"
+        print_warning "WebDAV credentials not configured yet"
         echo
         echo "  Add these to ~/.config/bash/bash_profile_local:"
-        echo "    export CAVE_AWS_ACCESS_KEY_ID=\"your-access-key-id\""
-        echo "    export CAVE_AWS_SECRET_ACCESS_KEY=\"your-secret-access-key\""
+        echo "    export CAVE_WEBDAV_USER=\"your-username\""
+        echo "    export CAVE_WEBDAV_PASS=\"your-password\""
         echo
         echo "  Then reload: source ~/.bash_profile"
         echo
@@ -517,7 +517,7 @@ setup_rclone() {
 
     # Auto-load LaunchAgent if credentials are configured
     local plist_path="$HOME/Library/LaunchAgents/com.rclone.cave.plist"
-    if [[ -f "${bash_local}" ]] && grep -q "CAVE_AWS_ACCESS_KEY_ID" "${bash_local}" 2>/dev/null; then
+    if [[ -f "${bash_local}" ]] && grep -q "CAVE_WEBDAV_USER" "${bash_local}" 2>/dev/null; then
         # Check if already loaded
         if launchctl list | grep -q "com.rclone.cave"; then
             print_success "Cave LaunchAgent already loaded"

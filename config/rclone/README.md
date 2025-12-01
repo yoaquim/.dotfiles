@@ -1,27 +1,34 @@
-# rclone Configuration for Cave (S3 Storage)
+# rclone Configuration for Cave (WebDAV Storage)
 
-This directory contains the configuration for automatically mounting the `terra-cave-us-east-1` S3 bucket to `~/Cave` using rclone and macFUSE, providing a Dropbox-like experience with local caching and background sync.
+This directory contains the configuration for automatically mounting the Cave WebDAV server to `~/Cave` using rclone, providing a Dropbox-like experience with local caching and background sync.
 
 ## Overview
 
-- **Remote**: S3 bucket `terra-cave-us-east-1` in `us-east-1`
+- **Remote**: WebDAV server at `https://cave.yoaquim.com/`
 - **Mount Point**: `~/Cave`
-- **Cache Mode**: Full VFS caching (editable locally, syncs to S3)
+- **Cache Mode**: Full VFS caching (editable locally, syncs to server)
 - **Cache Size**: 50GB max
 - **Auto-start**: Via macOS LaunchAgent on login
 
 ## Setup Instructions
 
-### 1. Add AWS Credentials to bash_profile_local
+### 1. Add WebDAV Credentials to bash_profile_local
 
-AWS credentials are stored as environment variables in `~/.config/bash/bash_profile_local` (which is already git-ignored).
+WebDAV credentials are stored as environment variables in `~/.config/bash/bash_profile_local` (which is already git-ignored).
 
 Add these lines to `~/.config/bash/bash_profile_local`:
 
 ```bash
-# AWS credentials for Cave (rclone S3 mount)
-export CAVE_AWS_ACCESS_KEY_ID="your-access-key-id-here"
-export CAVE_AWS_SECRET_ACCESS_KEY="your-secret-access-key-here"
+# WebDAV credentials for Cave (rclone mount)
+# Password must be obscured using: rclone obscure "your-plaintext-password"
+export CAVE_WEBDAV_USER="your-username-here"
+export CAVE_WEBDAV_PASS="your-obscured-password-here"
+```
+
+**Important**: The password must be obscured (encrypted) using rclone:
+```bash
+rclone obscure "your-actual-password"
+# Copy the output and use it as CAVE_WEBDAV_PASS
 ```
 
 Then reload your shell:
@@ -44,8 +51,8 @@ cd ~/.dotfiles
 ```
 
 The installer will:
-- Create symlink: `~/.config/rclone/` → `~/.dotfiles/config/rclone/`
-- Create symlink: `~/Library/LaunchAgents/com.rclone.cave.plist` → dotfiles
+- Create symlink: `~/.config/rclone/` -> `~/.dotfiles/config/rclone/`
+- Create symlink: `~/Library/LaunchAgents/com.rclone.cave.plist` -> dotfiles
 - Create `~/Cave` mount point directory
 - Set up the LaunchAgent for auto-start
 - Check if credentials are configured and remind you if not
@@ -106,10 +113,10 @@ launchctl load ~/Library/LaunchAgents/com.rclone.cave.plist
 
 ### Credential Flow
 
-1. **Store**: AWS credentials in `~/.config/bash/bash_profile_local` as `CAVE_AWS_*` variables
+1. **Store**: WebDAV credentials in `~/.config/bash/bash_profile_local` as `CAVE_WEBDAV_*` variables
 2. **Load**: `mount-cave.sh` sources `bash_profile_local` on startup
-3. **Export**: Script exports `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from `CAVE_AWS_*`
-4. **Use**: rclone reads standard AWS environment variables (via `env_auth = true`)
+3. **Export**: Script exports `RCLONE_WEBDAV_USER` and `RCLONE_WEBDAV_PASS` from `CAVE_WEBDAV_*`
+4. **Use**: rclone reads these environment variables for authentication
 
 This approach keeps credentials:
 - Out of git (bash_profile_local is git-ignored)
@@ -121,9 +128,9 @@ This approach keeps credentials:
 The mount uses `--vfs-cache-mode full`, which provides:
 
 1. **Immediate local writes**: Files are written to local cache first
-2. **Background sync**: Changes sync to S3 in the background (5s delay)
+2. **Background sync**: Changes sync to server in the background (5s delay)
 3. **Fast reads**: Frequently accessed files are cached locally
-4. **Offline editing**: Edit files even if S3 is temporarily unavailable
+4. **Offline editing**: Edit files even if server is temporarily unavailable
 
 ### Cache Settings
 
@@ -142,15 +149,15 @@ The mount uses `--vfs-cache-mode full`, which provides:
 
 ```
 ~/.dotfiles/config/rclone/
-├── rclone.conf                    # Config (uses env_auth, safe to commit)
+├── rclone.conf                    # Config (no secrets, safe to commit)
 ├── mount-cave.sh                  # Mount script (loads credentials)
 ├── com.rclone.cave.plist          # LaunchAgent definition
 └── README.md                      # This file
 
 ~/.dotfiles/config/bash/
-└── bash_profile_local             # AWS credentials stored here (NOT in git)
+└── bash_profile_local             # WebDAV credentials stored here (NOT in git)
 
-~/.config/rclone/                  # Symlink → ~/.dotfiles/config/rclone/
+~/.config/rclone/                  # Symlink -> ~/.dotfiles/config/rclone/
 ~/.cache/rclone/
 ├── vfs/                           # VFS cache directory (up to 50GB)
 ├── cave.log                       # rclone mount log
@@ -159,7 +166,7 @@ The mount uses `--vfs-cache-mode full`, which provides:
 
 ~/Cave/                            # Mount point
 ~/Library/LaunchAgents/
-└── com.rclone.cave.plist          # Symlink → dotfiles
+└── com.rclone.cave.plist          # Symlink -> dotfiles
 ```
 
 ## Troubleshooting
@@ -187,41 +194,34 @@ launchctl list | grep rclone
 
 ### Mount not starting
 
-1. **Check AWS credentials are set**:
+1. **Check WebDAV credentials are set**:
    ```bash
    # Check if variables are exported
-   echo $CAVE_AWS_ACCESS_KEY_ID
-   echo $CAVE_AWS_SECRET_ACCESS_KEY
+   echo $CAVE_WEBDAV_USER
+   echo $CAVE_WEBDAV_PASS
 
    # If empty, add them to ~/.config/bash/bash_profile_local:
-   export CAVE_AWS_ACCESS_KEY_ID="your-key"
-   export CAVE_AWS_SECRET_ACCESS_KEY="your-secret"
+   export CAVE_WEBDAV_USER="your-username"
+   export CAVE_WEBDAV_PASS="your-password"
 
    # Then reload
    source ~/.bash_profile
    ```
 
-2. Check if macFUSE is installed:
-   ```bash
-   brew list --cask | grep macfuse
-   ```
-
-3. Check rclone configuration:
+2. Check rclone configuration:
    ```bash
    rclone config show cave
    ```
 
-4. Test mount manually (will show credential errors if any):
+3. Test WebDAV connection:
+   ```bash
+   rclone lsd cave: --webdav-user="$CAVE_WEBDAV_USER" --webdav-pass="$CAVE_WEBDAV_PASS"
+   ```
+
+4. Test mount manually (will show errors if any):
    ```bash
    ~/.dotfiles/config/rclone/mount-cave.sh
    ```
-
-### Permission errors
-
-macFUSE requires system extension approval on first use:
-1. Open **System Settings** → **Privacy & Security**
-2. Look for blocked system extension from "Benjamin Fleischer"
-3. Click **Allow** and restart
 
 ### Cache full
 
@@ -236,14 +236,6 @@ rm -rf ~/.cache/rclone/vfs/*
 
 # Restart mount
 launchctl load ~/Library/LaunchAgents/com.rclone.cave.plist
-```
-
-### Verify S3 connection
-
-Test rclone can access S3:
-
-```bash
-rclone ls cave:terra-cave-us-east-1 --max-depth 1
 ```
 
 ### Force unmount
@@ -265,10 +257,10 @@ diskutil unmount force ~/Cave
 
 ## Security Notes
 
-- AWS credentials are stored in `~/.config/bash/bash_profile_local` as environment variables
+- WebDAV credentials are stored in `~/.config/bash/bash_profile_local` as environment variables
 - `bash_profile_local` is excluded from git (machine-specific config)
-- Never commit or share files containing `CAVE_AWS_ACCESS_KEY_ID` or `CAVE_AWS_SECRET_ACCESS_KEY`
-- `rclone.conf` uses `env_auth = true` and contains **no secrets** - safe to commit to git
+- Never commit or share files containing `CAVE_WEBDAV_USER` or `CAVE_WEBDAV_PASS`
+- `rclone.conf` contains **no secrets** - safe to commit to git
 - All files in `config/rclone/` can be safely committed
 
 ## Uninstalling
@@ -293,6 +285,6 @@ rm -rf ~/Cave
 ## References
 
 - [rclone documentation](https://rclone.org/docs/)
+- [rclone WebDAV backend](https://rclone.org/webdav/)
 - [rclone mount documentation](https://rclone.org/commands/rclone_mount/)
 - [VFS cache modes](https://rclone.org/commands/rclone_mount/#vfs-cache-mode)
-- [macFUSE](https://osxfuse.github.io/)
