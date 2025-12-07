@@ -127,6 +127,7 @@ Available tags:
 - `add_unit_tests.md` - Test-only tasks
 - `bug_analysis.md` - Bug fixes
 - `code_refactoring.md` - Refactoring
+- `plan-feature.md` - Full planning reference (this command uses it)
 
 **Example:** Instead of just writing `@git-workflow`, read `~/.claude/vk-tags/git-workflow.md` and include its content in the task description.
 
