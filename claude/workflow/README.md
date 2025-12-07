@@ -2,7 +2,7 @@
 
 Global configuration for Claude Code workflow system. This provides a standardized, reusable documentation and workflow system for all projects.
 
-**Location**: `~/.dotfiles/config/claude/` (symlinked to `~/.claude/`)
+**Location**: `~/.dotfiles/claude/` (symlinked to `~/.claude/`)
 
 ---
 
@@ -38,19 +38,22 @@ This global configuration provides:
 
 ### On This Machine (Already Set Up)
 
-The symlink `~/.claude` → `~/.dotfiles/config/claude/` is already created.
+The symlink `~/.claude` → `~/.dotfiles/claude/` is already created.
 
 **Available commands in any project:**
 ```
-/init-project   - Initialize .agent/ for new or existing project
-/feature        - Define WHAT to build (feature requirements)
-/plan-task      - Plan HOW to build it (implementation)
-/implement-task - Implement a task
-/test-task      - Test implementation
-/complete-task  - Finalize task
-/fix-bug        - Quick bug fix workflow
-/document-issue - Document known issues
-/status         - Show project status
+/setup                      - Initialize .agent/ for new or existing project
+/feature                    - Define WHAT to build (feature requirements)
+/vk-plan                    - Create VK Kanban planning tickets
+/workflow:plan-task         - Plan HOW to build it (implementation)
+/workflow:implement-task    - Implement a task
+/workflow:test-task         - Test implementation
+/workflow:complete-task     - Finalize task
+/workflow:fix-bug           - Quick bug fix workflow
+/workflow:document-issue    - Document known issues
+/workflow:status            - Show project status
+/workflow:review-docs       - Review documentation
+/workflow:update-doc        - Update documentation
 ```
 
 ### On a New Machine
@@ -70,44 +73,51 @@ This will:
 ## Directory Structure
 
 ```
-~/.dotfiles/config/claude/         # Source (version controlled)
-├── README.md                      # This file
-├── IMPLEMENTATION.md              # Implementation plan and decisions
-├── config.yml                     # Global configuration
+~/.dotfiles/claude/                # Source (version controlled)
 ├── setup.sh                       # Setup script for new machines
 ├── commands/                      # Slash commands (global)
-│   ├── feature.md
-│   ├── plan-task.md
-│   ├── implement-task.md
-│   ├── test-task.md
-│   ├── complete-task.md
-│   ├── fix-bug.md
-│   ├── document-issue.md
-│   ├── status.md
-│   └── ...
-├── sops/                          # Universal SOPs (referenced, not copied)
+│   ├── feature.md                 # Define feature requirements
+│   ├── setup.md                   # Project initialization
+│   ├── vk-plan.md                 # VK Kanban planning
+│   └── workflow/                  # Workflow commands
+│       ├── plan-task.md
+│       ├── implement-task.md
+│       ├── test-task.md
+│       ├── complete-task.md
+│       ├── fix-bug.md
+│       ├── document-issue.md
+│       ├── status.md
+│       ├── review-docs.md
+│       └── update-doc.md
+├── vk-tags/                       # Reusable VK task tags
 │   ├── README.md
-│   ├── git-workflow.md
-│   ├── testing-principles.md
-│   └── documentation-standards.md
-└── templates/                     # Project templates (copied by /init-project)
-    ├── CLAUDE.md.template
-    ├── agent/
-    │   ├── README.md.template
-    │   ├── task-template.md
-    │   ├── system/
-    │   │   ├── overview.md.template
-    │   │   └── architecture.md.template
-    │   ├── sops/
-    │   │   └── README.md.template
-    │   └── known-issues/
-    │       └── README.md.template
-    └── ...
+│   ├── plan-feature.md
+│   ├── bug_analysis.md
+│   └── ...
+└── workflow/                      # Universal workflows and templates
+    ├── README.md                  # This file
+    ├── sops/                      # Standard operating procedures
+    │   ├── README.md
+    │   ├── git-workflow.md
+    │   ├── testing-principles.md
+    │   └── documentation-standards.md
+    └── templates/                 # Project templates (copied by /setup)
+        ├── CLAUDE.md.template
+        └── agent/
+            ├── README.md.template
+            ├── task-template.md
+            ├── system/
+            │   ├── overview.md.template
+            │   └── architecture.md.template
+            ├── sops/
+            │   └── README.md.template
+            └── known-issues/
+                └── README.md.template
 
-~/.claude/                          # Symlink to above
+~/.claude/                         # Symlink to above
 ```
 
-### Project Structure (After /init-project)
+### Project Structure (After /setup)
 
 ```
 your-project/
@@ -139,25 +149,16 @@ your-project/
 
 ## Configuration
 
-### config.yml
+Configuration is managed through:
+- **Slash commands**: Edit `.md` files in `~/.dotfiles/claude/commands/`
+- **Templates**: Edit files in `~/.dotfiles/claude/workflow/templates/`
+- **SOPs**: Edit or add files in `~/.dotfiles/claude/workflow/sops/`
+- **VK Tags**: Edit files in `~/.dotfiles/claude/vk-tags/`
 
-```yaml
-projects_dir: ~/Projects      # Where your projects live
-editor: nvim                   # Your preferred editor
-task_digits: 3                 # Task numbering (000-999)
-auto_update_docs: true         # Auto-update docs after tasks
-```
-
-**Edit**:
-```bash
-nvim ~/.claude/workflow/config.yml
-```
-
-**Customize**:
-- `projects_dir`: Change if your projects are elsewhere
-- `editor`: Use `code`, `vim`, or any other editor
-- `task_digits`: Currently 3 (000-999), could extend to 4 if needed
-- `auto_update_docs`: Disable if you prefer manual doc updates
+**Key conventions**:
+- `projects_dir`: `~/Projects` (used for cross-project search)
+- `task_digits`: 3-digit numbering (000-999)
+- `issue_digits`: 2-digit numbering (01-99)
 
 ---
 
@@ -236,7 +237,7 @@ All commands are available globally in any project.
 
 ### Project Setup
 
-- **`/init-project`** - Initialize `.agent/` directory for new or existing project
+- **`/setup`** - Initialize `.agent/` directory for new or existing project
   - Creates `features/`, `tasks/`, `system/`, `sops/`, `known-issues/` directories
   - Generates project documentation templates
   - References universal SOPs
@@ -246,12 +247,16 @@ All commands are available globally in any project.
 - **`/feature <description>`** - Define feature requirements through interactive conversation
   - Uses EARS format for acceptance criteria
   - Creates `.agent/features/<feature-name>.md`
-  - Tracks as last feature for `/plan-task` auto-detection
+  - Tracks as last feature for `/workflow:plan-task` auto-detection
   - Focuses on WHAT users need, not HOW to implement
+
+- **`/vk-plan`** - Create VK Kanban planning tickets for features
+  - Integrates with Vibe Kanban system
+  - Creates numbered task breakdowns
 
 ### Implementation Planning (HOW to Build)
 
-- **`/plan-task [description]`** - Create technical implementation plan
+- **`/workflow:plan-task [description]`** - Create technical implementation plan
   - Auto-detects last feature if no argument provided
   - Reads feature requirements if available
   - Creates `.agent/tasks/XXX-task-name.md`
@@ -259,26 +264,26 @@ All commands are available globally in any project.
 
 ### Building & Testing
 
-- **`/implement-task [XXX]`** - Implement a task (defaults to latest)
-- **`/test-task [XXX]`** - Test a task implementation
-- **`/complete-task [XXX]`** - Finalize task, update docs, git workflow
+- **`/workflow:implement-task [XXX]`** - Implement a task (defaults to latest)
+- **`/workflow:test-task [XXX]`** - Test a task implementation
+- **`/workflow:complete-task [XXX]`** - Finalize task, update docs, git workflow
 
 ### Status & Documentation
 
-- **`/status`** - Show project status, features, active tasks, recent changes
-- **`/review-docs`** - Review documentation for issues or outdated info
-- **`/update-doc`** - Manually update documentation
+- **`/workflow:status`** - Show project status, features, active tasks, recent changes
+- **`/workflow:review-docs`** - Review documentation for issues or outdated info
+- **`/workflow:update-doc`** - Manually update documentation
 
 ### Bug Fixes
 
-- **`/fix-bug <description>`** - Intelligent bug fix workflow
+- **`/workflow:fix-bug <description>`** - Intelligent bug fix workflow
   - **Quick hotfix** for simple bugs (done in one command)
   - **Bug task** for complex issues (full investigation + fix)
   - **Cross-project search** for similar issues automatically
 
 ### Issue Documentation
 
-- **`/document-issue`** - Document a known issue or bug
+- **`/workflow:document-issue`** - Document a known issue or bug
   - Searches similar issues across all projects
   - Creates numbered issue document (NN: 01-99)
   - Updates known-issues index
@@ -299,7 +304,7 @@ This allows project-specific overrides while maintaining global defaults.
 
 ```bash
 # 1. Initialize project (once per project)
-/init-project
+/setup
 
 # 2. Define WHAT to build (feature requirements)
 /feature "Asset upload with metadata extraction"
@@ -309,7 +314,7 @@ This allows project-specific overrides while maintaining global defaults.
   → Tracks as last feature
 
 # 3. Plan HOW to build it (implementation)
-/plan-task
+/workflow:plan-task
   → Auto-detects last feature (asset-upload)
   → Reads feature requirements
   → Creates technical implementation plan
@@ -317,20 +322,20 @@ This allows project-specific overrides while maintaining global defaults.
   → Creates .agent/tasks/001-asset-upload-backend.md
 
 # 4. Implement the task
-/implement-task 001
+/workflow:implement-task 001
   → Reads task doc and feature requirements
   → Creates feature branch
   → Implements according to plan
   → Commits work
 
 # 5. Test the implementation
-/test-task 001
+/workflow:test-task 001
   → Runs automated tests
   → Verifies acceptance criteria from feature requirements
   → Manual testing checklist
 
 # 6. Complete and finalize
-/complete-task 001
+/workflow:complete-task 001
   → Updates task status to Complete
   → Updates system documentation
   → Merges branch
@@ -342,17 +347,17 @@ This allows project-specific overrides while maintaining global defaults.
 For simple features, skip `/feature`:
 
 ```bash
-/plan-task "Add user logout button"
+/workflow:plan-task "Add user logout button"
   → Plans directly without requirements doc
-/implement-task
-/test-task
-/complete-task
+/workflow:implement-task
+/workflow:test-task
+/workflow:complete-task
 ```
 
 ### Bug Fix Flow
 
 ```bash
-/fix-bug "Upload fails for files > 10MB"
+/workflow:fix-bug "Upload fails for files > 10MB"
   → Auto-searches similar issues across projects
   → Routes to quick hotfix OR full bug task
   → Implements fix
@@ -362,7 +367,7 @@ For simple features, skip `/feature`:
 ### Check Status
 
 ```bash
-/status
+/workflow:status
   → Shows defined features
   → Shows task progress
   → Shows git status
@@ -381,7 +386,7 @@ Known issues are searchable across **all projects** in `~/Projects`:
 # Manual search
 find ~/Projects -type f -path "*/\.agent/known-issues/*.md" -exec grep -l "keyword" {} \;
 
-# Automatic search in /fix-bug and /document-issue commands
+# Automatic search in /workflow:fix-bug and /workflow:document-issue commands
 ```
 
 **Why?**
@@ -409,17 +414,17 @@ find ~/Projects -type f -path "*/\.agent/tasks/*.md" -exec grep -l "authenticati
    git clone <dotfiles-repo> ~/.dotfiles
    ```
 
-2. Ensure `~/.dotfiles/config/claude/` exists
+2. Ensure `~/.dotfiles/claude/` exists
 
 ### Run Setup
 
 ```bash
-cd ~/.dotfiles/config/claude/
+cd ~/.dotfiles/claude/
 ./setup.sh
 ```
 
 The script will:
-- ✅ Create symlink `~/.claude` → `~/.dotfiles/config/claude/`
+- ✅ Create symlink `~/.claude` → `~/.dotfiles/claude/`
 - ✅ Verify all required files
 - ✅ Check configuration
 - ✅ Display available commands
@@ -428,7 +433,7 @@ The script will:
 
 ```bash
 ls -la ~/.claude          # Should show symlink
-cat ~/.claude/workflow/config.yml  # Should display config
+ls ~/.claude/commands/    # Should list available commands
 ```
 
 ---
@@ -437,16 +442,16 @@ cat ~/.claude/workflow/config.yml  # Should display config
 
 ### Add New Universal SOP
 
-1. Create new `.md` file in `~/.claude/workflow/sops/`
+1. Create new `.md` file in `~/.dotfiles/claude/workflow/sops/`
 2. Follow documentation standards format
-3. Update `~/.claude/workflow/sops/README.md`
+3. Update `~/.dotfiles/claude/workflow/sops/README.md`
 4. Commit to dotfiles repo
 5. All projects automatically reference it
 
 ### Add New Slash Command
 
 **Global command:**
-1. Create `.md` file in `~/.claude/commands/`
+1. Create `.md` file in `~/.dotfiles/claude/commands/`
 2. Follow existing command format
 3. Available in all projects immediately
 
@@ -458,19 +463,10 @@ cat ~/.claude/workflow/config.yml  # Should display config
 
 ### Modify Templates
 
-1. Edit files in `~/.claude/workflow/templates/`
-2. Test with `/init-project` on a test project
+1. Edit files in `~/.dotfiles/claude/workflow/templates/`
+2. Test with `/setup` on a test project
 3. Commit changes to dotfiles
 4. Future projects use updated templates
-
-### Change Projects Directory
-
-Edit `~/.claude/workflow/config.yml`:
-```yaml
-projects_dir: ~/Code  # or wherever your projects live
-```
-
-This affects cross-project search paths.
 
 ---
 
@@ -494,7 +490,7 @@ This affects cross-project search paths.
 **This directory is part of dotfiles:**
 ```bash
 cd ~/.dotfiles
-git add config/claude/
+git add claude/
 git commit -m "Update Claude Code config: <description>"
 git push
 ```
@@ -596,7 +592,7 @@ git pull
 
 **Solution**:
 ```bash
-cd ~/.dotfiles/config/claude/
+cd ~/.dotfiles/claude/
 ./setup.sh  # Will backup and recreate
 ```
 
@@ -606,7 +602,7 @@ cd ~/.dotfiles/config/claude/
 
 **Solution**:
 1. Verify command exists: `ls ~/.claude/commands/`
-2. Check command name matches exactly
+2. Check command name matches exactly (e.g., `/workflow:plan-task` not `/plan-task`)
 3. Restart Claude Code session
 
 ### Template Variables Not Replaced
@@ -614,7 +610,7 @@ cd ~/.dotfiles/config/claude/
 **Problem**: `{{VARIABLE}}` appears in generated files
 
 **Solution**:
-- Re-run `/init-project`
+- Re-run `/setup`
 - Ensure you answered all prompts
 - Check template file has correct variable names
 
@@ -623,7 +619,7 @@ cd ~/.dotfiles/config/claude/
 **Problem**: `find ~/Projects ...` returns no results
 
 **Solution**:
-1. Verify `projects_dir` in `~/.claude/workflow/config.yml`
+1. Verify projects are in `~/Projects` directory
 2. Check projects have `.agent/known-issues/` directory
 3. Ensure known issues exist in those projects
 
@@ -659,6 +655,6 @@ This is personal configuration, but you can:
 
 ---
 
-**Location**: `~/.dotfiles/config/claude/README.md`
-**Symlink**: `~/.claude/README.md`
-**Last Updated**: 2025-10-25
+**Location**: `~/.dotfiles/claude/workflow/README.md`
+**Symlink**: `~/.claude/workflow/README.md`
+**Last Updated**: 2025-12-07

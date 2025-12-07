@@ -48,7 +48,8 @@
 | `bash_profile_functions` | Custom bash functions |
 | `bash_profile_git` | Git-specific aliases and functions |
 | `bash_profile_tools` | Tool integrations (nvm, pyenv, etc.) |
-| `bash_profile_local` | Local machine-specific settings |
+| `bash_profile_ssh` | SSH agent configuration |
+| `bash_profile_local` | Local machine-specific settings (not in git) |
 
 ---
 
@@ -102,7 +103,7 @@
 | `cd.` | `cd ~/.dotfiles` | Go to dotfiles |
 | `cdv` | `cd ~/.vim` | Go to vim config |
 | `cdd` | `cd ~/Desktop/` | Go to desktop |
-| `cdb` | `cd ~/Dropbox/` | Go to Dropbox |
+| `cdc` | `cd ~/Cave/` | Go to Cave (rclone mount) |
 | `cdp` | `cd ~/Projects/` | Go to projects |
 | `cds` | `cd ~/Scratches/` | Go to scratches |
 
@@ -179,6 +180,12 @@ unmark myapp            # Remove bookmark
 Toggle visibility of hidden files in macOS Finder:
 ```bash
 toggle_hidden           # Show/hide dotfiles in Finder
+```
+
+#### `cave`
+Open the Cave rclone mount in Finder (or show status if not mounted):
+```bash
+cave                    # Opens ~/Cave in Finder if mounted
 ```
 
 ---

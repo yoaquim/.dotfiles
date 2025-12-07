@@ -38,14 +38,14 @@
    - For Copilot: `:Copilot auth`
 
 ### 🎨 Current Theme
-- **Active**: `minimal` colorscheme
-- **Available**: `base16`, `material`, `minimal`
+- **Active**: `base16-darkmoss` colorscheme
+- **Available**: `base16-*` (via base16-nvim), `material`, `minimal`
 
 ---
 
 ## ⌨️ Essential Keymaps
 
-> **Note**: `<leader>` key is `,` by default in AstroNvim
+> **Note**: `<leader>` key is `Space` by default in AstroNvim
 
 ### 📁 File Operations
 | Keymap | Description |

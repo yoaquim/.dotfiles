@@ -74,10 +74,9 @@ ln -sf ~/.dotfiles/config/hammerspoon ~/.config/hammerspoon
 ## 🔧 Configuration
 
 ### 📁 File Location
-- **Config Directory**: `~/.config/hammerspoon/`
+- **Config Directory**: `~/.hammerspoon/`
 - **Source**: `~/.dotfiles/config/hammerspoon/`
-- **Symlinked**: Configuration directory is linked from dotfiles
-- **Legacy Link**: `~/.hammerspoon/` → `~/.config/hammerspoon/` (for compatibility)
+- **Symlinked**: `~/.hammerspoon/` → `~/.dotfiles/config/hammerspoon/`
 
 ### 🎛️ Core Configuration
 ```lua

@@ -76,9 +76,10 @@
 | `cdv` | Go to vim directory | bash_profile_aliases:45 |
 | `cd.` | Go to dotfiles directory | bash_profile_aliases:48 |
 | `cdd` | Go to Desktop | bash_profile_aliases:51 |
-| `cdb` | Go to Dropbox | bash_profile_aliases:54 |
-| `cdp` | Go to Projects | bash_profile_aliases:57 |
-| `cds` | Go to Scratches | bash_profile_aliases:60 |
+| `cdc` | Go to Cave (rclone mount) | bash_profile_aliases:54 |
+| `cdp` | Go to Projects | bash_profile_aliases:59 |
+| `cds` | Go to Scratches | bash_profile_aliases:63 |
+| `cave` | Open Cave in Finder (if mounted) | bash_profile_aliases:57 |
 
 ### File Operations
 | Command | Action | Location |

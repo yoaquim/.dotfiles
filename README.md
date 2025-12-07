@@ -180,14 +180,26 @@ The `install.sh` script provides several installation modes:
     ├── 🔨 hammerspoon/             # Hammerspoon automation
     │   ├── 📄 init.lua             # Hotkey and automation config
     │   └── 📄 README.md            # Hammerspoon user guide
-    ├── 🤖 claude/                  # Claude Code configuration
-    │   ├── 📄 setup.sh             # Claude setup script
-    │   ├── 📁 commands/            # Custom slash commands
-    │   └── 📁 workflow/            # Universal workflows and templates
-    │       ├── 📄 README.md        # Complete workflow documentation
-    │       ├── 📁 sops/            # Standard operating procedures
-    │       └── 📁 templates/       # Project initialization templates
+    ├── 🌐 rclone/                  # rclone cloud storage configuration
+    │   ├── 📄 rclone.conf          # Remote config (no secrets)
+    │   ├── 📄 mount-cave.sh        # Mount script
+    │   ├── 📄 com.rclone.cave.plist # LaunchAgent for auto-mount
+    │   └── 📄 README.md            # rclone setup guide
+    ├── 🔐 ssh/                     # SSH configuration
+    │   └── 📄 config               # SSH config file
     └── 📄 gitconfig                # Git configuration
+└── 📁 claude/                      # Claude Code global configuration
+    ├── 📄 setup.sh                 # Claude setup script
+    ├── 📁 commands/                # Custom slash commands
+    │   ├── 📄 feature.md           # Define feature requirements
+    │   ├── 📄 setup.md             # Project initialization
+    │   ├── 📄 vk-plan.md           # VK Kanban integration
+    │   └── 📁 workflow/            # Workflow commands
+    ├── 📁 vk-tags/                 # Reusable VK task tags
+    └── 📁 workflow/                # Universal workflows and templates
+        ├── 📄 README.md            # Complete workflow documentation
+        ├── 📁 sops/                # Standard operating procedures
+        └── 📁 templates/           # Project initialization templates
 ```
 
 ### 🔗 Symlink Structure
@@ -203,7 +215,9 @@ After installation, configurations are linked to standard locations:
 | `config/gitconfig` | `~/.gitconfig` | Git configuration |
 | `config/nvim/polish.lua` | `~/.config/nvim/lua/polish.lua` | Neovim customizations |
 | `config/nvim/user.lua` | `~/.config/nvim/lua/plugins/user.lua` | Neovim plugins |
-| `config/hammerspoon/` | `~/.config/hammerspoon/` | Hammerspoon automation |
+| `config/hammerspoon/` | `~/.hammerspoon/` | Hammerspoon automation |
+| `config/rclone/` | `~/.config/rclone/` | rclone cloud storage |
+| `config/ssh/config` | `~/.ssh/config` | SSH configuration |
 | `claude/` | `~/.claude/` | Claude Code global configuration |
 
 ---
@@ -324,17 +338,18 @@ This dotfiles setup includes a **custom Claude Code configuration** that provide
 ### 🎯 What's Included
 
 **Custom Slash Commands** (available globally in any project):
-- `/init-project` - Initialize `.agent/` documentation system for new/existing projects
+- `/setup` - Initialize `.agent/` documentation system for new/existing projects
 - `/feature` - Define WHAT to build (feature requirements with EARS format)
-- `/plan-task` - Plan HOW to build it (technical implementation, auto-detects last feature)
-- `/implement-task` - Implement documented tasks with git workflow
-- `/test-task` - Test implementations with automated and manual verification
-- `/complete-task` - Finalize tasks with documentation updates
-- `/fix-bug` - Intelligent bug fixing (quick hotfix or full bug task workflow)
-- `/document-issue` - Document known issues for future reference
-- `/status` - Comprehensive project status report
-- `/review-docs` - Review documentation for accuracy and consistency
-- `/update-doc` - Update project documentation
+- `/vk-plan` - Create VK Kanban planning tickets for features
+- `/workflow:plan-task` - Plan HOW to build it (technical implementation)
+- `/workflow:implement-task` - Implement documented tasks with git workflow
+- `/workflow:test-task` - Test implementations with automated and manual verification
+- `/workflow:complete-task` - Finalize tasks with documentation updates
+- `/workflow:fix-bug` - Intelligent bug fixing (quick hotfix or full bug task workflow)
+- `/workflow:document-issue` - Document known issues for future reference
+- `/workflow:status` - Comprehensive project status report
+- `/workflow:review-docs` - Review documentation for accuracy and consistency
+- `/workflow:update-doc` - Update project documentation
 
 **Universal SOPs** (Standard Operating Procedures):
 - Git workflow and branching strategies
@@ -364,7 +379,7 @@ All slash commands and workflows are immediately available in any project after 
 **Initialize a new project:**
 ```bash
 # In any project directory
-/init-project
+/setup
 ```
 
 This creates a complete `.agent/` documentation system with:
@@ -377,26 +392,26 @@ This creates a complete `.agent/` documentation system with:
 **Define and build a feature:**
 ```bash
 /feature "asset upload"             # Define WHAT to build (user requirements)
-/plan-task                          # Plan HOW to build (auto-uses last feature)
-/implement-task                     # Implement the latest task
-/test-task                          # Test the implementation
-/complete-task                      # Finalize and document
+/workflow:plan-task                 # Plan HOW to build (auto-uses last feature)
+/workflow:implement-task            # Implement the latest task
+/workflow:test-task                 # Test the implementation
+/workflow:complete-task             # Finalize and document
 ```
 
 **Quick feature (skip requirements):**
 ```bash
-/plan-task "simple feature"         # Plan directly without requirements
-/implement-task
+/workflow:plan-task "simple feature"  # Plan directly without requirements
+/workflow:implement-task
 ```
 
 **Quick bug fix:**
 ```bash
-/fix-bug <bug description>          # Intelligently routes to hotfix or full workflow
+/workflow:fix-bug <bug description>   # Intelligently routes to hotfix or full workflow
 ```
 
 **Check project status:**
 ```bash
-/status                             # View tasks, health, and next steps
+/workflow:status                      # View tasks, health, and next steps
 ```
 
 ### 🎨 Customization
@@ -410,7 +425,7 @@ Since the configuration is symlinked from your dotfiles:
 Example - updating a slash command:
 ```bash
 # Edit any slash command
-nvim ~/.dotfiles/claude/commands/fix-bug.md
+nvim ~/.dotfiles/claude/commands/workflow/fix-bug.md
 
 # Changes are immediately available in all projects
 # (start new chat or type / to see updates)

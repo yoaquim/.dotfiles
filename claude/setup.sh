@@ -32,7 +32,7 @@ error() {
 # Banner
 echo ""
 echo "╔════════════════════════════════════════╗"
-echo "║   Claude Code Workflow Setup          ║"
+echo "║   Claude Code Workflow Setup           ║"
 echo "╚════════════════════════════════════════╝"
 echo ""
 
@@ -41,10 +41,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 info "Script location: $SCRIPT_DIR"
 
 # Verify we're in the right place
-if [[ ! -d "$SCRIPT_DIR/commands" ]] || [[ ! -d "$SCRIPT_DIR/workflow" ]] || [[ ! -d "$SCRIPT_DIR/guides" ]]; then
+if [[ ! -d "$SCRIPT_DIR/commands" ]] || [[ ! -d "$SCRIPT_DIR/workflow" ]]; then
     error "Expected structure not found!"
     error "Make sure you're running this from ~/.dotfiles/claude/"
-    error "Required directories: commands/, workflow/, guides/"
+    error "Required directories: commands/, workflow/"
     exit 1
 fi
 
@@ -112,6 +112,34 @@ symlink_directory() {
 }
 
 # ============================================================
+# Helper function to symlink a file
+# ============================================================
+symlink_file() {
+    local SOURCE="$1"
+    local TARGET="$2"
+    local NAME="$3"
+
+    if [[ -L "$TARGET" ]]; then
+        CURRENT_TARGET="$(readlink "$TARGET")"
+        if [[ "$CURRENT_TARGET" == "$SOURCE" ]]; then
+            success "$NAME (already linked)"
+        else
+            rm "$TARGET"
+            ln -s "$SOURCE" "$TARGET"
+            success "$NAME (replaced)"
+        fi
+    elif [[ -f "$TARGET" ]]; then
+        warning "$NAME exists as a file, backing up..."
+        mv "$TARGET" "$TARGET.backup.$(date +%Y%m%d_%H%M%S)"
+        ln -s "$SOURCE" "$TARGET"
+        success "$NAME (backed up and linked)"
+    else
+        ln -s "$SOURCE" "$TARGET"
+        success "$NAME"
+    fi
+}
+
+# ============================================================
 # Step 1: Ensure ~/.claude/commands exists
 # ============================================================
 if [[ ! -d "$HOME/.claude/commands" ]]; then
@@ -120,62 +148,66 @@ if [[ ! -d "$HOME/.claude/commands" ]]; then
 fi
 
 # ============================================================
-# Step 2: Symlink command subdirectories
+# Step 2: Symlink individual command files at root level
 # ============================================================
 echo ""
-info "Symlinking command subdirectories..."
+info "Symlinking root-level commands..."
 
-# Symlink workflow commands
+for cmd_file in "$SCRIPT_DIR/commands"/*.md; do
+    if [[ -f "$cmd_file" ]]; then
+        filename=$(basename "$cmd_file")
+        symlink_file "$cmd_file" "$HOME/.claude/commands/$filename" "$filename"
+    fi
+done
+
+# ============================================================
+# Step 3: Symlink workflow commands subdirectory
+# ============================================================
+echo ""
+info "Symlinking workflow commands..."
+
 symlink_directory "$SCRIPT_DIR/commands/workflow" "$HOME/.claude/commands/workflow" "~/.claude/commands/workflow"
 
-# Symlink VK commands
-symlink_directory "$SCRIPT_DIR/commands/vk" "$HOME/.claude/commands/vk" "~/.claude/commands/vk"
-
 # ============================================================
-# Step 3: Symlink workflow directory
+# Step 4: Symlink vk-tags directory
 # ============================================================
 echo ""
-info "Symlinking workflow directory to ~/.claude/workflow/..."
+info "Symlinking vk-tags..."
+
+symlink_directory "$SCRIPT_DIR/vk-tags" "$HOME/.claude/vk-tags" "~/.claude/vk-tags"
+
+# ============================================================
+# Step 5: Symlink workflow directory (SOPs and templates)
+# ============================================================
+echo ""
+info "Symlinking workflow directory..."
 
 symlink_directory "$SCRIPT_DIR/workflow" "$HOME/.claude/workflow" "~/.claude/workflow"
 
 # ============================================================
-# Step 4: Symlink guides directory
-# ============================================================
-echo ""
-info "Symlinking guides directory to ~/.claude/guides/..."
-
-symlink_directory "$SCRIPT_DIR/guides" "$HOME/.claude/guides" "~/.claude/guides"
-
-# ============================================================
-# Step 5: Verify setup
+# Step 6: Verify setup
 # ============================================================
 echo ""
 info "Verifying setup..."
 
-# Check command subdirectories
-WORKFLOW_OK=false
-VK_OK=false
-
+# Check workflow commands
 if [[ -L "$HOME/.claude/commands/workflow" ]]; then
-    WORKFLOW_COUNT=$(find "$SCRIPT_DIR/commands/workflow" -name "*.md" -type f | wc -l | tr -d ' ')
+    WORKFLOW_COUNT=$(find "$SCRIPT_DIR/commands/workflow" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
     echo "  ✓ Workflow commands symlinked ($WORKFLOW_COUNT commands)"
-    WORKFLOW_OK=true
 else
     error "Workflow commands NOT symlinked"
 fi
 
-if [[ -L "$HOME/.claude/commands/vk" ]]; then
-    VK_COUNT=$(find "$SCRIPT_DIR/commands/vk" -name "*.md" -type f | wc -l | tr -d ' ')
-    echo "  ✓ VK commands symlinked ($VK_COUNT commands)"
-    VK_OK=true
-else
-    error "VK commands NOT symlinked"
-fi
+# Check root commands
+ROOT_CMD_COUNT=$(find "$HOME/.claude/commands" -maxdepth 1 -name "*.md" -type l 2>/dev/null | wc -l | tr -d ' ')
+echo "  ✓ Root commands symlinked ($ROOT_CMD_COUNT commands)"
 
-if [[ "$WORKFLOW_OK" != true ]] || [[ "$VK_OK" != true ]]; then
-    error "Command symlinks incomplete"
-    exit 1
+# Check vk-tags
+if [[ -L "$HOME/.claude/vk-tags" ]]; then
+    VK_TAG_COUNT=$(find "$SCRIPT_DIR/vk-tags" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo "  ✓ VK tags symlinked ($VK_TAG_COUNT tags)"
+else
+    warning "VK tags NOT symlinked"
 fi
 
 # Check workflow
@@ -183,18 +215,10 @@ if [[ -L "$HOME/.claude/workflow" ]]; then
     echo "  ✓ Workflow directory symlinked"
 else
     error "Workflow directory NOT symlinked"
-    exit 1
-fi
-
-# Check guides
-if [[ -L "$HOME/.claude/guides" ]]; then
-    echo "  ✓ Guides directory symlinked"
-else
-    warning "Guides directory NOT symlinked (optional)"
 fi
 
 # ============================================================
-# Step 6: Display what's available
+# Step 7: Display what's available
 # ============================================================
 echo ""
 echo "╔════════════════════════════════════════╗"
@@ -206,78 +230,47 @@ info "Structure created:"
 echo ""
 echo "~/.claude/"
 echo "├── commands/"
-echo "│   ├── workflow/ → $SCRIPT_DIR/commands/workflow"
-echo "│   │   ├── init-project.md"
-echo "│   │   ├── feature.md"
-echo "│   │   ├── plan-task.md"
-echo "│   │   ├── implement-task.md"
-echo "│   │   ├── test-task.md"
-echo "│   │   ├── complete-task.md"
-echo "│   │   ├── fix-bug.md"
-echo "│   │   ├── document-issue.md"
-echo "│   │   ├── review-docs.md"
-echo "│   │   ├── status.md"
-echo "│   │   └── update-doc.md"
-echo "│   └── vk/ → $SCRIPT_DIR/commands/vk"
-echo "│       ├── init.md"
-echo "│       ├── kickoff.md"
-echo "│       ├── feature.md"
-echo "│       ├── plan.md"
-echo "│       ├── prioritize.md"
-echo "│       ├── execute.md"
-echo "│       ├── start.md"
+echo "│   ├── feature.md        → Define feature requirements"
+echo "│   ├── setup.md          → Initialize project"
+echo "│   ├── vk-plan.md        → Create VK planning tickets"
+echo "│   └── workflow/         → Workflow commands"
+echo "│       ├── plan-task.md"
+echo "│       ├── implement-task.md"
+echo "│       ├── test-task.md"
+echo "│       ├── complete-task.md"
+echo "│       ├── fix-bug.md"
+echo "│       ├── document-issue.md"
 echo "│       ├── status.md"
-echo "│       └── sync-docs.md"
-echo "├── workflow/ → $SCRIPT_DIR/workflow"
-echo "│   ├── sops/                  # Universal SOPs"
-echo "│   ├── templates/             # Project templates"
+echo "│       ├── review-docs.md"
+echo "│       └── update-doc.md"
+echo "├── vk-tags/              → Reusable task tags"
+echo "├── workflow/"
+echo "│   ├── sops/             → Universal SOPs"
+echo "│   ├── templates/        → Project templates"
 echo "│   └── README.md"
-echo "├── guides/ → $SCRIPT_DIR/guides"
-echo "│   ├── vk-product-workflow.md # Complete VK guide"
-echo "│   └── vk-execution-model.md  # Tasks vs Attempts"
 echo "└── ... (Claude Code app data)"
 echo ""
 
 info "Available slash commands:"
 echo ""
-echo "Standard Workflow:"
-echo "  /init-project      - Initialize .agent/ for new/existing project"
-echo "  /feature           - Define WHAT to build (feature requirements)"
-echo "  /plan-task         - Plan HOW to build it"
-echo "  /implement-task    - Implement a task"
-echo "  /test-task         - Test implementation"
-echo "  /complete-task     - Finalize and document"
-echo "  /fix-bug           - Quick bug fix"
-echo "  /document-issue    - Document known issue"
-echo "  /status            - Show project status"
+echo "  /setup               - Initialize .agent/ for new/existing project"
+echo "  /feature             - Define WHAT to build (feature requirements)"
+echo "  /vk-plan             - Create VK Kanban planning tickets"
 echo ""
-echo "VK Workflow (Vibe Kanban integration):"
-echo "  /vk:init   - Initialize VK-enabled project"
-echo "  /vk:kickoff        - Complete project kickoff (features → requirements → tasks)"
-echo "  /vk:feature        - Define feature requirements"
-echo "  /vk:plan           - Create VK tasks from feature"
-echo "  /vk:prioritize     - Set dependencies and execution order"
-echo "  /vk:start          - Start ready tasks (smart orchestration)"
-echo "  /vk:execute        - Start single task manually"
-echo "  /vk:status         - Check VK progress and readiness"
-echo "  /vk:sync-docs      - Sync documentation"
+echo "  /workflow:plan-task      - Plan HOW to build it"
+echo "  /workflow:implement-task - Implement a task"
+echo "  /workflow:test-task      - Test implementation"
+echo "  /workflow:complete-task  - Finalize and document"
+echo "  /workflow:fix-bug        - Quick bug fix"
+echo "  /workflow:document-issue - Document known issue"
+echo "  /workflow:status         - Show project status"
+echo "  /workflow:review-docs    - Review documentation"
+echo "  /workflow:update-doc     - Update documentation"
 echo ""
 
-info "Documentation:"
+info "Typical workflow:"
 echo ""
-echo "  ~/.claude/guides/vk-product-workflow.md  - Complete VK workflow guide"
-echo "  ~/.claude/guides/vk-execution-model.md   - Tasks vs Attempts explained"
-echo "  ~/.claude/workflow/README.md             - Standard workflow docs"
-echo "  ~/.claude/workflow/sops/                 - Universal SOPs"
-echo ""
-
-info "Typical workflows:"
-echo ""
-echo "Standard (manual):"
-echo "  /init-project → /feature → /plan-task → /implement-task → /test-task → /complete-task"
-echo ""
-echo "VK (orchestrated):"
-echo "  /vk:init → /vk:kickoff → /vk:prioritize → /vk:start --watch"
+echo "  /setup → /feature → /workflow:plan-task → /workflow:implement-task → /workflow:test-task → /workflow:complete-task"
 echo ""
 
 success "Setup complete! Happy coding!"

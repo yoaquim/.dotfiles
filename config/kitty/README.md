@@ -50,7 +50,7 @@
 ### 🔤 Font Settings
 | Setting | Value | Description |
 |---------|-------|-------------|
-| **Font Family** | `JetBrainsMono Nerd Font Mono` | Main font with programming ligatures |
+| **Font Family** | `CaskaydiaCove Nerd Font Mono` | Main font with programming ligatures |
 | **Font Size** | `13` | Comfortable reading size |
 | **Bold Font** | `auto` | Automatic bold variant |
 | **Italic Font** | `auto` | Automatic italic variant |
@@ -68,7 +68,7 @@
 ### 📜 Scrollback Configuration
 | Setting | Value | Description |
 |---------|-------|-------------|
-| **Scrollback Lines** | `10,000` | Large history buffer |
+| **Scrollback Lines** | `50,000` | Large history buffer |
 | **Scrollback Pager** | `less` | Use less for viewing history |
 | **Wheel Scroll Multiplier** | `5.0` | Faster scrolling |
 

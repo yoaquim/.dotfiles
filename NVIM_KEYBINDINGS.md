@@ -191,7 +191,7 @@
 
 ### Custom Settings
 - **Clipboard**: Explicitly disabled system clipboard integration - must use `<leader>y/p` for system clipboard
-- **Color scheme**: material-oceanic theme with transparent background
+- **Color scheme**: base16-darkmoss theme with transparent background
 - **Indentation**: 2 spaces (expandtab, softtabstop=2, shiftwidth=2)
 - **Line numbers**: Absolute line numbers (relativenumber=false)
 - **Mouse**: Enabled
@@ -205,8 +205,9 @@
 - **Neotest**: Supports Python (pytest), Jest, and Vitest
 
 ### Available Color Schemes
-- material-oceanic (active)
-- base16-nvim
+- base16-darkmoss (active)
+- base16-nvim (other base16 themes available)
+- material.nvim
 - minimal.nvim
 
 ## Tips
