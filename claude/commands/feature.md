@@ -1,5 +1,5 @@
 ---
-description: Define feature requirements through interactive conversation (VK workflow)
+description: Define feature requirements through interactive conversation
 argument-hint: <feature description>
 allowed-tools: Read, Write, Edit, AskUserQuestion, Glob, Bash(ls*), Bash(cp*), Bash(mkdir*)
 ---
@@ -18,11 +18,9 @@ You are a requirements gathering specialist. Your goal is to help users define *
 
 If `.agent/` directory doesn't exist:
 ```
-⚠️ No .agent/ directory found.
+This project doesn't have a .agent/ directory.
 
-Please run /init-project first to set up the project structure.
-
-/init-project will create the necessary documentation system including the features/ directory.
+Please run /setup first to initialize the project structure.
 ```
 
 Exit if `.agent/` doesn't exist.
@@ -50,7 +48,7 @@ If detailed notes are provided:
 
 **Acknowledge the context:**
 ```
-📋 FEATURE REQUIREMENTS GATHERING
+FEATURE REQUIREMENTS GATHERING
 
 Feature: [user's description]
 
@@ -123,7 +121,7 @@ This will take 5-10 minutes of conversation. Ready to start?
 Summarize findings and confirm:
 
 ```
-📋 REQUIREMENTS SUMMARY
+REQUIREMENTS SUMMARY
 
 **Problem:**
 [What we're solving]
@@ -209,7 +207,7 @@ cp /path/to/diagram.jpg .agent/features/NNN-feature-name/images/
 ```markdown
 # Feature: [Feature Name]
 
-**Status**: 📋 Defined
+**Status**: Defined
 **Defined**: [Today's date]
 **Priority**: [High/Medium/Low based on conversation]
 
@@ -414,10 +412,15 @@ These should be answered before implementation planning.
 
 ## Next Steps
 
-1. Review and validate these requirements with stakeholders
-2. Run `/plan-task` to create technical implementation plan
-3. Break into tasks if needed
-4. Begin implementation with `/implement-task`
+**For VK workflow:**
+1. Create a VK ticket referencing this feature doc
+2. VK will break this into numbered subtasks
+3. VK handles implementation orchestration
+
+**For local workflow:**
+1. Run `/workflow:plan-task` to create implementation plan
+2. This will create a task doc in `.agent/tasks/`
+3. Run `/workflow:implement-task` to start building
 
 ---
 
@@ -451,21 +454,21 @@ Write the directory name (e.g., `001-feature-name`) without the `.md` extension:
 echo "NNN-feature-name" > .agent/.last-feature
 ```
 
-This allows `/plan-task` to auto-detect the last feature defined.
+This allows `/workflow:plan-task` to auto-detect the last feature defined.
 
 ---
 
 ## Step 8: Report Completion
 
 ```
-✅ FEATURE REQUIREMENTS DOCUMENTED
+FEATURE REQUIREMENTS DOCUMENTED
 
-📁 Feature Directory: .agent/features/NNN-feature-name/
-📄 Requirements: .agent/features/NNN-feature-name/README.md
-🖼️  Images: [X images in images/ directory] (if applicable)
-📋 Status: Defined
-🎯 Priority: [Priority]
-🔢 Feature Number: NNN (chronological order)
+Feature Directory: .agent/features/NNN-feature-name/
+Requirements: .agent/features/NNN-feature-name/README.md
+Images: [X images in images/ directory] (if applicable)
+Status: Defined
+Priority: [Priority]
+Feature Number: NNN (chronological order)
 
 **What's Captured:**
 - [X] User roles and personas
@@ -478,26 +481,14 @@ This allows `/plan-task` to auto-detect the last feature defined.
 
 **Next Steps:**
 
-1. **Review the requirements**
-   - Read .agent/features/NNN-feature-name/README.md
-   - View images in .agent/features/NNN-feature-name/images/
-   - Validate with stakeholders if needed
-   - Clarify any open questions
+For VK workflow:
+  1. Create VK ticket: "Read .agent/features/NNN-feature-name/README.md and break into subtasks"
+  2. VK will create numbered implementation tasks
+  3. VK handles execution
 
-2. **Plan the implementation**
-   - Run `/plan-task` to create technical plan
-   - This will reference the feature requirements
-   - May result in one or multiple tasks
-
-4. **Start building**
-   - Run `/implement-task` once tasks are planned
-   - Requirements doc will guide development
-   - Use as reference for testing
-
-**Commands:**
-```
-/plan-task                 # Auto-uses this feature
-/plan-task "specific"      # Or specify task name
+For local workflow:
+  /workflow:plan-task              # Auto-uses this feature
+  /workflow:plan-task "specific"   # Or specify task name
 ```
 
 ---
@@ -505,23 +496,23 @@ This allows `/plan-task` to auto-detect the last feature defined.
 ## Best Practices
 
 ### DO:
-✅ Focus on WHAT users need, not HOW to implement
-✅ Ask questions until requirements are testable
-✅ Use EARS format for clear acceptance criteria
-✅ Identify edge cases and constraints upfront
-✅ Make success measurable
-✅ Define what's out of scope
-✅ Include visual materials (mockups, diagrams) when helpful
-✅ Adapt questions based on context already provided
+- Focus on WHAT users need, not HOW to implement
+- Ask questions until requirements are testable
+- Use EARS format for clear acceptance criteria
+- Identify edge cases and constraints upfront
+- Make success measurable
+- Define what's out of scope
+- Include visual materials (mockups, diagrams) when helpful
+- Adapt questions based on context already provided
 
 ### DON'T:
-❌ Jump to implementation details
-❌ Assume you know what users want
-❌ Skip edge cases
-❌ Make requirements vague or untestable
-❌ Forget to define success metrics
-❌ Let scope creep happen
-❌ Ignore context/images the user provides
+- Jump to implementation details
+- Assume you know what users want
+- Skip edge cases
+- Make requirements vague or untestable
+- Forget to define success metrics
+- Let scope creep happen
+- Ignore context/images the user provides
 
 ---
 
@@ -535,12 +526,12 @@ This allows `/plan-task` to auto-detect the last feature defined.
 - **Testable**: Can write tests to verify
 
 **Use concrete examples:**
-- ✅ "Upload fails if file > 100MB"
-- ❌ "Upload has size limits"
+- "Upload fails if file > 100MB"
+- NOT "Upload has size limits"
 
 **Focus on user value:**
-- ✅ "So users can share large media files"
-- ❌ "Because we need file upload"
+- "So users can share large media files"
+- NOT "Because we need file upload"
 
 **Be complete but concise:**
 - Capture everything important
@@ -575,13 +566,13 @@ This allows `/plan-task` to auto-detect the last feature defined.
 
 ---
 
-## Integration with Workflow
+## Integration with Workflows
 
 **This feature doc feeds into:**
-1. `/plan-task` - Technical planning references requirements
-2. `/implement-task` - Implementation uses requirements as guide
-3. `/test-task` - Tests verify acceptance criteria
-4. `/complete-task` - Completion confirms requirements met
+1. VK tickets - VK reads this and creates subtasks
+2. `/workflow:plan-task` - Creates local implementation plan
+3. `/workflow:implement-task` - Implementation uses requirements as guide
+4. Testing - Tests verify acceptance criteria
 
 **The requirements doc is the source of truth for WHAT to build.**
 
@@ -593,4 +584,4 @@ This allows `/plan-task` to auto-detect the last feature defined.
 - **Chronological order**: Numbers represent order of creation
 - **Loose priority**: Earlier numbers roughly indicate higher priority
 - **Zero-padded**: Ensures proper sorting in file listings
-- **Flexible**: Work on features in any order; manually reorder directories if needed (rare)
+- **Flexible**: Work on features in any order
