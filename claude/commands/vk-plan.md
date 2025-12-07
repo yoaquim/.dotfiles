@@ -96,6 +96,7 @@ If multiple projects or none found, ask the user to confirm.
 **Feature Directory:** `.agent/features/{num}-{name}/`
 **Requirements:** `.agent/features/{num}-{name}/README.md`
 **Images:** `.agent/features/{num}-{name}/images/` (if exists)
+**Tag Templates:** `~/.claude/vk-tags/` (for task context)
 
 ---
 
@@ -103,8 +104,31 @@ If multiple projects or none found, ask the user to confirm.
 
 1. **Read** the feature document at `.agent/features/{num}-{name}/README.md`
 2. **Review** any images/mockups in `.agent/features/{num}-{name}/images/`
-3. **Analyze** requirements and identify logical task breakdown
-4. **Create tasks** via VK MCP with proper numbering and dependencies
+3. **Read** relevant tag templates from `~/.claude/vk-tags/` for task context
+4. **Analyze** requirements and identify logical task breakdown
+5. **Create tasks** via VK MCP with proper numbering, dependencies, and **embedded tag content**
+
+---
+
+## IMPORTANT: Tag Content Embedding
+
+VK tags (`@tag-name`) do NOT auto-expand when creating tasks via MCP.
+
+**You MUST read the tag files and include their content directly in task descriptions.**
+
+Tag files location: `~/.claude/vk-tags/`
+
+Available tags:
+- `git-workflow.md` - Include in ALL tasks
+- `django-patterns.md` - Django code changes
+- `tailwind-utilities.md` - UI/CSS work
+- `permission-checks.md` - Auth/permissions
+- `testing-requirements.md` - Code needing tests
+- `add_unit_tests.md` - Test-only tasks
+- `bug_analysis.md` - Bug fixes
+- `code_refactoring.md` - Refactoring
+
+**Example:** Instead of just writing `@git-workflow`, read `~/.claude/vk-tags/git-workflow.md` and include its content in the task description.
 
 ---
 
