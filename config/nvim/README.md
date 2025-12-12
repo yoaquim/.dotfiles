@@ -18,14 +18,27 @@
 
 ### First-Time Setup
 
-1. **Install AstroNvim** (if not already installed):
+**Recommended**: Use the automated setup script (requires SSH keys for GitHub):
+```bash
+cd ~/.dotfiles
+bash ./setup-astronvim.sh
+```
+
+> **Note**: This script requires SSH keys (`~/.ssh/git` and `~/.ssh/git.pub`) to be configured.
+> See the main README.md troubleshooting section for SSH key setup instructions.
+
+**Manual installation** (alternative):
+
+1. **Install AstroNvim**:
    ```bash
    git clone --depth 1 https://github.com/AstroNvim/template ~/.config/nvim
+   rm -rf ~/.config/nvim/.git
    ```
 
 2. **Symlink your config**:
    ```bash
    ln -sf ~/.dotfiles/config/nvim/polish.lua ~/.config/nvim/lua/polish.lua
+   mkdir -p ~/.config/nvim/lua/plugins
    ln -sf ~/.dotfiles/config/nvim/user.lua ~/.config/nvim/lua/plugins/user.lua
    ```
 

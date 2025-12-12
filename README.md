@@ -24,7 +24,7 @@
 - **Command Line Tools** for Xcode
 - **Internet connection** for downloading tools
 
-### Two-Step Installation
+### Three-Step Installation
 
 #### Step 1: Core Installation
 ```bash
@@ -38,6 +38,15 @@ cd ~ && git clone https://github.com/yoaquim/.dotfiles.git && cd .dotfiles && ba
 bash ./post-setup.sh
 ```
 
+#### Step 3: AstroNvim Setup (requires SSH keys)
+```bash
+# Setup AstroNvim for Neovim (requires SSH keys configured for GitHub)
+bash ./setup-astronvim.sh
+```
+
+> **Note**: Step 3 requires SSH keys (`~/.ssh/git` and `~/.ssh/git.pub`) to be configured
+> and added to your GitHub account. The script will check for these before proceeding.
+
 ### Manual Installation
 ```bash
 # 1. Clone the repository
@@ -50,6 +59,9 @@ bash ./install.sh
 
 # 3. Setup language environments (use bash explicitly)
 bash ./post-setup.sh
+
+# 4. Setup AstroNvim (requires SSH keys for GitHub)
+bash ./setup-astronvim.sh
 ```
 
 ---
@@ -128,7 +140,6 @@ The `install.sh` script provides several installation modes:
 #### 5. **Plugin Installation**
 - Installs tmux plugin manager (TPM)
 - Clones Base16 color schemes
-- Sets up AstroNvim configuration
 
 #### 6. **Language Setup**
 - Installs latest Node.js LTS via nvm
@@ -140,6 +151,12 @@ The `install.sh` script provides several installation modes:
 - Installs Claude Code CLI
 - Completes environment setup
 
+#### 8. **AstroNvim Setup** (separate script)
+- Run `bash ./setup-astronvim.sh` after SSH keys are configured
+- Checks for SSH keys (`~/.ssh/git` and `~/.ssh/git.pub`)
+- Clones AstroNvim template
+- Links custom polish.lua and user.lua configurations
+
 ---
 
 ## 📁 Configuration Structure
@@ -150,6 +167,7 @@ The `install.sh` script provides several installation modes:
 ├── 📄 README.md                    # This comprehensive guide
 ├── 🚀 install.sh                   # Automated installation script
 ├── 🚀 post-setup.sh                # Language environment setup script
+├── 🚀 setup-astronvim.sh           # AstroNvim setup script (requires SSH)
 ├── 🔧 change-shell.sh              # Shell change helper script
 ├── 🙈 .gitignore                   # Git ignore rules
 └── 📁 config/                      # Configuration files
@@ -610,7 +628,7 @@ git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
 ` I
 ```
 
-#### **Neovim Configuration Issues**
+#### **Neovim/AstroNvim Configuration Issues**
 ```bash
 # Check AstroNvim installation
 ls -la ~/.config/nvim
@@ -619,8 +637,30 @@ ls -la ~/.config/nvim
 ls -la ~/.config/nvim/lua/polish.lua
 ls -la ~/.config/nvim/lua/plugins/user.lua
 
-# Reinstall AstroNvim
-./install.sh --reinstall
+# Reinstall AstroNvim (requires SSH keys)
+bash ./setup-astronvim.sh --force
+```
+
+#### **AstroNvim Clone Fails (SSH Issues)**
+```bash
+# Check SSH keys exist
+ls -la ~/.ssh/git*
+
+# Test GitHub SSH connection
+ssh -T git@github.com
+
+# If SSH is not configured, generate keys
+ssh-keygen -t ed25519 -f ~/.ssh/git -C "your_email@example.com"
+
+# Add key to ssh-agent
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/git
+
+# Add public key to GitHub: https://github.com/settings/keys
+cat ~/.ssh/git.pub
+
+# Then retry AstroNvim setup
+bash ./setup-astronvim.sh
 ```
 
 #### **Font Issues**

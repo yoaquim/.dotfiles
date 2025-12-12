@@ -261,40 +261,6 @@ EOF
 }
 
 # ───────────────────────────────────────────────────
-# AstroNvim Compatibility Check
-# ───────────────────────────────────────────────────
-
-check_astronvim_compatibility() {
-    print_info "Checking AstroNvim compatibility with language environments"
-    
-    # Check if AstroNvim is installed
-    local nvim_config_dir="$HOME/.config/nvim"
-    if [[ ! -d "${nvim_config_dir}" ]]; then
-        print_warning "AstroNvim not found. This is fine - you can install it later."
-        return 0
-    fi
-    
-    # Check Node.js availability
-    if command -v node &> /dev/null; then
-        local node_version="$(node --version)"
-        print_success "Node.js ${node_version} is available for AstroNvim"
-    else
-        print_warning "Node.js not available. Some AstroNvim features may not work."
-    fi
-    
-    # Check Python availability
-    if command -v python &> /dev/null; then
-        local python_version="$(python --version)"
-        print_success "Python ${python_version} is available for AstroNvim"
-    else
-        print_warning "Python not available. Some AstroNvim features may not work."
-    fi
-    
-    print_info "AstroNvim compatibility check complete"
-    print_info "Note: AstroNvim will automatically detect and use the language versions when you run nvim"
-}
-
-# ───────────────────────────────────────────────────
 # Claude Code Installation
 # ───────────────────────────────────────────────────
 
@@ -329,125 +295,6 @@ install_claude_code() {
     fi
 }
 
-
-# ───────────────────────────────────────────────────
-# Utility Functions (needed for AstroNvim setup)
-# ───────────────────────────────────────────────────
-
-backup_directory() {
-    local dir="${1}"
-    if [[ -d "${dir}" ]]; then
-        local backup="${dir}.backup.$(date +%Y%m%d_%H%M%S)"
-        print_info "Backing up '${dir}' to '${backup}'"
-        mv "${dir}" "${backup}"
-        print_success "Backup created at '${backup}'"
-    fi
-}
-
-create_symlink() {
-    local source="${1}"
-    local target="${2}"
-    local force="${3:-false}"
-    
-    # Create parent directory if it doesn't exist
-    local parent_dir="$(dirname "${target}")"
-    if [[ ! -d "${parent_dir}" ]]; then
-        mkdir -p "${parent_dir}"
-    fi
-    
-    # Remove existing file/symlink if force is true
-    if [[ "${force}" == "true" ]] && [[ -e "${target}" || -L "${target}" ]]; then
-        rm -f "${target}"
-    fi
-    
-    # Create symlink if it doesn't exist
-    if [[ ! -e "${target}" ]]; then
-        ln -s "${source}" "${target}"
-        print_success "Created symlink: ${target} -> ${source}"
-    else
-        print_info "Symlink already exists: ${target}"
-    fi
-}
-
-confirm_action() {
-    local message="${1}"
-    local response
-    
-    if [[ "${FORCE_REINSTALL:-false}" == "true" ]]; then
-        return 0
-    fi
-    
-    if supports_color; then
-        printf "\n\033[1;33m[CONFIRM]\033[0m %s (y/N): " "${message}"
-    else
-        printf "\n[CONFIRM] %s (y/N): " "${message}"
-    fi
-    read -r response
-    
-    if [[ "${response}" =~ ^[Yy]$ ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-# ───────────────────────────────────────────────────
-# AstroNvim Installation (moved from install.sh - requires Node.js/npm)
-# ───────────────────────────────────────────────────
-
-install_astronvim() {
-    print_info "Installing AstroNvim"
-    
-    local nvim_config_dir="$HOME/.config/nvim"
-    
-    # Backup existing Neovim configuration
-    if [[ -d "${nvim_config_dir}" ]]; then
-        if [[ "${FORCE_REINSTALL:-false}" == "true" ]] || confirm_action "Existing Neovim config found. Backup and replace?"; then
-            backup_directory "${nvim_config_dir}"
-            rm -rf "${nvim_config_dir}"
-        else
-            print_info "Keeping existing Neovim configuration"
-            return 0
-        fi
-    fi
-    
-    # Install AstroNvim
-    print_info "Cloning AstroNvim repository"
-    if ! git clone --depth 1 https://github.com/AstroNvim/template "${nvim_config_dir}"; then
-        print_warning "Failed to clone AstroNvim - Neovim setup incomplete"
-        return 1
-    fi
-    
-    # Remove the template's .git directory to make it your own
-    rm -rf "${nvim_config_dir}/.git"
-    
-    print_success "AstroNvim installed successfully"
-}
-
-setup_astronvim_config() {
-    print_info "Setting up AstroNvim configuration"
-    
-    local nvim_config_dir="$HOME/.config/nvim"
-    local lua_dir="${nvim_config_dir}/lua"
-    
-    # Create lua directory if it doesn't exist
-    mkdir -p "${lua_dir}"
-    mkdir -p "${lua_dir}/plugins"
-    
-    # Link polish.lua and user.lua from dotfiles
-    create_symlink "${SCRIPT_DIR}/config/nvim/polish.lua" "${lua_dir}/polish.lua" true
-    create_symlink "${SCRIPT_DIR}/config/nvim/user.lua" "${lua_dir}/plugins/user.lua" true
-    
-    print_success "AstroNvim configuration setup complete"
-}
-
-setup_astronvim() {
-    install_astronvim
-    setup_astronvim_config
-    
-    print_info "AstroNvim setup complete. Run 'nvim' to finish plugin installation."
-}
-
 # ───────────────────────────────────────────────────
 # Final Instructions
 # ───────────────────────────────────────────────────
@@ -465,8 +312,9 @@ show_final_instructions() {
         printf "   \033[32mpython --version && pip --version\033[0m\n"
         printf "\n\033[1;34m3. Configure Claude Code:\033[0m\n"
         printf "   \033[32mclaude auth login\033[0m\n"
-        printf "\n\033[1;34m4. AstroNvim is now set up - run 'nvim' to complete plugin installation\033[0m\n"
-        printf "\n\033[1;35mEnjoy your complete development environment! 🚀\033[0m\n\n"
+        printf "\n\033[1;34m4. Set up AstroNvim (requires SSH keys for GitHub):\033[0m\n"
+        printf "   \033[32mbash ./setup-astronvim.sh\033[0m\n"
+        printf "\n\033[1;35mEnjoy your development environment!\033[0m\n\n"
     else
         echo ""
         echo "=============================================================================="
@@ -485,9 +333,10 @@ show_final_instructions() {
         echo "3. Configure Claude Code:"
         echo "   claude auth login"
         echo ""
-        echo "4. AstroNvim is now set up - run 'nvim' to complete plugin installation"
+        echo "4. Set up AstroNvim (requires SSH keys for GitHub):"
+        echo "   bash ./setup-astronvim.sh"
         echo ""
-        echo "Enjoy your complete development environment!"
+        echo "Enjoy your development environment!"
         echo ""
     fi
 }
@@ -498,17 +347,17 @@ show_final_instructions() {
 
 main() {
     print_info "Starting language environment setup"
-    
+
     # Validate environment
     check_os
-    
+
     # Install language managers
     if install_language_managers; then
         # Setup Node.js with nvm
         if command -v brew &> /dev/null && brew list --formula nvm &> /dev/null; then
             setup_nvm || print_warning "Node.js setup failed - continuing without Node.js"
         fi
-        
+
         # Setup Python with pyenv
         if command -v brew &> /dev/null && brew list --formula pyenv &> /dev/null; then
             setup_pyenv || print_warning "Python setup failed - continuing without Python"
@@ -516,15 +365,9 @@ main() {
     else
         print_warning "Language manager installation failed - skipping language setup"
     fi
-    
-    # Setup AstroNvim now that Node.js/npm/Python are available
-    setup_astronvim || print_warning "AstroNvim setup failed - continuing"
-    
-    # Check AstroNvim compatibility
-    check_astronvim_compatibility
-    
+
     print_success "Language environment setup complete"
-    
+
     # Show final setup instructions
     show_final_instructions
 }
