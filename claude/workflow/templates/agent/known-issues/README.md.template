@@ -21,19 +21,16 @@ Document an issue when:
 
 ## Known Issues Index
 
+_No issues documented yet._
+
+<!-- Example entry format:
 ### 01 - [Issue Name](./01-issue-name.md)
 **Tags**: [tag1, tag2, tag3]
 **Severity**: High | Medium | Low
 **Status**: ✅ Fixed | ⚠️ Workaround | 🔄 In Progress
 
 Brief one-line description of the issue.
-
-### 02 - [Issue Name](./02-issue-name.md)
-**Tags**: [tag1, tag2, tag3]
-**Severity**: High | Medium | Low
-**Status**: ✅ Fixed | ⚠️ Workaround | 🔄 In Progress
-
-Brief one-line description of the issue.
+-->
 
 ---
 

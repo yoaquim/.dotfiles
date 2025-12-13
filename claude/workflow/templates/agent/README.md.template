@@ -9,8 +9,12 @@ This directory contains all critical documentation for the project.
 - [Architecture](./system/architecture.md) - Technical architecture and design decisions
 
 ### Tasks & Features
-- [000 - Initial Setup](./tasks/000-initial-setup.md) - ✅ Project initialization and environment setup
+- [000 - Initial Setup](./tasks/000-initial-setup.md) - ✅ Project scaffolded
 - [Task Template](./task-template.md) - Template for creating new task documents
+
+### Feature Requirements
+- Features defined in `./features/NNN-feature-name/README.md`
+- Use `/feature <description>` to define new features
 
 ### Standard Operating Procedures
 

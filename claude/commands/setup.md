@@ -9,10 +9,11 @@ You are setting up a new project with proper scaffolding and documentation.
 1. Gathers project info through interactive questions
 2. Creates project config files (package.json, requirements.txt, etc.)
 3. Asks before running install commands
-4. Creates `.agent/` documentation structure
-5. Creates `docs/` directory for user context
-6. Creates `CLAUDE.md` project instructions
-7. Optionally initializes git
+4. Creates `.agent/` documentation structure **from templates**
+5. Creates `CLAUDE.md` project instructions
+6. Optionally initializes git
+
+**Templates Location:** `~/.claude/workflow/templates/`
 
 ---
 
@@ -56,7 +57,34 @@ If user chooses A, backup `.agent/` to `.agent.backup.[timestamp]/`.
 
 ---
 
-## Step 2: Interactive Questions
+## Step 2: Verify Templates Exist
+
+**CRITICAL: Check that templates are available:**
+
+```bash
+ls -la ~/.claude/workflow/templates/
+ls -la ~/.claude/workflow/templates/agent/
+```
+
+If templates don't exist, show error:
+```
+ERROR: Templates not found at ~/.claude/workflow/templates/
+
+The workflow templates are required for /setup.
+
+Please ensure your dotfiles are properly installed with:
+  ~/.claude/workflow/templates/agent/README.md.template
+  ~/.claude/workflow/templates/agent/system/overview.md.template
+  ~/.claude/workflow/templates/agent/system/architecture.md.template
+  ~/.claude/workflow/templates/agent/known-issues/README.md.template
+  ~/.claude/workflow/templates/agent/sops/README.md.template
+  ~/.claude/workflow/templates/agent/task-template.md
+  ~/.claude/workflow/templates/CLAUDE.md.template
+```
+
+---
+
+## Step 3: Interactive Questions
 
 Use AskUserQuestion to gather project configuration:
 
@@ -142,8 +170,6 @@ options:
     description: "PostgreSQL relational database"
   - label: "MySQL"
     description: "MySQL relational database"
-  - label: "MongoDB"
-    description: "MongoDB document database"
   - label: "SQLite"
     description: "SQLite file database"
   - label: "None"
@@ -161,20 +187,22 @@ options:
     description: "No containerization"
 ```
 
-**Question 6: Local Tasks**
+**Question 6: Task Management Workflow**
 ```
-question: "Use local task management?"
-header: "Tasks"
+question: "How will you manage tasks?"
+header: "Workflow"
 options:
-  - label: "Yes"
-    description: "Create .agent/tasks/ for /workflow:plan-task"
-  - label: "No"
-    description: "Skip (I use VK or other task management)"
+  - label: "VK (Vibe Kanban)"
+    description: "Use VK for task management - skip local .agent/tasks/"
+  - label: "Local Tasks"
+    description: "Use local .agent/tasks/ with /workflow commands"
+  - label: "Both"
+    description: "Create .agent/tasks/ but primarily use VK"
 ```
 
 ---
 
-## Step 3: Gather Product Vision
+## Step 4: Gather Product Vision
 
 Ask for product context:
 
@@ -194,7 +222,7 @@ Store the responses for documentation.
 
 ---
 
-## Step 4: Confirm Configuration
+## Step 5: Confirm Configuration
 
 ```
 PROJECT CONFIGURATION
@@ -204,7 +232,7 @@ Language: [language]
 Framework: [framework]
 Database: [database]
 Docker: [Yes/No]
-Local Tasks: [Yes/No]
+Task Management: [VK / Local Tasks / Both]
 
 Product Vision:
 [captured description]
@@ -218,11 +246,11 @@ If "yes", proceed.
 
 ---
 
-## Step 5: Create Project Files
+## Step 6: Create Project Files
 
 Based on configuration, create the appropriate files.
 
-### 5.1 TypeScript/JavaScript Projects
+### 6.1 TypeScript/JavaScript Projects
 
 **If package.json doesn't exist:**
 
@@ -326,7 +354,7 @@ app.listen(PORT, () => {
 
 Add express to dependencies list.
 
-### 5.2 Python Projects
+### 6.2 Python Projects
 
 **Create requirements.txt:**
 ```
@@ -400,7 +428,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 ```
 
-### 5.3 Go Projects
+### 6.3 Go Projects
 
 **Create go.mod:**
 ```bash
@@ -452,7 +480,7 @@ func main() {
 }
 ```
 
-### 5.4 Database Configuration
+### 6.4 Database Configuration
 
 **If database selected, create `.env.example`:**
 
@@ -472,17 +500,12 @@ MYSQL_PASSWORD=password
 MYSQL_DATABASE=[project_name]
 ```
 
-For MongoDB:
-```
-DATABASE_URL=mongodb://localhost:27017/[project_name]
-```
-
 For SQLite:
 ```
 DATABASE_URL=sqlite:///./[project_name].db
 ```
 
-### 5.5 Docker Configuration
+### 6.5 Docker Configuration
 
 **If Docker selected, create `Dockerfile`:**
 
@@ -573,7 +596,7 @@ volumes:
 
 ---
 
-## Step 6: Ask to Run Install Commands
+## Step 7: Ask to Run Install Commands
 
 **Present the commands that need to run:**
 
@@ -617,303 +640,186 @@ Run these commands now? (yes/no/skip)
 
 ---
 
-## Step 7: Create Documentation Structure
+## Step 8: Create .agent/ Documentation Structure FROM TEMPLATES
 
-**Create directories:**
+**CRITICAL: This step uses the templates from `~/.claude/workflow/templates/`**
+
+### 8.1 Create Directory Structure
+
 ```bash
 mkdir -p .agent/features
 mkdir -p .agent/system
+mkdir -p .agent/sops
 mkdir -p .agent/known-issues
-mkdir -p docs
 ```
 
-**If local tasks enabled:**
+**If Local Tasks or Both workflow:**
 ```bash
 mkdir -p .agent/tasks
 ```
 
-**Create `.agent/README.md`:**
-```markdown
-# [Project Name] Documentation
+### 8.2 Prepare Template Variables
 
-This directory contains project documentation for Claude Code.
+Before copying templates, prepare the variable substitutions:
 
-## Structure
+| Variable | Value |
+|----------|-------|
+| `{{PROJECT_NAME}}` | [User's project name] |
+| `{{LANGUAGE}}` | [Selected language] |
+| `{{FRAMEWORK}}` | [Selected framework or "None"] |
+| `{{FRAMEWORK_LOWER}}` | [lowercase framework name, e.g., "django", "fastapi"] |
+| `{{DATABASE}}` | [Selected database or "None"] |
+| `{{CONTAINER_PLATFORM}}` | "Docker" or "None" |
+| `{{TEST_FRAMEWORK}}` | [Appropriate test framework: pytest, jest, go test] |
+| `{{DEV_COMMAND}}` | [Development command based on stack] |
+| `{{TEST_COMMAND}}` | [Test command based on stack] |
+| `{{BUILD_COMMAND}}` | [Build command based on stack] |
+| `{{INIT_DATE}}` | [Today's date: YYYY-MM-DD] |
 
-- `features/` - Feature requirements (created by /feature)
-- `system/` - System documentation (overview, architecture)
-- `known-issues/` - Documented issues and troubleshooting
-[- `tasks/` - Task documents (created by /workflow:plan-task)] (if local tasks)
+**Determine commands based on stack:**
 
-## Quick Links
+For TypeScript/JavaScript:
+- DEV_COMMAND: `npm run dev`
+- TEST_COMMAND: `npm test`
+- BUILD_COMMAND: `npm run build`
+- TEST_FRAMEWORK: `jest`
 
-- [Overview](./system/overview.md) - Project goals and tech stack
-- [Architecture](./system/architecture.md) - Technical architecture
+For Python:
+- DEV_COMMAND: `python manage.py runserver` (Django) or `uvicorn src.main:app --reload` (FastAPI) or `flask run` (Flask)
+- TEST_COMMAND: `pytest`
+- BUILD_COMMAND: `# No build step`
+- TEST_FRAMEWORK: `pytest`
 
-## Workflow
+For Go:
+- DEV_COMMAND: `go run cmd/[project]/main.go`
+- TEST_COMMAND: `go test ./...`
+- BUILD_COMMAND: `go build ./...`
+- TEST_FRAMEWORK: `go test`
 
-**Define a feature:**
-```
-/feature <description>
-```
+### 8.3 Copy and Process Templates
 
-**For VK workflow:**
-1. Create VK ticket referencing `.agent/features/NNN-feature-name/README.md`
-2. VK breaks into subtasks and executes
+**Read each template, replace variables, and write to destination:**
 
-**For local workflow:**
-```
-/workflow:plan-task      # Create implementation plan
-/workflow:implement-task # Execute task
-/workflow:test-task      # Test implementation
-/workflow:complete-task  # Finalize
-```
+1. **`.agent/README.md`** from `~/.claude/workflow/templates/agent/README.md.template`
+   - Replace all `{{VARIABLE}}` placeholders
+   - If VK-only workflow, remove/modify the tasks section references
 
-## Related Commands
+2. **`.agent/system/overview.md`** from `~/.claude/workflow/templates/agent/system/overview.md.template`
+   - Replace variables
+   - Fill in the "Project Description" section with user's product vision
+   - Fill in "Current State" with "Initial Setup - Project scaffolded"
 
-- `/feature` - Define feature requirements
-- `/workflow:status` - Project status
-- `/workflow:fix-bug` - Quick bug fixes
-- `/workflow:document-issue` - Document known issues
-```
+3. **`.agent/system/architecture.md`** from `~/.claude/workflow/templates/agent/system/architecture.md.template`
+   - Replace variables
+   - Keep most sections as placeholders for future
 
-**Create `.agent/system/overview.md`:**
-```markdown
-# Project Overview
+4. **`.agent/known-issues/README.md`** from `~/.claude/workflow/templates/agent/known-issues/README.md.template`
+   - Replace variables
+   - Remove the example entries (01, 02) leaving just the structure
 
-**Project**: [Project Name]
-**Created**: [Today's date]
+5. **`.agent/sops/README.md`** from `~/.claude/workflow/templates/agent/sops/README.md.template`
+   - Replace variables
+   - Note: This references universal SOPs in `~/.claude/workflow/sops/`
 
----
+6. **`CLAUDE.md`** (project root) from `~/.claude/workflow/templates/CLAUDE.md.template`
+   - Replace variables
+   - Adjust workflow section based on VK vs Local choice
 
-## Product Vision
+### 8.4 Copy Task Template (if Local Tasks enabled)
 
-[User's product description]
+**If Local Tasks or Both workflow:**
 
-### Target Users
+Copy `~/.claude/workflow/templates/agent/task-template.md` to `.agent/task-template.md`
 
-[User's target users]
+### 8.5 Create Initial Setup Task (if Local Tasks enabled)
 
-### Problem Solved
+**If Local Tasks or Both workflow:**
 
-[User's problem statement]
-
----
-
-## Technology Stack
-
-- **Language**: [Language]
-- **Framework**: [Framework]
-- **Database**: [Database]
-- **Container**: [Docker/None]
-
----
-
-## Development
-
-### Run Development Server
-```bash
-[dev command based on language/framework]
-```
-
-### Run Tests
-```bash
-[test command]
-```
-
-### Build
-```bash
-[build command]
-```
-
----
-
-## Current State
-
-**Status**: Initial Setup
-
-The project has been scaffolded and is ready for feature development.
-
----
-
-## Next Steps
-
-1. Define your first feature with `/feature <description>`
-2. Implement using VK or local workflow
-3. Update this overview as the project evolves
-```
-
-**Create `.agent/system/architecture.md`:**
-```markdown
-# Technical Architecture
-
-**Project**: [Project Name]
-**Last Updated**: [Today's date]
-
----
-
-## Overview
-
-[To be documented as architecture evolves]
-
----
-
-## Technology Stack
-
-- **Language**: [Language]
-- **Framework**: [Framework]
-- **Database**: [Database]
-
----
-
-## Directory Structure
-
-```
-[project-name]/
-├── src/                 # Source code
-├── .agent/              # Claude Code documentation
-│   ├── features/        # Feature requirements
-│   ├── system/          # System docs
-│   ├── known-issues/    # Issue tracking
-│   └── tasks/           # Task documents (if enabled)
-├── docs/                # User documentation
-└── [config files]
-```
-
----
-
-## Key Components
-
-[To be documented as features are implemented]
-
----
-
-## Data Flow
-
-[To be documented as features are implemented]
-
----
-
-## Security Considerations
-
-[To be documented during implementation]
-```
-
-**Create `.agent/known-issues/README.md`:**
-```markdown
-# Known Issues
-
-This directory tracks known issues, bugs, and troubleshooting insights.
-
-## Active Issues
-
-(No issues documented yet)
-
-## Resolved Issues
-
-(No resolved issues yet)
-
-## Adding Issues
-
-Use `/workflow:document-issue` to document known issues.
-
-Issues are numbered 01-99 with format: `NN-issue-name.md`
-```
-
-**If local tasks, create `.agent/task-template.md`:**
-
-Copy from `~/.claude/workflow/templates/agent/task-template.md` if it exists, otherwise create a basic template.
-
-**Create `docs/README.md`:**
-```markdown
-# [Project Name] Documentation
-
-This directory is for your project documentation, notes, and reference materials.
-
-## Contents
-
-Add your documentation here:
-- Project specs
-- Design documents
-- API documentation
-- User guides
-- Reference materials
-
-## Note
-
-This `docs/` directory is for human documentation.
-The `.agent/` directory is for Claude Code workflow documentation.
-```
-
----
-
-## Step 8: Create CLAUDE.md
-
-**Create `CLAUDE.md` in project root:**
+Create `.agent/tasks/000-initial-setup.md`:
 
 ```markdown
-# CLAUDE.md - [Project Name]
+# Task 000: Initial Setup
 
-## Project Overview
+**Status**: ✅ Complete
+**Branch**: `main`
+**Priority**: High
+**Planned**: [Today's date]
+**Completed**: [Today's date]
 
-[Product vision from user]
+## Problem
 
-## Technology Stack
+Project needed initial scaffolding and documentation structure.
 
-- **Language**: [Language]
-- **Framework**: [Framework]
-- **Database**: [Database]
+**Current State:**
+- Empty or minimal project directory
+- No standardized documentation
+- No development environment configured
 
-## Development Commands
+## Solution
 
-```bash
-# Start development server
-[dev command]
+Used `/setup` command to initialize project with:
+- Project configuration files ([package.json/requirements.txt/go.mod])
+- `.agent/` documentation structure
+- `CLAUDE.md` project instructions
+- [Docker configuration if selected]
+- [Database configuration if selected]
 
-# Run tests
-[test command]
+## Implementation Summary
 
-# Build
-[build command]
-```
+**Completed**: [Today's date]
 
-## Documentation
+### Deliverables
+- ✅ Project configuration ([language] + [framework])
+- ✅ `.agent/` documentation structure
+- ✅ `CLAUDE.md` project instructions
+- ✅ [Docker files] (if applicable)
+- ✅ [Database configuration] (if applicable)
 
+### Files Created
+- `CLAUDE.md` - Project instructions
 - `.agent/README.md` - Documentation index
 - `.agent/system/overview.md` - Project overview
 - `.agent/system/architecture.md` - Technical architecture
-- `docs/` - User documentation
+- `.agent/sops/README.md` - SOPs index
+- `.agent/known-issues/README.md` - Known issues index
+- `.agent/task-template.md` - Task document template
+- `.agent/tasks/000-initial-setup.md` - This document
+- [Other project files...]
 
-## Workflow
+### Configuration
+- **Language**: [Language]
+- **Framework**: [Framework]
+- **Database**: [Database]
+- **Docker**: [Yes/No]
+- **Task Management**: [VK/Local/Both]
 
-**Define features:**
-```
-/feature <description>
-```
+### Next Steps
+1. Define first feature with `/feature <description>`
+2. Plan implementation with `/workflow:plan-task`
+3. Or create VK ticket referencing feature requirements
 
-**Local task workflow:**
-```
-/workflow:plan-task
-/workflow:implement-task
-/workflow:test-task
-/workflow:complete-task
-```
+---
 
-**Utilities:**
-```
-/workflow:status         # Project status
-/workflow:fix-bug        # Quick bug fix
-/workflow:document-issue # Document issues
-/workflow:review-docs    # Review documentation
-/workflow:update-doc     # Update specific doc
+Generated by `/setup` command.
 ```
 
-## Principles
+### 8.6 Adjust for VK-Only Workflow
 
-1. **Simplicity First** - Keep solutions simple and focused
-2. **Read Before Writing** - Always read existing code before modifying
-3. **Document As You Go** - Keep `.agent/` docs updated
-4. **Test Your Work** - Verify changes work as expected
+**If VK-only workflow selected:**
+
+1. Do NOT create `.agent/tasks/` directory
+2. Do NOT copy task-template.md
+3. Modify `.agent/README.md` to remove tasks section
+4. Modify `CLAUDE.md` to emphasize VK workflow
+
+Update the README.md to replace tasks references with:
+```markdown
+### Tasks & Features
+Tasks are managed in **Vibe Kanban (VK)**.
+
+- Features are defined locally in `.agent/features/`
+- Implementation tasks are created and tracked in VK
+- Use `/feature` to define requirements, then create VK ticket
 ```
 
 ---
@@ -988,9 +894,9 @@ git add .
 git commit -m "Initial project setup
 
 - Add project scaffolding ([Language] + [Framework])
-- Add .agent/ documentation structure
+- Add .agent/ documentation structure from templates
 - Add CLAUDE.md project instructions
-- Add docs/ directory
+- Configure [Docker/Database] (if applicable)
 
 Generated by /setup"
 ```
@@ -1007,7 +913,7 @@ Language: [Language]
 Framework: [Framework]
 Database: [Database]
 Docker: [Yes/No]
-Local Tasks: [Yes/No]
+Task Management: [VK / Local Tasks / Both]
 
 FILES CREATED:
 
@@ -1019,18 +925,51 @@ Project Files:
   [x] [Dockerfile] (if Docker)
   [x] [docker-compose.yml] (if Docker)
 
-Documentation:
+Documentation (from templates):
   [x] CLAUDE.md
   [x] .agent/README.md
   [x] .agent/system/overview.md
   [x] .agent/system/architecture.md
+  [x] .agent/sops/README.md
   [x] .agent/known-issues/README.md
   [x] .agent/features/ (empty, ready for /feature)
-  [x] .agent/tasks/ (if local tasks enabled)
-  [x] docs/README.md
+  [x] .agent/task-template.md (if local tasks)
+  [x] .agent/tasks/000-initial-setup.md (if local tasks)
 
 Other:
   [x] .gitignore
+
+WORKFLOW:
+
+[If VK workflow]
+Your project uses Vibe Kanban for task management.
+
+  1. Define features locally:     /feature <description>
+  2. Create VK ticket referencing: .agent/features/NNN-name/README.md
+  3. VK handles task breakdown and execution
+
+[If Local workflow]
+Your project uses local task management.
+
+  1. Define features:            /feature <description>
+  2. Plan implementation:        /workflow:plan-task
+  3. Implement:                  /workflow:implement-task
+  4. Test:                       /workflow:test-task
+  5. Complete:                   /workflow:complete-task
+
+[If Both]
+Your project supports both workflows.
+
+  For VK:
+    /feature → Create VK ticket → VK executes
+
+  For local:
+    /feature → /workflow:plan-task → /workflow:implement-task
+
+UNIVERSAL SOPs (referenced, not copied):
+  ~/.claude/workflow/sops/git-workflow.md
+  ~/.claude/workflow/sops/testing-principles.md
+  ~/.claude/workflow/sops/documentation-standards.md
 
 NEXT STEPS:
 
@@ -1039,16 +978,29 @@ NEXT STEPS:
 3. Define your first feature:
    /feature <your feature description>
 
-4. Then either:
-   - Create VK ticket referencing the feature doc
-   - Or run /workflow:plan-task for local workflow
-
 Ready to build!
 ```
 
 ---
 
 ## Error Handling
+
+### Templates Not Found
+```
+ERROR: Templates not found at ~/.claude/workflow/templates/
+
+Please ensure your dotfiles are properly linked:
+  ln -s ~/.dotfiles/claude ~/.claude
+
+Required template files:
+  ~/.claude/workflow/templates/agent/README.md.template
+  ~/.claude/workflow/templates/agent/system/overview.md.template
+  ~/.claude/workflow/templates/agent/system/architecture.md.template
+  ~/.claude/workflow/templates/agent/known-issues/README.md.template
+  ~/.claude/workflow/templates/agent/sops/README.md.template
+  ~/.claude/workflow/templates/agent/task-template.md
+  ~/.claude/workflow/templates/CLAUDE.md.template
+```
 
 ### Permission Errors
 ```
