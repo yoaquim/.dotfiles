@@ -120,11 +120,10 @@ Tag files location: `~/.claude/vk-tags/`
 
 Available tags:
 - `git-workflow.md` - Include in ALL tasks
+- `tdd.md` - Business logic, validation, pure functions (TDD approach)
 - `django-patterns.md` - Django code changes
 - `tailwind-utilities.md` - UI/CSS work
 - `permission-checks.md` - Auth/permissions
-- `testing-requirements.md` - Code needing tests
-- `add_unit_tests.md` - Test-only tasks
 - `bug_analysis.md` - Bug fixes
 - `code_refactoring.md` - Refactoring
 - `plan-feature.md` - Full planning reference (this command uses it)
@@ -135,14 +134,14 @@ Available tags:
 
 ## Task Numbering System
 
-Number tasks by **dependency level**:
+Number tasks by **dependency level**. Create as many levels and tasks per level as needed—do NOT default to a fixed count (e.g., 3 tasks per level). Let the feature complexity drive the breakdown.
 
 | Level | Meaning | Can Start |
 |-------|---------|-----------|
 | `0.x` | No dependencies | Immediately (parallel) |
 | `1.x` | Needs Level 0 done | After all `0.x` complete |
 | `2.x` | Needs Level 1 done | After all `1.x` complete |
-| `3.x` | Needs Level 2 done | After all `2.x` complete |
+| `3.x+` | Continue as needed | After previous level complete |
 
 ---
 
@@ -169,6 +168,8 @@ Number tasks by **dependency level**:
 - **1-2 points** per task (30-120 minutes of work)
 - **Prefer many small tasks** over few large ones
 - If task feels large, break it down further
+- A complex feature may have 15+ tasks; a simple one may have 4
+- Do NOT artificially limit task counts—create exactly what's needed
 
 ---
 
@@ -217,7 +218,7 @@ Blocked by previous levels:
 **Design Reference:** (if images exist)
 `.agent/features/{num}-{name}/images/{relevant-image}.png`
 
-@git-workflow {other-relevant-tags}
+@git-workflow @tdd (if business logic)
 ```
 
 ---
@@ -229,11 +230,10 @@ Include relevant tags based on task type:
 | Tag | When to Use |
 |-----|-------------|
 | `@git-workflow` | All tasks |
+| `@tdd` | Business logic, validation, pure functions |
 | `@django-patterns` | Django code changes |
 | `@tailwind-utilities` | UI/CSS work |
 | `@permission-checks` | Auth/permissions work |
-| `@testing-requirements` | Any code that needs tests |
-| `@add_unit_tests` | Test-only tasks |
 | `@bug_analysis` | Bug fixes |
 | `@code_refactoring` | Refactoring work |
 
@@ -267,8 +267,7 @@ After creating all tasks, report:
 
 Level 0 (Start immediately): N tasks
 Level 1 (After Level 0): N tasks
-Level 2 (After Level 1): N tasks
-Level 3 (After Level 2): N tasks
+(continue for all levels created)
 
 Total: X tasks ready in VK
 ```

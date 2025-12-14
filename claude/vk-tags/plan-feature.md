@@ -37,6 +37,8 @@ Number tasks by **dependency level**:
 - **30-120 minutes** of work per task
 - If larger, break into multiple tasks
 - Prefer many small tasks over few large ones
+- **Create as many levels and tasks as needed**—do NOT default to a fixed count
+- A complex feature may have 15+ tasks; a simple one may have 4
 
 ## Task Description Template
 
@@ -53,22 +55,21 @@ See `.agent/features/{num}-{name}/images/{mockup}.png`
 - {Specific requirement 1}
 - {Specific requirement 2}
 
-@django-patterns @tailwind-utilities @permission-checks
-@testing-requirements @git-workflow
+@git-workflow {other relevant tags}
 ```
 
 **For setup/config:**
 ```markdown
 {Brief description}
 
-@django-patterns @git-workflow
+@git-workflow
 ```
 
-**For testing:**
+**For tasks requiring TDD:**
 ```markdown
 {Brief description}
 
-@add_unit_tests @testing-requirements @git-workflow
+@tdd @git-workflow
 ```
 
 ## Image References
@@ -164,13 +165,12 @@ Include in base.html <head> section for navigation icons.
 **Include these tags based on task type:**
 
 - **All tasks**: `@git-workflow`
+- **Business logic / validation / pure functions**: `@tdd`
 - **Django code**: `@django-patterns`
 - **UI/Frontend**: `@tailwind-utilities`
 - **Features with auth**: `@permission-checks`
-- **Any code change**: `@testing-requirements`
 - **Bug fixes**: `@bug_analysis`
 - **Refactoring**: `@code_refactoring`
-- **Test-only tasks**: `@add_unit_tests`
 
 ## Complete Example: Feature 001
 
@@ -178,78 +178,70 @@ Include in base.html <head> section for navigation icons.
 **Location:** `.agent/features/001-collapsible-sidebar/`
 **Images:** `images/open.png`, `images/closed.png`
 
-**Level 0 - Parallel Setup (3 tasks):**
+> **Note:** This is ONE example. Actual task counts vary by feature complexity. Create as many levels and tasks as needed—don't force a fixed structure.
+
+**Level 0 - Parallel Setup (2 tasks):**
 
 ```
 [f-001] [0.1] Add Lucide icons CDN
-Description: Add Lucide icons library from https://lucide.dev/
-Tags: @django-patterns @git-workflow
-
-[f-001] [0.2] Add rimas-badge.svg asset
-Description: Add red Rimas badge for collapsed state toggle
+Description: Add Lucide icons library from CDN
 Tags: @git-workflow
 
-[f-001] [0.3] Create sidebar HTML structure
-Description: Replace horizontal nav with vertical sidebar in base.html
+[f-001] [0.2] Create sidebar HTML structure
+Description: Replace horizontal nav with vertical sidebar
 Design Reference: .agent/features/001-collapsible-sidebar/images/open.png
-Tags: @django-patterns @tailwind-utilities @git-workflow
+Tags: @git-workflow
 ```
 
-**Level 1 - Core Logic (3 tasks):**
+**Level 1 - Core Logic (5 tasks):**
 
 ```
 [f-001] [1.1] Implement sidebar toggle JavaScript
-Description: Toggle between open/closed states, update logo/badge
+Description: Toggle between open/closed states
 Design Reference: Both mockup images
-Tags: @django-patterns @git-workflow
+Tags: @git-workflow
 
 [f-001] [1.2] Implement section expand/collapse
 Description: Expandable headers with rotating chevrons
-Tags: @django-patterns @git-workflow
+Tags: @git-workflow
 
 [f-001] [1.3] Add localStorage persistence
 Description: Save sidebar and section states to localStorage
-Tags: @django-patterns @testing-requirements @git-workflow
-```
+Tags: @tdd @git-workflow
 
-**Level 2 - Polish (3 tasks):**
+[f-001] [1.4] Apply styling
+Description: Apply theme colors, transitions
+Tags: @git-workflow
 
-```
-[f-001] [2.1] Add smooth transitions
-Description: Animate sidebar width, content area, chevrons (300ms)
-Tags: @tailwind-utilities @git-workflow
-
-[f-001] [2.2] Integrate permission checks
+[f-001] [1.5] Integrate permission checks
 Description: Hide/show nav items based on user permissions
-Tags: @permission-checks @git-workflow
-
-[f-001] [2.3] Style with Rimas theme
-Description: Apply Rimas colors, red Admin/Logout links at bottom
-Tags: @tailwind-utilities @git-workflow
+Tags: @git-workflow
 ```
 
-**Level 3 - Testing (1 task):**
+**Level 2 - Testing (1 task):**
 
 ```
-[f-001] [3.1] Add comprehensive tests
-Description: Test toggle, persistence, permissions, 80%+ coverage
-Tags: @testing-requirements @git-workflow
+[f-001] [2.1] Add comprehensive tests
+Description: Test toggle, persistence, permissions
+Tags: @tdd @git-workflow
 ```
 
-**Total:** 10 tasks, 3 levels, ~15-20 points
+**Total:** 8 tasks across 3 levels
+
+> A simpler feature might be 4 tasks (2-1-1). A complex feature might be 15+ tasks. Let the requirements drive the breakdown.
 
 ## Output Summary
 
 After creating tasks, provide:
 
 ```
-✅ Created 10 tasks for Feature 001: Collapsible Sidebar
+✅ Created N tasks for Feature 001: Collapsible Sidebar
 
 Breakdown:
-- Level 0 (Start now): 3 tasks
-- Level 1 (After L0): 3 tasks
-- Level 2 (After L1): 3 tasks
-- Level 3 (After L2): 1 task
+- Level 0 (Start now): X tasks
+- Level 1 (After L0): Y tasks
+- Level 2 (After L1): Z tasks
+(continue as needed)
 
 Tasks created via VK MCP server and ready to start!
 ```
