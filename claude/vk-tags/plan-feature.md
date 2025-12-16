@@ -55,22 +55,22 @@ See `.agent/features/{num}-{name}/images/{mockup}.png`
 - {Specific requirement 1}
 - {Specific requirement 2}
 
-@git-workflow {other relevant tags}
+{other relevant tags}
 ```
 
 **For setup/config:**
 ```markdown
 {Brief description}
-
-@git-workflow
 ```
 
 **For tasks requiring TDD:**
 ```markdown
 {Brief description}
 
-@tdd @git-workflow
+@tdd
 ```
+
+**Note:** VK handles git workflow automatically through worktrees. Do NOT include git instructions.
 
 ## Image References
 
@@ -156,7 +156,7 @@ await create_task({
 
 Include in base.html <head> section for navigation icons.
 
-@django-patterns @git-workflow`
+@django-patterns`
 });
 ```
 
@@ -164,13 +164,14 @@ Include in base.html <head> section for navigation icons.
 
 **Include these tags based on task type:**
 
-- **All tasks**: `@git-workflow`
 - **Business logic / validation / pure functions**: `@tdd`
 - **Django code**: `@django-patterns`
 - **UI/Frontend**: `@tailwind-utilities`
 - **Features with auth**: `@permission-checks`
 - **Bug fixes**: `@bug_analysis`
 - **Refactoring**: `@code_refactoring`
+
+**Note:** VK handles git workflow automatically through worktrees. Do NOT include git instructions.
 
 ## Complete Example: Feature 001
 
@@ -185,12 +186,12 @@ Include in base.html <head> section for navigation icons.
 ```
 [f-001] [0.1] Add Lucide icons CDN
 Description: Add Lucide icons library from CDN
-Tags: @git-workflow
+Tags: @django-patterns
 
 [f-001] [0.2] Create sidebar HTML structure
 Description: Replace horizontal nav with vertical sidebar
 Design Reference: .agent/features/001-collapsible-sidebar/images/open.png
-Tags: @git-workflow
+Tags: @django-patterns
 ```
 
 **Level 1 - Core Logic (5 tasks):**
@@ -199,23 +200,23 @@ Tags: @git-workflow
 [f-001] [1.1] Implement sidebar toggle JavaScript
 Description: Toggle between open/closed states
 Design Reference: Both mockup images
-Tags: @git-workflow
+Tags: @django-patterns
 
 [f-001] [1.2] Implement section expand/collapse
 Description: Expandable headers with rotating chevrons
-Tags: @git-workflow
+Tags: @django-patterns
 
 [f-001] [1.3] Add localStorage persistence
 Description: Save sidebar and section states to localStorage
-Tags: @tdd @git-workflow
+Tags: @tdd
 
 [f-001] [1.4] Apply styling
 Description: Apply theme colors, transitions
-Tags: @git-workflow
+Tags: @django-patterns
 
 [f-001] [1.5] Integrate permission checks
 Description: Hide/show nav items based on user permissions
-Tags: @git-workflow
+Tags: @django-patterns
 ```
 
 **Level 2 - Testing (1 task):**
@@ -223,7 +224,7 @@ Tags: @git-workflow
 ```
 [f-001] [2.1] Add comprehensive tests
 Description: Test toggle, persistence, permissions
-Tags: @tdd @git-workflow
+Tags: @tdd
 ```
 
 **Total:** 8 tasks across 3 levels

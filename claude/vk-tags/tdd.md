@@ -40,6 +40,35 @@ Write tests FIRST, then implement code to pass them.
 - Aim for 80%+ coverage on new code
 - Keep tests fast—slow tests get skipped
 
+## Test File Placement
+
+**IMPORTANT**: Tests go in a dedicated `tests/` directory, NOT alongside source files.
+
+```
+# CORRECT - tests in separate directory
+server/
+├── src/
+│   └── utils/
+│       └── jwt.ts
+└── tests/
+    └── utils/
+        └── jwt.test.ts
+
+client/
+├── src/
+│   └── hooks/
+│       └── useAuth.ts
+└── tests/
+    └── hooks/
+        └── useAuth.test.ts
+
+# WRONG - tests next to source files
+server/src/utils/jwt.ts
+server/src/utils/jwt.test.ts   # ❌ NO
+```
+
+Mirror the `src/` structure inside `tests/` for easy navigation.
+
 ## Test Naming Convention
 ```
 test_<function>_<scenario>_<expected_result>

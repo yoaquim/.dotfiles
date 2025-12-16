@@ -119,7 +119,6 @@ VK tags (`@tag-name`) do NOT auto-expand when creating tasks via MCP.
 Tag files location: `~/.claude/vk-tags/`
 
 Available tags:
-- `git-workflow.md` - Include in ALL tasks
 - `tdd.md` - Business logic, validation, pure functions (TDD approach)
 - `django-patterns.md` - Django code changes
 - `tailwind-utilities.md` - UI/CSS work
@@ -128,7 +127,9 @@ Available tags:
 - `code_refactoring.md` - Refactoring
 - `plan-feature.md` - Full planning reference (this command uses it)
 
-**Example:** Instead of just writing `@git-workflow`, read `~/.claude/vk-tags/git-workflow.md` and include its content in the task description.
+**Note:** VK handles git workflow automatically through worktrees. Do NOT include git branching instructions in tasks.
+
+**Example:** Read the relevant tag file and include its content in the task description.
 
 ---
 
@@ -153,8 +154,9 @@ Number tasks by **dependency level**. Create as many levels and tasks per level 
 
 **Examples:**
 ```
-[f-{num}] [0.1] Add required dependencies
-[f-{num}] [0.2] Create base HTML structure
+[f-{num}] [0.1] Install all dependencies       # ALWAYS first - ALL packages here
+[f-{num}] [0.2] Create database migration
+[f-{num}] [0.3] Add environment variables
 [f-{num}] [1.1] Implement core functionality
 [f-{num}] [1.2] Add event handlers
 [f-{num}] [2.1] Add animations and polish
@@ -177,12 +179,25 @@ Number tasks by **dependency level**. Create as many levels and tasks per level 
 
 ### Level 0: Setup & Foundation
 No dependencies, can run in parallel:
-- Adding libraries/dependencies/CDNs
+- **[0.1] ALL dependencies** - Consolidate ALL packages/libraries into ONE ticket (prevents multiple lockfile changes)
 - Creating new files/directories
 - Adding static assets
 - Database migrations
-- Configuration changes
-- Base HTML structure
+- Configuration changes (env vars, config files)
+- Base HTML/template structure
+
+**IMPORTANT: Dependencies Rule**
+ALL dependencies for the entire feature MUST be in a single [0.1] ticket titled "Install all dependencies". This includes:
+- All packages for any part of the stack (server, client, shared, etc.)
+- Any CDN links or external libraries
+- System dependencies if needed
+
+Examples by stack:
+- Node.js: `npm install` / `yarn add` (one lockfile change)
+- Python: `pip install` / `poetry add` (one requirements change)
+- Ruby: `bundle add` (one Gemfile.lock change)
+
+Do NOT split dependencies across multiple tickets. One install ticket = one lockfile change.
 
 ### Level 1: Core Implementation
 Blocked by Level 0:
@@ -218,7 +233,7 @@ Blocked by previous levels:
 **Design Reference:** (if images exist)
 `.agent/features/{num}-{name}/images/{relevant-image}.png`
 
-@git-workflow @tdd (if business logic)
+@tdd (if business logic)
 ```
 
 ---
@@ -229,13 +244,14 @@ Include relevant tags based on task type:
 
 | Tag | When to Use |
 |-----|-------------|
-| `@git-workflow` | All tasks |
 | `@tdd` | Business logic, validation, pure functions |
 | `@django-patterns` | Django code changes |
 | `@tailwind-utilities` | UI/CSS work |
 | `@permission-checks` | Auth/permissions work |
 | `@bug_analysis` | Bug fixes |
 | `@code_refactoring` | Refactoring work |
+
+**Note:** Git workflow is handled by VK through worktrees. Do NOT add git instructions to tasks.
 
 ---
 
@@ -252,7 +268,7 @@ await mcp__vibe_kanban__create_task({
   title: "[f-{num}] [0.1] Task title here",
   description: `Task description...
 
-@git-workflow @django-patterns`
+@django-patterns`
 });
 ```
 
@@ -276,11 +292,12 @@ Total: X tasks ready in VK
 
 ## Key Principles
 
-1. **Small tasks** = faster completion, easier parallelization
-2. **Clear numbering** = know exactly when tasks can start
-3. **Proper tagging** = agents have context they need
-4. **Image references** = agents see visual requirements
-5. **Read the feature doc thoroughly** before creating any tasks
+1. **One dependency ticket** = ALL packages in [0.1], never split across tickets
+2. **Small tasks** = faster completion, easier parallelization
+3. **Clear numbering** = know exactly when tasks can start
+4. **Proper tagging** = agents have context they need
+5. **Image references** = agents see visual requirements
+6. **Read the feature doc thoroughly** before creating any tasks
 ```
 
 ---

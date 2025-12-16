@@ -15,7 +15,6 @@ Tags are text snippets that can be inserted into task descriptions using `@tag-n
 | `@code_refactoring` | Refactoring checklist | `code_refactoring.md` |
 | `@django-patterns` | Django best practices | `django-patterns.md` |
 | `@testing-requirements` | Testing standards (80%+ coverage) | `testing-requirements.md` |
-| `@git-workflow` | Feature branch workflow | `git-workflow.md` |
 | `@permission-checks` | Django RBAC permissions | `permission-checks.md` |
 | `@tailwind-utilities` | Tailwind CSS + Rimas design system | `tailwind-utilities.md` |
 | `@plan-feature` | Feature breakdown into numbered VK tasks | `plan-feature.md` |

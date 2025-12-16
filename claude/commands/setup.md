@@ -967,9 +967,11 @@ Your project supports both workflows.
     /feature → /workflow:plan-task → /workflow:implement-task
 
 UNIVERSAL SOPs (referenced, not copied):
-  ~/.claude/workflow/sops/git-workflow.md
+  [If NOT VK workflow] ~/.claude/workflow/sops/git-workflow.md
   ~/.claude/workflow/sops/testing-principles.md
   ~/.claude/workflow/sops/documentation-standards.md
+
+[If VK workflow] Note: Git workflow handled by VK through worktrees.
 
 NEXT STEPS:
 
