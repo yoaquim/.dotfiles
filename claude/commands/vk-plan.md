@@ -257,12 +257,30 @@ Include relevant tags based on task type:
 
 ## Creating Tasks via VK MCP
 
+**IMPORTANT: Create tasks in REVERSE order (highest level first, lowest level last).**
+
+VK displays tasks with the most recently created at the top. To have Level 0 tasks appear at the top of the TODO list (so they're worked on first), create tasks starting from the highest level and work backwards:
+
+1. Create Level 3+ tasks first (if any)
+2. Then Level 2 tasks
+3. Then Level 1 tasks
+4. Finally Level 0 tasks (created last = appears at top)
+
 ```javascript
 // Get project_id
 const projects = await mcp__vibe_kanban__list_projects();
 const projectId = projects[0].id;
 
-// Create each task
+// Create tasks in REVERSE order (3.x → 2.x → 1.x → 0.x)
+// This ensures 0.x tasks appear at the top of the VK TODO list
+
+// Level 2 first (if exists)
+await mcp__vibe_kanban__create_task({...});
+
+// Level 1 next
+await mcp__vibe_kanban__create_task({...});
+
+// Level 0 LAST (so it appears at the top)
 await mcp__vibe_kanban__create_task({
   project_id: projectId,
   title: "[f-{num}] [0.1] Task title here",

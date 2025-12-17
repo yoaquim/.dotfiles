@@ -211,6 +211,17 @@ bash ./setup-astronvim.sh
 - **Full LSP support** inside containers
 - **Transparent editing** with complete IDE features
 
+### 🗄️ Database Client (nvim-dbee)
+
+| Keymap | Description |
+|--------|-------------|
+| `<leader>B` | Toggle database client |
+
+**Features**:
+- Connect to PostgreSQL, MySQL, SQLite, and more
+- Execute queries and view results
+- Browse database schemas
+
 ---
 
 ## 🛠️ Advanced Features
@@ -310,6 +321,7 @@ bash ./setup-astronvim.sh
 | **Testing** | neotest, neotest-python, neotest-jest |
 | **AI** | GitHub Copilot |
 | **Docker** | nvim-dev-container |
+| **Database** | nvim-dbee |
 | **Themes** | minimal, base16, material |
 
 ### Getting Help

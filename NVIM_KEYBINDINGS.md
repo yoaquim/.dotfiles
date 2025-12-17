@@ -131,6 +131,11 @@
 | `<leader>Dr` | Remove all containers | user.lua:210 |
 | `<leader>Dc` | Edit devcontainer config | user.lua:211 |
 
+### Database Client (nvim-dbee)
+| Keybinding | Action | Location |
+|------------|--------|----------|
+| `<leader>B` | Toggle database client | user.lua:229 |
+
 ## Custom Commands
 | Command | Action | Location |
 |---------|--------|----------|
@@ -203,6 +208,7 @@
 - **Mini.snippets**: Available but no custom keybindings
 - **DAP**: Auto-opens/closes UI, supports Python and JavaScript/TypeScript debugging
 - **Neotest**: Supports Python (pytest), Jest, and Vitest
+- **nvim-dbee**: Database client for PostgreSQL, MySQL, SQLite, and more
 
 ### Available Color Schemes
 - base16-darkmoss (active)

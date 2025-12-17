@@ -1,6 +1,15 @@
 ---@type LazyPluginSpec[]
 return {
-  
+
+  -- Treesitter Configuration
+  -- ───────────────────────────────────────────────────
+  {
+    "nvim-treesitter/nvim-treesitter",
+    opts = {
+      ensure_installed = { "sql" },
+    },
+  },
+
   -- Snacks Picker Configuration
   -- ───────────────────────────────────────────────────
   {
@@ -209,6 +218,29 @@ return {
       { "<leader>Dl", "<cmd>DevcontainerLogs<cr>", desc = "View container logs" },
       { "<leader>Dr", "<cmd>DevcontainerRemoveAll<cr>", desc = "Remove all containers" },
       { "<leader>Dc", "<cmd>DevcontainerEditNearestConfig<cr>", desc = "Edit devcontainer config" },
+    },
+  },
+
+  -- Database Client (nvim-dbee)
+  -- ───────────────────────────────────────────────────
+  {
+    "kndndrj/nvim-dbee",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+    },
+    build = function()
+      require("dbee").install()
+    end,
+    config = function()
+      require("dbee").setup({
+        sources = {
+          -- Load from .connections.json in current working directory
+          require("dbee.sources").FileSource:new(vim.fn.getcwd() .. "/.connections.json"),
+        },
+      })
+    end,
+    keys = {
+      { "<leader>B", "<cmd>lua require('dbee').toggle()<cr>", desc = "Toggle database client (dbee)" },
     },
   },
 
