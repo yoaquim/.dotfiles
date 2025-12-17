@@ -144,6 +144,33 @@ Number tasks by **dependency level**. Create as many levels and tasks per level 
 | `2.x` | Needs Level 1 done | After all `1.x` complete |
 | `3.x+` | Continue as needed | After previous level complete |
 
+### CRITICAL: Same Level = Parallel Execution
+
+**Tasks within the same level (e.g., 1.1, 1.2, 1.3) run in PARALLEL on separate git worktrees.**
+
+This means: **Tasks at the same level MUST NOT modify the same files** or you'll get merge conflicts.
+
+**BAD Example (merge conflict disaster):**
+```
+[1.1] Implement room creation     → modifies LobbyRoom.ts
+[1.2] Implement room joining      → modifies LobbyRoom.ts  ❌ CONFLICT!
+[1.3] Implement chat system       → modifies LobbyRoom.ts  ❌ CONFLICT!
+```
+
+**GOOD Example (no conflicts):**
+```
+[1.1] Create LobbyRoom with all handlers (skeleton + full implementation)
+[1.2] Create RoomListService      → separate file
+[1.3] Create ChatMessage schema   → separate file
+```
+
+**OR use sequential levels for same-file changes:**
+```
+[1.1] Create LobbyRoom skeleton with onCreate/onJoin
+[2.1] Add chat handlers to LobbyRoom
+[3.1] Add disconnection handling to LobbyRoom
+```
+
 ---
 
 ## Task Title Format
@@ -199,24 +226,64 @@ Examples by stack:
 
 Do NOT split dependencies across multiple tickets. One install ticket = one lockfile change.
 
-### Level 1: Core Implementation
-Blocked by Level 0:
-- Main feature logic
-- View functions
-- JavaScript functionality
-- Core styling
+### Level 1+: Core Implementation
 
-### Level 2: Integration & Polish
-Blocked by Level 1:
+**CRITICAL: Identify "Core Files" First**
+
+Before assigning levels, identify files that multiple features will touch. These are **core files** and need special handling:
+
+**Common Core File Patterns:**
+- Main class/module for the feature (e.g., `LobbyRoom.ts`, `UserService.ts`)
+- Central state management (e.g., `store.ts`, `context.tsx`)
+- Main component that orchestrates sub-features
+- API route files that handle multiple endpoints
+
+**Strategy for Core Files:**
+
+**Option A: One Big Task (Recommended for complex core files)**
+Put ALL logic for the core file in ONE task at Level 1. This task may be larger, but avoids conflicts:
+```
+[1.1] Implement LobbyRoom with all handlers (create, join, leave, chat, ready, kick, disconnect)
+[1.2] Create client-side room service      → separate file, can run parallel
+[1.3] Create room list component           → separate file, can run parallel
+```
+
+**Option B: Sequential Levels (For very large core files)**
+Break into sequential levels where each builds on the previous:
+```
+[1.1] Create LobbyRoom skeleton with basic lifecycle (onCreate, onJoin, onLeave)
+[2.1] Add player state management to LobbyRoom (character select, ready toggle)
+[2.2] Create room list API endpoint        → separate file, parallel with 2.1
+[3.1] Add chat system to LobbyRoom
+[3.2] Add disconnection handling to LobbyRoom  ← SAME LEVEL ONLY IF different methods
+[4.1] Add room lifecycle (kick, start game) to LobbyRoom
+```
+
+**Option C: Separate Files (Best for parallelization)**
+Design architecture so features live in separate files:
+```
+[1.1] Create LobbyRoom base class with lifecycle hooks
+[1.2] Create ChatHandler class             → separate file
+[1.3] Create PlayerStateHandler class      → separate file
+[1.4] Create RoomLifecycleHandler class    → separate file
+[2.1] Wire all handlers into LobbyRoom     → integration task
+```
+
+**Rule of Thumb:** If 3+ tasks would touch the same file, use Option A or B. Don't split same-file work across parallel tasks.
+
+### Level 2+: Integration & Polish
+Blocked by previous levels:
+- Wiring components together
 - Animations and transitions
 - Edge case handling
 - Permission integration
 - Advanced styling
 
-### Level 3+: Testing & Documentation
-Blocked by previous levels:
+### Final Levels: Testing & Documentation
+Blocked by all implementation:
 - Unit tests
 - Integration tests
+- End-to-end tests
 - Documentation updates
 
 ---
@@ -310,12 +377,13 @@ Total: X tasks ready in VK
 
 ## Key Principles
 
-1. **One dependency ticket** = ALL packages in [0.1], never split across tickets
-2. **Small tasks** = faster completion, easier parallelization
-3. **Clear numbering** = know exactly when tasks can start
-4. **Proper tagging** = agents have context they need
-5. **Image references** = agents see visual requirements
-6. **Read the feature doc thoroughly** before creating any tasks
+1. **Same level = parallel execution** - Tasks at the same level run simultaneously on different worktrees
+2. **No same-file conflicts** - Tasks at the same level MUST NOT modify the same files
+3. **Core files need special handling** - Use Option A (one big task) or Option B (sequential levels) for files touched by multiple features
+4. **One dependency ticket** - ALL packages in [0.1], never split across tickets
+5. **Small tasks where possible** - But not at the cost of merge conflicts
+6. **Clear numbering** - Know exactly when tasks can start and what can run in parallel
+7. **Read the feature doc thoroughly** before creating any tasks
 ```
 
 ---
