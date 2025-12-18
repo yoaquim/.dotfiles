@@ -105,8 +105,9 @@ If multiple projects or none found, ask the user to confirm.
 1. **Read** the feature document at `.agent/features/{num}-{name}/README.md`
 2. **Review** any images/mockups in `.agent/features/{num}-{name}/images/`
 3. **Read** relevant tag templates from `~/.claude/vk-tags/` for task context
-4. **Analyze** requirements and identify logical task breakdown
-5. **Create tasks** via VK MCP with proper numbering, dependencies, and **embedded tag content**
+4. **Evaluate build-vs-buy** for each functional area (see Library Evaluation section below)
+5. **Analyze** requirements and identify logical task breakdown
+6. **Create tasks** via VK MCP with proper numbering, dependencies, and **embedded tag content**
 
 ---
 
@@ -130,6 +131,123 @@ Available tags:
 **Note:** VK handles git workflow automatically through worktrees. Do NOT include git branching instructions in tasks.
 
 **Example:** Read the relevant tag file and include its content in the task description.
+
+---
+
+## CRITICAL: Library Evaluation (Build vs Buy)
+
+Before creating tasks, **actively investigate** whether well-established libraries exist for each functional area. This applies to ALL languages and frameworks.
+
+### When to Use Existing Libraries
+
+**PREFER existing libraries when:**
+- The problem is **solved and battle-tested** (auth, toasts, date handling, validation, etc.)
+- The library has **active maintenance** (recent commits, responsive to issues)
+- The library has **significant adoption** (stars, downloads, community)
+- Rolling your own would take **more than 2-3 hours** for equivalent quality
+- The functionality involves **security-sensitive** code (crypto, auth, sanitization)
+- The library handles **edge cases** you'd likely miss (timezones, i18n, accessibility)
+
+**ROLL YOUR OWN when:**
+- The requirement is **trivially simple** (a single utility function)
+- Existing libraries are **over-engineered** for your needs (bringing in 50KB for one function)
+- You need **tight integration** with existing architecture that libraries don't support
+- The library is **unmaintained** or has security vulnerabilities
+- Your use case is **genuinely unique** and not covered by existing solutions
+
+### Evaluation Process
+
+For each major functional area in the feature, ask:
+
+1. **What problem am I solving?** (toasts, forms, state, animations, etc.)
+2. **Is this a common, solved problem?** (Search: "{problem} {language/framework} library")
+3. **What are the top 2-3 libraries?** (Check GitHub stars, npm/pypi downloads, recent activity)
+4. **Does the library fit our needs?** (Size, dependencies, API style, maintenance)
+
+### Common Patterns by Ecosystem
+
+**JavaScript/TypeScript:**
+| Need | Don't Build | Use Instead |
+|------|-------------|-------------|
+| Toast notifications | Custom toast system | react-hot-toast, sonner, react-toastify |
+| Form handling | Manual form state | react-hook-form, formik, tanstack-form |
+| Data fetching | Custom fetch wrapper | tanstack-query, swr, apollo |
+| Date/time | Custom formatting | date-fns, dayjs, luxon |
+| Validation | Custom validators | zod, yup, joi |
+| Animations | CSS transitions | framer-motion, react-spring |
+| Tables | Custom table components | tanstack-table, ag-grid |
+| Drag & drop | Custom DnD | dnd-kit, react-beautiful-dnd |
+
+**Python:**
+| Need | Don't Build | Use Instead |
+|------|-------------|-------------|
+| HTTP requests | urllib directly | requests, httpx |
+| Validation | Manual checks | pydantic, marshmallow |
+| CLI parsing | argparse complexity | click, typer |
+| Date handling | strftime/strptime | pendulum, arrow |
+| Async tasks | Threading manually | celery, dramatiq, rq |
+| Testing | Assert statements | pytest with fixtures |
+
+**Ruby:**
+| Need | Don't Build | Use Instead |
+|------|-------------|-------------|
+| Background jobs | Manual threading | sidekiq, good_job |
+| Pagination | Manual OFFSET/LIMIT | pagy, kaminari |
+| Auth | Rolling your own | devise, rodauth |
+| File uploads | Manual handling | shrine, carrierwave |
+
+**Go:**
+| Need | Don't Build | Use Instead |
+|------|-------------|-------------|
+| HTTP routing | net/http directly | chi, gin, echo |
+| Validation | Manual checks | go-playground/validator |
+| Config | Manual parsing | viper, envconfig |
+| CLI | flag package | cobra, urfave/cli |
+
+**General (any language):**
+| Need | Don't Build | Use Instead |
+|------|-------------|-------------|
+| Auth/OAuth | Custom auth flows | Auth0, Clerk, or language-specific libs |
+| Payments | Direct API calls | Stripe SDK, payment processor SDKs |
+| Email | Raw SMTP | SendGrid, Resend, Postmark SDKs |
+| Search | SQL LIKE queries | Elasticsearch, Meilisearch, Algolia |
+| Real-time | Raw WebSockets | Socket.io, Pusher, Ably |
+
+### Task Impact
+
+When a library should be used:
+1. **Add to [0.1] dependencies ticket** - Include the library installation
+2. **Note in task description** - Specify which library to use and why
+3. **Reference documentation** - Link to relevant docs for implementation
+
+**Example task description with library:**
+```markdown
+Implement toast notification system for form feedback.
+
+**Use:** react-hot-toast (lightweight, accessible, customizable)
+**Docs:** https://react-hot-toast.com/docs
+
+Requirements:
+- Success toast on form submission
+- Error toast with message from API
+- Dismissible after 5 seconds
+
+Note: Do NOT build a custom toast system. react-hot-toast handles accessibility, animations, and stacking out of the box.
+```
+
+### Red Flags (When NOT to reinvent)
+
+If you catch yourself planning tasks for ANY of these, STOP and find a library:
+- "Create reusable toast/notification component"
+- "Build form validation logic"
+- "Implement date formatting utilities"
+- "Create drag and drop system"
+- "Build authentication flow from scratch"
+- "Implement table sorting/filtering/pagination"
+- "Create modal/dialog system"
+- "Build carousel/slider component"
+
+These are **solved problems**. Use the ecosystem.
 
 ---
 
@@ -384,6 +502,7 @@ Total: X tasks ready in VK
 5. **Small tasks where possible** - But not at the cost of merge conflicts
 6. **Clear numbering** - Know exactly when tasks can start and what can run in parallel
 7. **Read the feature doc thoroughly** before creating any tasks
+8. **Use existing libraries for solved problems** - Don't reinvent toasts, forms, validation, auth, etc. Research and specify which libraries to use in task descriptions
 ```
 
 ---
