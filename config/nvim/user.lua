@@ -67,8 +67,32 @@ return {
     end,
   },
 
-  -- LSP and Language Support configured in mason.lua
+  -- LSP and Language Support
   -- ───────────────────────────────────────────────────
+  {
+    "williamboman/mason-lspconfig.nvim",
+    opts = {
+      ensure_installed = {
+        -- Frontend
+        "ts_ls",           -- TypeScript/JavaScript
+        "tailwindcss",     -- Tailwind CSS
+        "cssls",           -- CSS
+        "html",            -- HTML
+        -- Backend
+        "sqlls",           -- SQL
+        "pyright",         -- Python
+        "ruby_lsp",        -- Ruby
+        "bashls",          -- Bash
+        -- DevOps
+        "dockerls",        -- Docker
+        "terraformls",     -- Terraform
+        "yamlls",          -- YAML
+        -- Documentation
+        "jsonls",          -- JSON
+        "marksman",        -- Markdown
+      },
+    },
+  },
 
   -- Debugging Support
   -- ───────────────────────────────────────────────────
