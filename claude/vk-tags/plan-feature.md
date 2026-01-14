@@ -94,9 +94,17 @@ Tasks with **no dependencies** that can run in parallel:
 - Database migrations
 - Configuration changes
 
+**⛔ CRITICAL: [0.1] MUST be ALL dependencies for the feature:**
+```
+[f-001] [0.1] Install all dependencies
+```
+- ALL Python packages → add to `requirements.txt`
+- ALL system deps → update `Dockerfile`
+- Never split dependencies across multiple tickets
+
 **Example:**
 ```
-[f-001] [0.1] Add Lucide icons CDN to base.html
+[f-001] [0.1] Install all dependencies (weasyprint for PDF)
 [f-001] [0.2] Add rimas-badge.svg to static/images/
 [f-001] [0.3] Create initial sidebar HTML structure
 ```
@@ -254,3 +262,5 @@ Tasks created via VK MCP server and ready to start!
 3. **Proper tagging** = agents have all context they need
 4. **Image references** = agents can see visual requirements
 5. **Numbered systematically** = easy to track and execute
+6. **[0.1] = ALL dependencies** = one ticket for all packages/system deps
+7. **Test in Docker** = verify `docker compose build && docker compose up` works

@@ -22,8 +22,8 @@ Follow Django best practices and patterns from RIMAS DAM project.
 ### 3. Templates
 - Extend `base.html` for all pages
 - Use permission checks: `{% if perms.assets.add_asset %}`
-- Use Tailwind utility classes (no custom CSS)
-- Follow Rimas design system (see @tailwind-utilities)
+- **⛔ NO CUSTOM CSS** - Use Tailwind utility classes ONLY (no `<style>` blocks, no custom classes)
+- See @tailwind-utilities for patterns
 
 ### 4. Forms
 - Use Django ModelForms
@@ -42,3 +42,29 @@ Reference these for detailed patterns:
 - HTMX for dynamic interactions
 - Tailwind CSS v4 (standalone CLI)
 - Docker Compose for development
+
+## ⛔ CRITICAL: Dependency Management
+
+**When adding ANY new library:**
+
+1. **Add to `requirements.txt`** - Never assume it's already there
+2. **System dependencies** → Update `Dockerfile` with `apt-get install`
+3. **Test in Docker** - Run `docker compose build && docker compose up` and verify it works
+4. **Never use lazy imports to hide missing deps** - Fix the root cause
+
+**Examples:**
+```bash
+# Python package
+echo "weasyprint>=60.0" >> requirements.txt
+
+# System deps in Dockerfile
+RUN apt-get update && apt-get install -y \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+**Common system deps:**
+- `weasyprint`: libcairo2, libpango-1.0-0, libpangocairo-1.0-0, libgdk-pixbuf-2.0-0
+- `pillow`: libjpeg-dev, zlib1g-dev
+- `psycopg2`: libpq-dev

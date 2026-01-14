@@ -84,8 +84,26 @@ text-rimas-text-muted        <!-- #999999 - Muted/disabled -->
 - **Base Size**: 16px (1rem)
 - Use `font-medium` or `font-semibold` for emphasis
 
-## Important Rules
-- **No custom CSS** - Use Tailwind utilities only
+## ⛔ CRITICAL: NO CUSTOM CSS - EVER
+
+**NEVER write custom CSS classes or `<style>` blocks. This is NON-NEGOTIABLE.**
+
+### ❌ FORBIDDEN:
+```html
+<style>
+.my-class { ... }  /* NO! */
+.queue-item { ... }  /* NO! */
+</style>
+```
+
+### ✅ REQUIRED - Tailwind utilities directly in HTML:
+```html
+<div class="bg-white p-4 border-b border-gray-200">...</div>
+```
+
+**If you think you need custom CSS, you're wrong. Tailwind can do it.**
+
+## Other Rules
 - **Mobile-first** - Use responsive prefixes: `md:`, `lg:`
 - **Transitions** - Add `transition-colors` for hover effects
 - **Spacing** - Use standard Tailwind spacing: `p-4`, `mb-6`, etc.
