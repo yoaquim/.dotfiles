@@ -1,0 +1,120 @@
+# Project Roadmap
+
+**Project**: {{PROJECT_NAME}}
+**Last Updated**: {{INIT_DATE}}
+**Status**: Active
+
+---
+
+## Vision
+
+[High-level project vision - 2-3 sentences describing what this project aims to achieve and why it matters]
+
+---
+
+## Phases
+
+### Phase 1: [Name] (Current)
+
+**Goal**: [One sentence describing what this phase achieves]
+**Status**: In Progress
+
+**Items**:
+| ID | Item | Description | Status |
+|----|------|-------------|--------|
+| R1.1 | [Feature idea] | [Brief description] | Planned |
+| R1.2 | [Feature idea] | [Brief description] | Planned |
+| R1.3 | [Feature idea] | [Brief description] | Planned |
+
+---
+
+### Phase 2: [Name]
+
+**Goal**: [One sentence]
+**Status**: Planned
+
+**Items**:
+| ID | Item | Description | Status |
+|----|------|-------------|--------|
+| R2.1 | [Feature idea] | [Brief description] | Planned |
+| R2.2 | [Feature idea] | [Brief description] | Planned |
+
+---
+
+### Phase 3: [Name]
+
+**Goal**: [One sentence]
+**Status**: Future
+
+**Items**:
+| ID | Item | Description | Status |
+|----|------|-------------|--------|
+| R3.1 | [Feature idea] | [Brief description] | Future |
+| R3.2 | [Feature idea] | [Brief description] | Future |
+
+---
+
+## Backlog
+
+Ideas not yet assigned to phases:
+
+| ID | Item | Description | Notes |
+|----|------|-------------|-------|
+| B1 | [Idea] | [Description] | [Any context] |
+| B2 | [Idea] | [Description] | [Any context] |
+
+---
+
+## Completed
+
+Items that have been implemented:
+
+| ID | Item | Completed | Feature |
+|----|------|-----------|---------|
+| - | - | - | - |
+
+---
+
+## Notes
+
+[Unstructured thoughts, references, constraints, decisions, or any other context that doesn't fit above]
+
+---
+
+## Item Status Legend
+
+| Status | Meaning |
+|--------|---------|
+| Future | Not yet planned for implementation |
+| Planned | Assigned to a phase, not started |
+| In Progress | Currently being worked on |
+| Defined | Feature document created in .agent/features/ |
+| Implemented | Development complete |
+| Released | Live in production |
+
+---
+
+## Linking to Features
+
+When a roadmap item becomes a feature:
+
+1. Create feature with `/feature <description>`
+2. Update the roadmap item status to "Defined"
+3. Add feature reference: `→ Feature 001`
+
+Example:
+```
+| R1.1 | User Auth | Login/logout flow | Defined → Feature 001 |
+```
+
+---
+
+## Updating This Roadmap
+
+Use `/roadmap` to update this document with new ideas, reorganize phases, or capture brain dumps.
+
+The command will:
+- Parse unstructured input into structured items
+- Assign appropriate IDs (R1.x, R2.x, Bx)
+- Suggest phase assignments
+- Update status as items progress

@@ -38,6 +38,19 @@ The user may provide initial context in several forms:
 - Paths to images/mockups/diagrams
 - Free-form notes or requirements dump
 - Links to external resources
+- **Roadmap item reference (e.g., "R1.2", "roadmap item R2.1")**
+
+**Check for roadmap:**
+
+```bash
+ls -la .agent/ROADMAP.md 2>/dev/null
+```
+
+If roadmap exists:
+- Read `.agent/ROADMAP.md`
+- Check if user's input references a roadmap item (R1.1, R2.3, etc.)
+- If referenced, extract the item's description and phase
+- Store for including in feature document
 
 **Parse and analyze what's provided:**
 
@@ -50,6 +63,12 @@ If detailed notes are provided:
 - Identify what questions are already answered
 - Note what still needs clarification
 
+If roadmap item referenced:
+- Extract item ID (e.g., R1.2)
+- Extract phase (e.g., Phase 1)
+- Extract original description from roadmap
+- Use this as starting context for the feature
+
 **Acknowledge the context and confirm readiness:**
 
 Output a brief summary:
@@ -57,9 +76,10 @@ Output a brief summary:
 FEATURE REQUIREMENTS GATHERING
 
 Feature: [user's description]
+[If roadmap item] Roadmap Item: R1.2 - [item description]
 
 Context received:
-- [List what was provided: description, X images, notes, etc.]
+- [List what was provided: description, X images, notes, roadmap reference, etc.]
 ```
 
 Then use the `AskUserQuestion` tool to confirm:
@@ -250,6 +270,18 @@ cp /path/to/diagram.jpg .agent/features/NNN-feature-name/images/
 
 **Target Users:**
 [Who this is for]
+
+---
+
+## Roadmap Reference
+
+[Include this section if feature relates to a roadmap item]
+
+**Roadmap Item**: [R1.1, R2.3, etc. - if applicable]
+**Phase**: [Phase 1, Phase 2, etc.]
+**Original Description**: [Brief description from roadmap]
+
+*Note: After implementation, update roadmap status to "Implemented" with link to this feature.*
 
 ---
 
@@ -486,7 +518,27 @@ This allows `/workflow:plan-task` to auto-detect the last feature defined.
 
 ---
 
-## Step 8: Report Completion
+## Step 8: Update Roadmap (if applicable)
+
+**If this feature was created from a roadmap item:**
+
+1. Read `.agent/ROADMAP.md`
+2. Find the roadmap item (e.g., R1.2)
+3. Update its status from "Planned" to "Defined"
+4. Add feature reference: `Defined → Feature NNN`
+
+**Example edit:**
+```markdown
+# Before:
+| R1.2 | User Login | Login/logout flow | Planned |
+
+# After:
+| R1.2 | User Login | Login/logout flow | Defined → Feature 001 |
+```
+
+---
+
+## Step 9: Report Completion
 
 ```
 FEATURE REQUIREMENTS DOCUMENTED
@@ -497,6 +549,7 @@ Images: [X images in images/ directory] (if applicable)
 Status: Defined
 Priority: [Priority]
 Feature Number: NNN (chronological order)
+[If roadmap item] Roadmap Item: R1.2 (status updated to "Defined")
 
 **What's Captured:**
 - [X] User roles and personas
@@ -506,17 +559,17 @@ Feature Number: NNN (chronological order)
 - [X] Success metrics
 - [X] Out of scope items
 - [X] Visual materials (if provided)
+- [X] Roadmap reference (if applicable)
 
 **Next Steps:**
 
 For VK workflow:
-  1. Create VK ticket: "Read .agent/features/NNN-feature-name/README.md and break into subtasks"
-  2. VK will create numbered implementation tasks
-  3. VK handles execution
+  /plan vk NNN                      # Create VK planning ticket
+  VK will create numbered implementation tasks
 
 For local workflow:
-  /workflow:plan-task              # Auto-uses this feature
-  /workflow:plan-task "specific"   # Or specify task name
+  /plan local NNN                   # Create local task documents
+  /workflow:implement-task          # Start implementing
 ```
 
 ---

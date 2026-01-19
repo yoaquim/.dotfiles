@@ -200,6 +200,17 @@ options:
     description: "Create .agent/tasks/ but primarily use VK"
 ```
 
+**Question 7: Initial Roadmap**
+```
+question: "Would you like to create an initial roadmap?"
+header: "Roadmap"
+options:
+  - label: "Yes"
+    description: "Create .agent/ROADMAP.md for planning features and phases"
+  - label: "No"
+    description: "Skip roadmap - can create later with /roadmap"
+```
+
 ---
 
 ## Step 4: Gather Product Vision
@@ -233,6 +244,7 @@ Framework: [framework]
 Database: [database]
 Docker: [Yes/No]
 Task Management: [VK / Local Tasks / Both]
+Create Roadmap: [Yes/No]
 
 Product Vision:
 [captured description]
@@ -822,6 +834,25 @@ Tasks are managed in **Vibe Kanban (VK)**.
 - Use `/feature` to define requirements, then create VK ticket
 ```
 
+### 8.7 Create Initial Roadmap (if selected)
+
+**If "Create Roadmap: Yes" was selected:**
+
+1. Copy and process `~/.claude/workflow/templates/agent/ROADMAP.md.template`
+2. Replace `{{PROJECT_NAME}}` and `{{INIT_DATE}}`
+3. Write to `.agent/ROADMAP.md`
+4. Keep placeholder content for user to fill in later
+
+**Initial roadmap will have:**
+- Empty vision section (to be filled)
+- Phase 1 structure with placeholder items
+- Backlog section
+- Instructions for using `/roadmap` to update
+
+**If "Create Roadmap: No" was selected:**
+- Skip roadmap creation
+- User can create later with `/roadmap`
+
 ---
 
 ## Step 9: Create .gitignore
@@ -914,6 +945,7 @@ Framework: [Framework]
 Database: [Database]
 Docker: [Yes/No]
 Task Management: [VK / Local Tasks / Both]
+Roadmap: [Yes/No]
 
 FILES CREATED:
 
@@ -933,6 +965,7 @@ Documentation (from templates):
   [x] .agent/sops/README.md
   [x] .agent/known-issues/README.md
   [x] .agent/features/ (empty, ready for /feature)
+  [x] .agent/ROADMAP.md (if roadmap selected)
   [x] .agent/task-template.md (if local tasks)
   [x] .agent/tasks/000-initial-setup.md (if local tasks)
 
@@ -966,6 +999,16 @@ Your project supports both workflows.
   For local:
     /feature → /workflow:plan-task → /workflow:implement-task
 
+[If Roadmap created]
+ROADMAP:
+  Your roadmap is at .agent/ROADMAP.md
+
+  To add ideas or update the roadmap:
+    /roadmap [your ideas or updates]
+
+  To create a feature from a roadmap item:
+    /feature [description referencing roadmap item, e.g., R1.1]
+
 UNIVERSAL SOPs (referenced, not copied):
   [If NOT VK workflow] ~/.claude/workflow/sops/git-workflow.md
   ~/.claude/workflow/sops/testing-principles.md
@@ -977,6 +1020,12 @@ NEXT STEPS:
 
 1. Review generated files
 2. Update .env.example with real values (if database)
+[If Roadmap created]
+3. Fill in your roadmap vision and phase items:
+   /roadmap [your project ideas]
+4. Define your first feature:
+   /feature <description referencing roadmap item>
+[If no Roadmap]
 3. Define your first feature:
    /feature <your feature description>
 

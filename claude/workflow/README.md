@@ -15,6 +15,9 @@ Global configuration for Claude Code workflow system. This provides a standardiz
 - [Universal SOPs](#universal-sops)
 - [Templates](#templates)
 - [Slash Commands](#slash-commands)
+- [Adapters](#adapters)
+- [Hooks](#hooks)
+- [Subagents](#subagents)
 - [Cross-Project Features](#cross-project-features)
 - [Setup on New Machine](#setup-on-new-machine)
 - [Customization](#customization)
@@ -42,9 +45,16 @@ The symlink `~/.claude` → `~/.dotfiles/claude/` is already created.
 
 **Available commands in any project:**
 ```
+# Setup & Planning
 /setup                      - Initialize .agent/ for new or existing project
 /feature                    - Define WHAT to build (feature requirements)
-/vk-plan                    - Create VK Kanban planning tickets
+/roadmap                    - Create/update project roadmap
+/plan vk 001                - Plan feature in Vibe Kanban
+/plan local 001             - Create local task documents
+/test-plan 001              - Generate test plan with Playwright
+/bug 001                    - Document bugs (feature-tied or standalone)
+
+# Workflow Commands
 /workflow:plan-task         - Plan HOW to build it (implementation)
 /workflow:implement-task    - Implement a task
 /workflow:test-task         - Test implementation
@@ -54,6 +64,10 @@ The symlink `~/.claude` → `~/.dotfiles/claude/` is already created.
 /workflow:status            - Show project status
 /workflow:review-docs       - Review documentation
 /workflow:update-doc        - Update documentation
+
+# Deprecated (still work, use alternatives)
+/vk-plan 001                - Use /plan vk 001 instead
+/feature-bug 001            - Use /bug 001 instead
 ```
 
 ### On a New Machine
@@ -78,7 +92,12 @@ This will:
 ├── commands/                      # Slash commands (global)
 │   ├── feature.md                 # Define feature requirements
 │   ├── setup.md                   # Project initialization
-│   ├── vk-plan.md                 # VK Kanban planning
+│   ├── roadmap.md                 # Create/update roadmaps
+│   ├── plan.md                    # Unified planning (vk, local, linear)
+│   ├── test-plan.md               # Test plan generation
+│   ├── bug.md                     # Bug documentation
+│   ├── vk-plan.md                 # [DEPRECATED] Use /plan vk
+│   ├── feature-bug.md             # [DEPRECATED] Use /bug
 │   └── workflow/                  # Workflow commands
 │       ├── plan-task.md
 │       ├── implement-task.md
@@ -89,6 +108,17 @@ This will:
 │       ├── status.md
 │       ├── review-docs.md
 │       └── update-doc.md
+├── adapters/                      # Pluggable adapter system
+│   ├── interface.md               # Adapter contract specification
+│   ├── vk.md                      # Vibe Kanban adapter
+│   ├── local.md                   # Local filesystem adapter
+│   └── linear.md                  # Linear adapter (placeholder)
+├── hooks/                         # Hook documentation and examples
+│   ├── README.md                  # Hooks overview
+│   ├── validation-guards.md       # Validation/blocking examples
+│   └── context-loaders.md         # Context injection examples
+├── guides/                        # Usage guides
+│   └── subagents.md               # Subagent usage guide
 ├── vk-tags/                       # Reusable VK task tags
 │   ├── README.md
 │   ├── plan-feature.md
@@ -103,13 +133,17 @@ This will:
     │   └── documentation-standards.md
     └── templates/                 # Project templates (copied by /setup)
         ├── CLAUDE.md.template
+        ├── test-plan.md.template  # Test plan template
         └── agent/
             ├── README.md.template
+            ├── ROADMAP.md.template # Project roadmap template
             ├── task-template.md
             ├── system/
             │   ├── overview.md.template
             │   └── architecture.md.template
             ├── sops/
+            │   └── README.md.template
+            ├── bugs/              # Standalone bugs template
             │   └── README.md.template
             └── known-issues/
                 └── README.md.template
@@ -295,6 +329,105 @@ All commands are available globally in any project.
 2. **Global** (`~/.claude/commands/`)
 
 This allows project-specific overrides while maintaining global defaults.
+
+---
+
+## Adapters
+
+**Location**: `~/.claude/adapters/`
+
+Adapters allow the `/plan` command to work with different task management systems through a unified interface.
+
+### Available Adapters
+
+| Adapter | Command | Purpose |
+|---------|---------|---------|
+| VK | `/plan vk 001` | Creates VK planning tickets |
+| Local | `/plan local 001` | Creates task documents in `.agent/tasks/` |
+| Linear | `/plan linear 001` | Linear integration (placeholder) |
+
+### Adapter Architecture
+
+Each adapter implements:
+1. `check_prerequisites()` - Verify system is available
+2. `parse_feature()` - Read feature document
+3. `plan_tasks()` - Create task breakdown
+4. `create_tasks()` - Execute in target system
+5. `report_completion()` - Generate summary
+
+See `~/.claude/adapters/interface.md` for the full contract specification.
+
+---
+
+## Hooks
+
+**Location**: `~/.claude/hooks/`
+
+Hooks run shell commands in response to Claude Code events for validation, context loading, and automation.
+
+### Hook Types
+
+| Type | When | Use For |
+|------|------|---------|
+| `UserPromptSubmit` | Before prompt processed | Validation guards, context injection |
+| `Stop` | After response complete | Logging, cleanup |
+
+### Configuration
+
+```json
+// ~/.claude/settings.local.json (global)
+// <project>/.claude/settings.local.json (project)
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "git push.*--force.*(main|master)",
+        "hooks": [{
+          "type": "command",
+          "command": "echo 'BLOCKED: Force push to main'"
+        }]
+      }
+    ]
+  }
+}
+```
+
+### Documentation
+
+| File | Purpose |
+|------|---------|
+| `hooks/README.md` | Hooks overview |
+| `hooks/validation-guards.md` | Blocking dangerous operations |
+| `hooks/context-loaders.md` | Loading context selectively |
+
+---
+
+## Subagents
+
+**Location**: `~/.claude/guides/subagents.md`
+
+Subagents preserve main context by delegating reading/searching to specialized Claude instances.
+
+### When to Use
+
+| Situation | Agent Type | Why |
+|-----------|------------|-----|
+| Reading large docs | Explore | Don't bloat main context |
+| Codebase search | Explore | Efficient parallel searches |
+| Complex research | general-purpose | Full tool access |
+| Quick lookups | Explore + Haiku | Minimal cost |
+
+### Usage Pattern
+
+```markdown
+## In command files:
+
+Use Task tool with subagent_type="Explore" and model="haiku":
+- Prompt: "Read .agent/ROADMAP.md and extract items related to [topic]"
+- This preserves main context for implementation work.
+```
+
+See `~/.claude/guides/subagents.md` for comprehensive usage guide.
 
 ---
 
@@ -638,6 +771,18 @@ This is personal configuration, but you can:
 
 ## Version History
 
+- **2026-01-18** - Major workflow improvements
+  - Added unified `/plan` command with adapter architecture (vk, local, linear)
+  - Added `/roadmap` command for project planning
+  - Added `/test-plan` command with Playwright integration
+  - Added `/bug` command (replaces `/feature-bug`)
+  - Added hooks documentation (validation guards, context loaders)
+  - Added subagents guide for context preservation
+  - Deprecated `/vk-plan` (use `/plan vk`)
+  - Deprecated `/feature-bug` (use `/bug`)
+  - Modified `/setup` to include roadmap option
+  - Modified `/feature` to support roadmap references
+
 - **2025-10-25** - Initial global configuration
   - Extracted from project-specific setup
   - Created universal SOPs
@@ -657,4 +802,4 @@ This is personal configuration, but you can:
 
 **Location**: `~/.dotfiles/claude/workflow/README.md`
 **Symlink**: `~/.claude/workflow/README.md`
-**Last Updated**: 2025-12-07
+**Last Updated**: 2026-01-18

@@ -1,0 +1,88 @@
+# Standalone Bugs
+
+**Project**: {{PROJECT_NAME}}
+**Last Updated**: {{INIT_DATE}}
+
+This directory contains bugs that are not tied to a specific feature.
+
+---
+
+## Bug Tracking
+
+Bugs can be:
+1. **Feature-tied**: Stored in `.agent/features/NNN-name/bugs/` - tied to a specific feature
+2. **Standalone**: Stored in `.agent/bugs/` - general bugs not tied to any feature
+
+Use `/bug` to create bug documentation:
+- `/bug 001` - Bug tied to feature 001
+- `/bug` - Standalone bug (stored here)
+
+---
+
+## Current Bugs
+
+| Bug ID | Title | Severity | Status | Created |
+|--------|-------|----------|--------|---------|
+| - | - | - | - | - |
+
+---
+
+## Bug Status Legend
+
+| Status | Meaning |
+|--------|---------|
+| Open | Bug documented, not yet fixed |
+| In Progress | Fix being developed |
+| Fixed | Fix complete, awaiting verification |
+| Verified | Fix verified in testing |
+| Closed | Resolved and released |
+| Won't Fix | Intentionally not fixing |
+
+---
+
+## Severity Legend
+
+| Severity | Meaning |
+|----------|---------|
+| Critical | Feature completely broken, data loss, security issue |
+| High | Major functionality broken, no workaround |
+| Medium | Feature partially works, workaround exists |
+| Low | Minor inconvenience, cosmetic issue |
+
+---
+
+## Bug File Structure
+
+Each bug should have its own file: `BUG-NNN-brief-title.md`
+
+Example:
+```
+.agent/bugs/
+├── README.md                    # This file
+├── images/                      # Screenshots for all bugs
+│   ├── bug-001-error-screen.png
+│   └── bug-002-wrong-layout.png
+├── BUG-001-login-fails.md
+├── BUG-002-missing-button.md
+└── BUG-003-slow-load.md
+```
+
+---
+
+## Creating VK Tickets
+
+Bugs can optionally be tracked in VK:
+- Use `/bug` with VK integration to create tickets
+- Tickets are prefixed with `[BUG]` for easy identification
+- Bug documentation links to VK ticket and vice versa
+
+---
+
+## Related Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/bug` | Document a new bug |
+| `/bug 001` | Document bug tied to feature 001 |
+| `/workflow:fix-bug` | Fix a bug immediately |
+| `/workflow:document-issue` | Document a fixed bug for future reference |
