@@ -83,6 +83,20 @@ The `/plan` skill uses adapters for different task management backends:
 |---------|---------|---------|
 | VK | `/plan vk 001` | Creates VK planning tickets for parallel execution |
 | Local | `/plan local 001` | Creates task documents in `.agent/tasks/` |
-| Linear | `/plan linear 001` | Linear integration (placeholder) |
+| Linear | `/plan linear 001` | Creates Linear issues + local task files |
 
 See `~/.claude/adapters/` for adapter implementations.
+
+## Linear Integration
+
+Both `/feature` and `/plan` support Linear integration:
+
+- `/feature` can optionally create a Linear issue to track the feature
+- `/plan linear 001` creates sub-issues in Linear for each task
+
+**Workflow with Linear:**
+1. `/feature` → Creates feature doc, optionally creates Linear issue
+2. `/plan linear 001` → Creates sub-issues in Linear + local task files
+3. For each task: Start new Claude Code session, implement, mark Done in Linear
+
+This allows team visibility in Linear while implementing locally with vanilla Claude Code.

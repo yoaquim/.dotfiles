@@ -48,6 +48,9 @@ Verify VK MCP connection and project exists.
 ### For Local Adapter
 Check `.agent/` and `.agent/tasks/` exist.
 
+### For Linear Adapter
+Check for Linear MCP tools or API access. If unavailable, will output issues for manual creation.
+
 ---
 
 ## Step 4: Parse Feature
@@ -83,6 +86,13 @@ ls -d .agent/features/*/ 2>/dev/null
 3. Create task breakdown by levels
 4. Write task documents to `.agent/tasks/`
 
+### Linear Adapter Flow
+1. Analyze feature document
+2. Create task breakdown by levels
+3. Create Linear issues (or output for manual creation)
+4. Also write local task files to `.agent/tasks/` for Claude Code reference
+5. Link to parent feature issue if exists
+
 ---
 
 ## Step 6: Report Completion
@@ -106,14 +116,41 @@ Next steps:
 LOCAL TASKS CREATED for Feature {num}: {Feature Title}
 
 Level 0 (Start immediately):
-  - [0.1] {title}
-  - [0.2] {title}
+  - [0.1] {title} → f-{num}-0.1-{slug}.md
+  - [0.2] {title} → f-{num}-0.2-{slug}.md
 
 Level 1 (After Level 0):
-  - [1.1] {title}
+  - [1.1] {title} → f-{num}-1.1-{slug}.md
 
 WORKFLOW:
-/workflow:implement-task f-{num}-0.1-{slug}
+1. Read the task document
+2. Create feature branch if needed
+3. Implement the task
+4. Run tests
+5. Move to next task
+```
+
+### Linear Report Format
+```
+LINEAR ISSUES CREATED for Feature {num}: {Feature Title}
+
+Parent Issue: [LIN-XXX] (if linked)
+
+Level 0 (Start immediately):
+  - [LIN-101] [0.1] {title}
+  - [LIN-102] [0.2] {title}
+
+Level 1 (After Level 0):
+  - [LIN-103] [1.1] {title}
+
+Local reference files also created in .agent/tasks/
+
+WORKFLOW:
+1. Open the Linear issue
+2. Start a new Claude Code session
+3. Tell Claude: "Work on task f-{num}-{level}.{seq}"
+4. Implement, then mark issue Done in Linear
+5. Move to next task
 ```
 
 ---
@@ -136,4 +173,4 @@ All adapters use the same numbering system:
 |---------|--------|---------|----------|
 | `vk` | Vibe Kanban | Planning ticket | Parallel execution via worktrees |
 | `local` | Filesystem | Task documents | Solo work, simple orchestration |
-| `linear` | Linear | Issues | Team collaboration (placeholder) |
+| `linear` | Linear | Issues + local files | Team tracking, manual CC execution |

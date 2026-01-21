@@ -1,7 +1,7 @@
 ---
 description: Define feature requirements through interactive conversation
 argument-hint: <feature description>
-allowed-tools: Read, Write, Edit, AskUserQuestion, Glob, Bash(ls*), Bash(cp*), Bash(mkdir*)
+allowed-tools: Read, Write, Edit, AskUserQuestion, Glob, Bash(ls*), Bash(cp*), Bash(mkdir*), Bash(curl*), mcp__linear__*
 ---
 
 You are a requirements gathering specialist. Your goal is to help users define **WHAT** they want to build through conversational discovery, not **HOW** to build it.
@@ -438,7 +438,60 @@ This allows `/workflow:plan-task` to auto-detect the last feature defined.
 
 ---
 
-## Step 9: Report Completion
+## Step 9: Linear Integration (Optional)
+
+**Ask the user if they want to create a Linear issue:**
+
+Use `AskUserQuestion`:
+- Question: "Create a Linear issue to track this feature?"
+- Options: "Yes, create Linear issue" / "No, skip Linear"
+
+**If user selects "Yes":**
+
+1. **Check for Linear MCP tools or API access**
+
+2. **Prepare issue content:**
+   ```
+   Title: [Feature NNN] {Feature Name}
+
+   Description:
+   ## Overview
+   {Brief description from feature doc}
+
+   ## Problem Statement
+   {Problem from feature doc}
+
+   ## Target Users
+   {Users from feature doc}
+
+   ## Key User Stories
+   {Top 3-5 user stories}
+
+   ## Success Criteria
+   {Success metrics}
+
+   ---
+   📄 Full requirements: .agent/features/NNN-feature-name/README.md
+   ```
+
+3. **Create the issue:**
+   - If Linear MCP available: Use `mcp__linear__create_issue`
+   - If not available: Output the issue content for manual creation
+
+4. **Store Linear issue reference:**
+   - Add to feature README.md under a "## Tracking" section:
+     ```markdown
+     ## Tracking
+
+     **Linear Issue**: [LIN-XXX](https://linear.app/team/issue/LIN-XXX)
+     ```
+
+**If user selects "No":**
+Skip Linear integration and proceed to completion report.
+
+---
+
+## Step 10: Report Completion
 
 ```
 FEATURE REQUIREMENTS DOCUMENTED
@@ -448,6 +501,7 @@ Requirements: .agent/features/NNN-feature-name/README.md
 Status: Defined
 Priority: [Priority]
 Feature Number: NNN
+[If Linear] Linear Issue: LIN-XXX
 
 **Next Steps:**
 
@@ -456,6 +510,9 @@ For VK workflow:
 
 For local workflow:
   /plan local NNN
+
+For Linear workflow:
+  /plan linear NNN
 ```
 
 ---

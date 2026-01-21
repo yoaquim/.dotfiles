@@ -314,6 +314,12 @@ See `~/.claude/adapters/interface.md` for the full contract specification.
 - Projects that don't need parallel execution
 - Simpler orchestration needs
 
+**Linear Adapter** (`/plan linear`):
+- Team needs visibility into work via Linear
+- Each task is a Linear issue you work on in vanilla Claude Code
+- Creates both Linear issues AND local task files
+- Manual Claude Code spin-up per task
+
 ---
 
 ## Hooks
@@ -435,6 +441,29 @@ For simple features, you can just implement directly or create a quick task:
   → Documents the bug
   → Optionally creates VK ticket
   → Links to feature if applicable
+```
+
+### Linear Workflow
+
+```bash
+# 1. Define feature with Linear tracking
+/feature "User authentication system"
+  → Creates .agent/features/001-user-auth/README.md
+  → Optionally creates Linear issue for the feature
+
+# 2. Plan with Linear adapter
+/plan linear 001
+  → Creates Linear sub-issues for each task
+  → Also creates local .agent/tasks/ files
+
+# 3. Implement each task
+# For each Linear issue:
+  → Start new Claude Code session
+  → "Work on task f-001-0.1"
+  → Claude reads local task file
+  → Implement → Test → Done
+  → Mark Linear issue complete
+  → Move to next task
 ```
 
 ---
