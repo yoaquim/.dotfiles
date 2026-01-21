@@ -14,7 +14,7 @@ Global configuration for Claude Code workflow system. This provides a standardiz
 - [Configuration](#configuration)
 - [Universal SOPs](#universal-sops)
 - [Templates](#templates)
-- [Slash Commands](#slash-commands)
+- [Skills](#skills)
 - [Adapters](#adapters)
 - [Hooks](#hooks)
 - [Subagents](#subagents)
@@ -31,8 +31,8 @@ This global configuration provides:
 
 1. **Universal SOPs** - Documentation standards, git workflow, testing principles that apply to ALL projects
 2. **Project Templates** - Reusable templates for initializing `.agent/` directories in new projects
-3. **Slash Commands** - Global commands available in all projects (`/plan-task`, `/fix-bug`, etc.)
-4. **Cross-Project Search** - Search known-issues across all projects
+3. **Skills** - Global skills available in all projects (`/plan`, `/feature`, `/bug`, etc.)
+4. **Adapters** - Pluggable backends for task management (VK, local, Linear)
 5. **Standardized Naming** - Lowercase directories, kebab-case files, consistent numbering
 
 ---
@@ -43,9 +43,8 @@ This global configuration provides:
 
 The symlink `~/.claude` → `~/.dotfiles/claude/` is already created.
 
-**Available commands in any project:**
+**Available skills in any project:**
 ```
-# Setup & Planning
 /setup                      - Initialize .agent/ for new or existing project
 /feature                    - Define WHAT to build (feature requirements)
 /roadmap                    - Create/update project roadmap
@@ -53,21 +52,6 @@ The symlink `~/.claude` → `~/.dotfiles/claude/` is already created.
 /plan local 001             - Create local task documents
 /test-plan 001              - Generate test plan with Playwright
 /bug 001                    - Document bugs (feature-tied or standalone)
-
-# Workflow Commands
-/workflow:plan-task         - Plan HOW to build it (implementation)
-/workflow:implement-task    - Implement a task
-/workflow:test-task         - Test implementation
-/workflow:complete-task     - Finalize task
-/workflow:fix-bug           - Quick bug fix workflow
-/workflow:document-issue    - Document known issues
-/workflow:status            - Show project status
-/workflow:review-docs       - Review documentation
-/workflow:update-doc        - Update documentation
-
-# Deprecated (still work, use alternatives)
-/vk-plan 001                - Use /plan vk 001 instead
-/feature-bug 001            - Use /bug 001 instead
 ```
 
 ### On a New Machine
@@ -78,7 +62,7 @@ cd ~/.dotfiles/claude/
 ```
 
 This will:
-- Symlink commands, skills, workflow, and vk-tags to `~/.claude/`
+- Symlink skills, workflow, and vk-tags to `~/.claude/`
 - Verify all required files
 - Display configuration
 
@@ -89,20 +73,14 @@ This will:
 ```
 ~/.dotfiles/claude/                # Source (version controlled)
 ├── setup.sh                       # Setup script for new machines
-├── skills/                        # NEW: Skills (recommended over commands)
+├── skills/                        # Skills (slash commands)
 │   ├── README.md                  # Skills documentation
 │   ├── feature/SKILL.md           # Define feature requirements
 │   ├── setup/SKILL.md             # Project initialization
 │   ├── plan/SKILL.md              # Unified planning (vk, local, linear)
 │   ├── bug/SKILL.md               # Bug documentation
 │   ├── roadmap/SKILL.md           # Create/update roadmaps
-│   ├── test-plan/SKILL.md         # Test plan generation
-│   └── workflow-*/SKILL.md        # Workflow skills (9 total)
-├── commands/                      # Legacy slash commands (still work)
-│   ├── feature.md
-│   ├── setup.md
-│   ├── plan.md
-│   └── workflow/...
+│   └── test-plan/SKILL.md         # Test plan generation
 ├── adapters/                      # Pluggable adapter system
 │   ├── interface.md               # Adapter contract specification
 │   ├── vk.md                      # Vibe Kanban adapter
@@ -154,7 +132,6 @@ your-project/
 ├── .agent/
 │   ├── README.md                   # Documentation index
 │   ├── task-template.md            # Template for new tasks
-│   ├── .last-feature               # Tracks last feature for /plan-task
 │   ├── features/                   # Feature requirements (WHAT)
 │   │   ├── asset-upload.md
 │   │   └── user-permissions.md
@@ -171,7 +148,7 @@ your-project/
 │       ├── README.md
 │       └── 01-issue-name.md
 └── .claude/
-    └── commands/                   # Project-local commands (optional)
+    └── skills/                     # Project-local skills (optional)
 ```
 
 ---
@@ -179,7 +156,7 @@ your-project/
 ## Configuration
 
 Configuration is managed through:
-- **Slash commands**: Edit `.md` files in `~/.dotfiles/claude/commands/`
+- **Skills**: Edit `SKILL.md` files in `~/.dotfiles/claude/skills/`
 - **Templates**: Edit files in `~/.dotfiles/claude/workflow/templates/`
 - **SOPs**: Edit or add files in `~/.dotfiles/claude/workflow/sops/`
 - **VK Tags**: Edit files in `~/.dotfiles/claude/vk-tags/`
@@ -228,11 +205,11 @@ These apply to **ALL projects** and are **referenced**, not copied:
 
 **Location**: `~/.claude/workflow/templates/`
 
-Used by `/init-project` command to create new project documentation.
+Used by `/setup` command to create new project documentation.
 
 ### Template Variables
 
-Templates use `{{VARIABLE}}` placeholders that are replaced during `/init-project`:
+Templates use `{{VARIABLE}}` placeholders that are replaced during `/setup`:
 
 - `{{PROJECT_NAME}}` - Project name
 - `{{LANGUAGE}}` - Programming language
@@ -260,113 +237,41 @@ Edit templates to match your preferred structure or add new sections.
 
 ---
 
-## Slash Commands
-
-All commands are available globally in any project.
-
-### Project Setup
-
-- **`/setup`** - Initialize `.agent/` directory for new or existing project
-  - Creates `features/`, `tasks/`, `system/`, `sops/`, `known-issues/` directories
-  - Generates project documentation templates
-  - References universal SOPs
-
-### Feature Requirements (WHAT to Build)
-
-- **`/feature <description>`** - Define feature requirements through interactive conversation
-  - Uses EARS format for acceptance criteria
-  - Creates `.agent/features/<feature-name>.md`
-  - Tracks as last feature for `/workflow:plan-task` auto-detection
-  - Focuses on WHAT users need, not HOW to implement
-
-- **`/vk-plan`** - Create VK Kanban planning tickets for features
-  - Integrates with Vibe Kanban system
-  - Creates numbered task breakdowns
-
-### Implementation Planning (HOW to Build)
-
-- **`/workflow:plan-task [description]`** - Create technical implementation plan
-  - Auto-detects last feature if no argument provided
-  - Reads feature requirements if available
-  - Creates `.agent/tasks/XXX-task-name.md`
-  - Breaks complex features into multiple tasks if needed
-
-### Building & Testing
-
-- **`/workflow:implement-task [XXX]`** - Implement a task (defaults to latest)
-- **`/workflow:test-task [XXX]`** - Test a task implementation
-- **`/workflow:complete-task [XXX]`** - Finalize task, update docs, git workflow
-
-### Status & Documentation
-
-- **`/workflow:status`** - Show project status, features, active tasks, recent changes
-- **`/workflow:review-docs`** - Review documentation for issues or outdated info
-- **`/workflow:update-doc`** - Manually update documentation
-
-### Bug Fixes
-
-- **`/workflow:fix-bug <description>`** - Intelligent bug fix workflow
-  - **Quick hotfix** for simple bugs (done in one command)
-  - **Bug task** for complex issues (full investigation + fix)
-  - **Cross-project search** for similar issues automatically
-
-### Issue Documentation
-
-- **`/workflow:document-issue`** - Document a known issue or bug
-  - Searches similar issues across all projects
-  - Creates numbered issue document (NN: 01-99)
-  - Updates known-issues index
-  - Links to related tasks
-
-### Command Resolution Order
-
-1. **Project-local** (`.claude/commands/` in project root)
-2. **Global** (`~/.claude/commands/`)
-
-This allows project-specific overrides while maintaining global defaults.
-
----
-
-## Skills (New)
+## Skills
 
 **Location**: `~/.claude/skills/`
 
-Skills are the modern replacement for slash commands. They provide the same functionality with additional features:
-
-### Skills vs Commands
-
-| Aspect | Commands (Legacy) | Skills (New) |
-|--------|-------------------|--------------|
-| Location | `commands/name.md` | `skills/name/SKILL.md` |
-| Triggering | Manual only (`/name`) | Manual OR automatic |
-| Structure | Single file | Directory with supporting files |
-| Features | Basic | Tool restrictions, auto-invocation |
+Skills are slash commands that provide specialized functionality.
 
 ### Available Skills
 
-| Skill | Description |
-|-------|-------------|
-| `feature` | Define feature requirements |
-| `setup` | Initialize project |
-| `plan` | Plan feature implementation |
-| `bug` | Document bugs |
-| `roadmap` | Create/update roadmaps |
-| `test-plan` | Generate test plans |
-| `workflow-plan-task` | Plan a task |
-| `workflow-implement-task` | Implement a task |
-| `workflow-test-task` | Test implementation |
-| `workflow-complete-task` | Complete and finalize |
-| `workflow-status` | Show project status |
-| `workflow-review-docs` | Review documentation |
-| `workflow-fix-bug` | Fix bugs |
-| `workflow-document-issue` | Document known issues |
-| `workflow-update-doc` | Update documentation |
+| Skill | Description | Usage |
+|-------|-------------|-------|
+| `setup` | Initialize project with `.agent/` structure | `/setup` |
+| `feature` | Define feature requirements (WHAT to build) | `/feature <description>` |
+| `plan` | Plan feature implementation (HOW to build) | `/plan vk 001` or `/plan local 001` |
+| `bug` | Document bugs with optional VK integration | `/bug <description>` or `/bug 001` |
+| `roadmap` | Create/update project roadmap | `/roadmap` |
+| `test-plan` | Generate test plan with Playwright tests | `/test-plan 001` |
 
-### Migration
+### Skill Structure
 
-Both systems work simultaneously. Skills are recommended for new usage. The old commands remain for backward compatibility.
+Each skill is a directory with a `SKILL.md` file:
+```
+skills/
+├── feature/
+│   └── SKILL.md
+├── plan/
+│   └── SKILL.md
+└── ...
+```
 
-See `~/.claude/skills/README.md` for full documentation.
+### Skill Resolution Order
+
+1. **Project-local** (`.claude/skills/` in project root)
+2. **Global** (`~/.claude/skills/`)
+
+This allows project-specific overrides while maintaining global defaults.
 
 ---
 
@@ -380,7 +285,7 @@ Adapters allow the `/plan` command to work with different task management system
 
 | Adapter | Command | Purpose |
 |---------|---------|---------|
-| VK | `/plan vk 001` | Creates VK planning tickets |
+| VK | `/plan vk 001` | Creates VK planning tickets for parallel execution |
 | Local | `/plan local 001` | Creates task documents in `.agent/tasks/` |
 | Linear | `/plan linear 001` | Linear integration (placeholder) |
 
@@ -394,6 +299,20 @@ Each adapter implements:
 5. `report_completion()` - Generate summary
 
 See `~/.claude/adapters/interface.md` for the full contract specification.
+
+### When to Use Each Adapter
+
+**VK Adapter** (`/plan vk`):
+- Need parallel task execution via worktrees
+- Team collaboration through VK
+- Complex features with many dependencies
+- Want automated task orchestration
+
+**Local Adapter** (`/plan local`):
+- Working solo without VK
+- Quick prototyping
+- Projects that don't need parallel execution
+- Simpler orchestration needs
 
 ---
 
@@ -458,7 +377,7 @@ Subagents preserve main context by delegating reading/searching to specialized C
 ### Usage Pattern
 
 ```markdown
-## In command files:
+## In skill files:
 
 Use Task tool with subagent_type="Explore" and model="haiku":
 - Prompt: "Read .agent/ROADMAP.md and extract items related to [topic]"
@@ -480,69 +399,42 @@ See `~/.claude/guides/subagents.md` for comprehensive usage guide.
 # 2. Define WHAT to build (feature requirements)
 /feature "Asset upload with metadata extraction"
   → Interactive conversation about user needs
-  → Creates .agent/features/asset-upload.md
+  → Creates .agent/features/NNN-asset-upload/README.md
   → EARS format acceptance criteria
-  → Tracks as last feature
 
-# 3. Plan HOW to build it (implementation)
-/workflow:plan-task
-  → Auto-detects last feature (asset-upload)
+# 3. Plan HOW to build it
+/plan local 001                    # For solo work
+/plan vk 001                       # For VK-managed parallel execution
   → Reads feature requirements
-  → Creates technical implementation plan
-  → May create multiple tasks if complex
-  → Creates .agent/tasks/001-asset-upload-backend.md
+  → Creates task breakdown
+  → Creates .agent/tasks/ documents (local) or VK tickets (vk)
 
-# 4. Implement the task
-/workflow:implement-task 001
-  → Reads task doc and feature requirements
-  → Creates feature branch
-  → Implements according to plan
-  → Commits work
+# 4. Implement tasks
+# For local: manually work through tasks in .agent/tasks/
+# For VK: VK orchestrates execution via worktrees
 
-# 5. Test the implementation
-/workflow:test-task 001
-  → Runs automated tests
-  → Verifies acceptance criteria from feature requirements
-  → Manual testing checklist
-
-# 6. Complete and finalize
-/workflow:complete-task 001
-  → Updates task status to Complete
-  → Updates system documentation
-  → Merges branch
-  → Cleans up
+# 5. Generate test plan
+/test-plan 001
+  → Creates comprehensive test plan
+  → Generates Playwright e2e tests
 ```
 
 ### Quick Feature (No Formal Requirements)
 
-For simple features, skip `/feature`:
+For simple features, you can just implement directly or create a quick task:
 
 ```bash
-/workflow:plan-task "Add user logout button"
-  → Plans directly without requirements doc
-/workflow:implement-task
-/workflow:test-task
-/workflow:complete-task
+/plan local "Add user logout button"
+  → Plans directly without formal requirements doc
 ```
 
-### Bug Fix Flow
+### Bug Documentation
 
 ```bash
-/workflow:fix-bug "Upload fails for files > 10MB"
-  → Auto-searches similar issues across projects
-  → Routes to quick hotfix OR full bug task
-  → Implements fix
-  → Tests and documents
-```
-
-### Check Status
-
-```bash
-/workflow:status
-  → Shows defined features
-  → Shows task progress
-  → Shows git status
-  → Suggests next steps
+/bug "Upload fails for files > 10MB"
+  → Documents the bug
+  → Optionally creates VK ticket
+  → Links to feature if applicable
 ```
 
 ---
@@ -556,8 +448,6 @@ Known issues are searchable across **all projects** in `~/Projects`:
 ```bash
 # Manual search
 find ~/Projects -type f -path "*/\.agent/known-issues/*.md" -exec grep -l "keyword" {} \;
-
-# Automatic search in /workflow:fix-bug and /workflow:document-issue commands
 ```
 
 **Why?**
@@ -568,7 +458,7 @@ find ~/Projects -type f -path "*/\.agent/known-issues/*.md" -exec grep -l "keywo
 
 ### Task Insights
 
-While tasks are project-specific, you can search across projects for similar implementations:
+Search across projects for similar implementations:
 
 ```bash
 find ~/Projects -type f -path "*/\.agent/tasks/*.md" -exec grep -l "authentication" {} \;
@@ -595,16 +485,16 @@ cd ~/.dotfiles/claude/
 ```
 
 The script will:
-- ✅ Create symlink `~/.claude` → `~/.dotfiles/claude/`
-- ✅ Verify all required files
-- ✅ Check configuration
-- ✅ Display available commands
+- Create symlink `~/.claude` → `~/.dotfiles/claude/`
+- Verify all required files
+- Check configuration
+- Display available skills
 
 ### Verify Setup
 
 ```bash
 ls -la ~/.claude          # Should show symlink
-ls ~/.claude/commands/    # Should list available commands
+ls ~/.claude/skills/      # Should list available skills
 ```
 
 ---
@@ -619,18 +509,18 @@ ls ~/.claude/commands/    # Should list available commands
 4. Commit to dotfiles repo
 5. All projects automatically reference it
 
-### Add New Slash Command
+### Add New Skill
 
-**Global command:**
-1. Create `.md` file in `~/.dotfiles/claude/commands/`
-2. Follow existing command format
+**Global skill:**
+1. Create directory in `~/.dotfiles/claude/skills/`
+2. Add `SKILL.md` file following existing format
 3. Available in all projects immediately
 
-**Project-local command:**
-1. Create `.claude/commands/` in project root
-2. Add `.md` file with command
+**Project-local skill:**
+1. Create `.claude/skills/` in project root
+2. Add skill directory with `SKILL.md`
 3. Only available in that project
-4. Overrides global command if same name
+4. Overrides global skill if same name
 
 ### Modify Templates
 
@@ -653,7 +543,7 @@ ls ~/.claude/commands/    # Should list available commands
 
 **After Major Workflow Changes**:
 - Update relevant SOPs
-- Update command files if needed
+- Update skill files if needed
 - Update templates to reflect new patterns
 
 ### Version Control
@@ -718,16 +608,14 @@ git pull
 
 **Trade-off**: Projects depend on external files, but that's acceptable since they're version controlled in dotfiles.
 
-### Why Hybrid Approach?
+### Why Adapter Pattern?
 
-**Decision**: Universal SOPs + Project-Specific SOPs
+**Decision**: `/plan` uses adapters (vk, local, linear) for different backends
 
 **Rationale**:
-- Universal patterns (git, testing) don't change per-project
-- Framework setup (Django, React) varies by tech stack
-- Best of both worlds
-
-**Trade-off**: Slightly more complex, but much more maintainable.
+- Same planning workflow, different execution targets
+- Easy to add new backends
+- Consistent interface across systems
 
 ### Why Cross-Project Search?
 
@@ -751,8 +639,6 @@ git pull
 - Easier to type and remember
 - No case sensitivity issues
 
-**Trade-off**: Required migration from old capitalized format, but one-time cost.
-
 ---
 
 ## Troubleshooting
@@ -767,13 +653,13 @@ cd ~/.dotfiles/claude/
 ./setup.sh  # Will backup and recreate
 ```
 
-### Command Not Found
+### Skill Not Found
 
-**Problem**: Slash command doesn't work
+**Problem**: Skill doesn't work
 
 **Solution**:
-1. Verify command exists: `ls ~/.claude/commands/`
-2. Check command name matches exactly (e.g., `/workflow:plan-task` not `/plan-task`)
+1. Verify skill exists: `ls ~/.claude/skills/`
+2. Check skill has `SKILL.md` file
 3. Restart Claude Code session
 
 ### Template Variables Not Replaced
@@ -796,18 +682,13 @@ cd ~/.dotfiles/claude/
 
 ---
 
-## Contributing
-
-This is personal configuration, but you can:
-
-1. **Fork** for your own use
-2. **Adapt** templates and commands to your workflow
-3. **Share** improvements or ideas
-4. **Maintain** as part of your dotfiles
-
----
-
 ## Version History
+
+- **2026-01-21** - Simplified to single-layer skills
+  - Removed `commands/` directory (replaced by skills)
+  - Removed `workflow-*` skills (execution layer removed)
+  - Retained core skills: setup, feature, plan, bug, roadmap, test-plan
+  - Adapters handle different execution backends (vk, local, linear)
 
 - **2026-01-18** - Major workflow improvements
   - Added unified `/plan` command with adapter architecture (vk, local, linear)
@@ -816,10 +697,6 @@ This is personal configuration, but you can:
   - Added `/bug` command (replaces `/feature-bug`)
   - Added hooks documentation (validation guards, context loaders)
   - Added subagents guide for context preservation
-  - Deprecated `/vk-plan` (use `/plan vk`)
-  - Deprecated `/feature-bug` (use `/bug`)
-  - Modified `/setup` to include roadmap option
-  - Modified `/feature` to support roadmap references
 
 - **2025-10-25** - Initial global configuration
   - Extracted from project-specific setup
@@ -833,11 +710,11 @@ This is personal configuration, but you can:
 ## Related Documentation
 
 - [Universal SOPs](./sops/README.md)
-- [Implementation Plan](./IMPLEMENTATION.md)
-- [Setup Script](./setup.sh)
+- [Setup Script](../setup.sh)
+- [Adapters](../adapters/interface.md)
 
 ---
 
 **Location**: `~/.dotfiles/claude/workflow/README.md`
 **Symlink**: `~/.claude/workflow/README.md`
-**Last Updated**: 2026-01-18
+**Last Updated**: 2026-01-21

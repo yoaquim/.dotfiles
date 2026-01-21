@@ -273,10 +273,10 @@ Total: X tasks created
 WORKFLOW:
 Start with Level 0 tasks. For each task:
 
-1. /workflow:implement-task f-{num}-0.1-{title}
-2. (implement the task)
-3. /workflow:test-task
-4. /workflow:complete-task
+1. Read the task document
+2. Create feature branch if needed
+3. Implement the task
+4. Run tests
 5. Move to next task
 
 Level 0 tasks can be worked in any order.
@@ -300,15 +300,6 @@ Unlike VK (which uses worktrees), local workflow uses standard git branching:
 ### Task Dependencies
 
 Local tasks use explicit documentation of dependencies rather than enforced ordering. The developer is responsible for completing dependencies before dependent tasks.
-
-### Integration with /workflow Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/workflow:plan-task` | Alternative to `/plan local` for single tasks |
-| `/workflow:implement-task` | Start working on a task |
-| `/workflow:test-task` | Test completed implementation |
-| `/workflow:complete-task` | Finalize and document completion |
 
 ### When to Use Local vs VK
 

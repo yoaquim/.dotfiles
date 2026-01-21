@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Claude Code Workflow Setup Script
-# Symlinks commands and workflow files to ~/.claude/
+# Symlinks skills and workflow files to ~/.claude/
 
 set -e -o pipefail  # Exit on error
 
@@ -41,10 +41,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 info "Script location: $SCRIPT_DIR"
 
 # Verify we're in the right place
-if [[ ! -d "$SCRIPT_DIR/commands" ]] || [[ ! -d "$SCRIPT_DIR/workflow" ]]; then
+if [[ ! -d "$SCRIPT_DIR/skills" ]] || [[ ! -d "$SCRIPT_DIR/workflow" ]]; then
     error "Expected structure not found!"
     error "Make sure you're running this from ~/.dotfiles/claude/"
-    error "Required directories: commands/, workflow/"
+    error "Required directories: skills/, workflow/"
     exit 1
 fi
 
@@ -112,80 +112,7 @@ symlink_directory() {
 }
 
 # ============================================================
-# Helper function to symlink a file
-# ============================================================
-symlink_file() {
-    local SOURCE="$1"
-    local TARGET="$2"
-    local NAME="$3"
-
-    if [[ -L "$TARGET" ]]; then
-        CURRENT_TARGET="$(readlink "$TARGET")"
-        if [[ "$CURRENT_TARGET" == "$SOURCE" ]]; then
-            success "$NAME (already linked)"
-        else
-            rm "$TARGET"
-            ln -s "$SOURCE" "$TARGET"
-            success "$NAME (replaced)"
-        fi
-    elif [[ -f "$TARGET" ]]; then
-        warning "$NAME exists as a file, backing up..."
-        mv "$TARGET" "$TARGET.backup.$(date +%Y%m%d_%H%M%S)"
-        ln -s "$SOURCE" "$TARGET"
-        success "$NAME (backed up and linked)"
-    else
-        ln -s "$SOURCE" "$TARGET"
-        success "$NAME"
-    fi
-}
-
-# ============================================================
-# Step 1: Ensure ~/.claude/commands exists
-# ============================================================
-if [[ ! -d "$HOME/.claude/commands" ]]; then
-    info "Creating ~/.claude/commands/"
-    mkdir -p "$HOME/.claude/commands"
-fi
-
-# ============================================================
-# Step 2: Symlink individual command files at root level
-# ============================================================
-echo ""
-info "Symlinking root-level commands..."
-
-for cmd_file in "$SCRIPT_DIR/commands"/*.md; do
-    if [[ -f "$cmd_file" ]]; then
-        filename=$(basename "$cmd_file")
-        symlink_file "$cmd_file" "$HOME/.claude/commands/$filename" "$filename"
-    fi
-done
-
-# ============================================================
-# Step 3: Symlink workflow commands subdirectory
-# ============================================================
-echo ""
-info "Symlinking workflow commands..."
-
-symlink_directory "$SCRIPT_DIR/commands/workflow" "$HOME/.claude/commands/workflow" "~/.claude/commands/workflow"
-
-# ============================================================
-# Step 4: Symlink vk-tags directory
-# ============================================================
-echo ""
-info "Symlinking vk-tags..."
-
-symlink_directory "$SCRIPT_DIR/vk-tags" "$HOME/.claude/vk-tags" "~/.claude/vk-tags"
-
-# ============================================================
-# Step 5: Symlink workflow directory (SOPs and templates)
-# ============================================================
-echo ""
-info "Symlinking workflow directory..."
-
-symlink_directory "$SCRIPT_DIR/workflow" "$HOME/.claude/workflow" "~/.claude/workflow"
-
-# ============================================================
-# Step 5.5: Symlink skills directory
+# Step 1: Symlink skills directory
 # ============================================================
 echo ""
 info "Symlinking skills directory..."
@@ -193,22 +120,42 @@ info "Symlinking skills directory..."
 symlink_directory "$SCRIPT_DIR/skills" "$HOME/.claude/skills" "~/.claude/skills"
 
 # ============================================================
-# Step 6: Verify setup
+# Step 2: Symlink vk-tags directory
+# ============================================================
+echo ""
+info "Symlinking vk-tags..."
+
+symlink_directory "$SCRIPT_DIR/vk-tags" "$HOME/.claude/vk-tags" "~/.claude/vk-tags"
+
+# ============================================================
+# Step 3: Symlink workflow directory (SOPs and templates)
+# ============================================================
+echo ""
+info "Symlinking workflow directory..."
+
+symlink_directory "$SCRIPT_DIR/workflow" "$HOME/.claude/workflow" "~/.claude/workflow"
+
+# ============================================================
+# Step 4: Symlink adapters directory
+# ============================================================
+echo ""
+info "Symlinking adapters directory..."
+
+symlink_directory "$SCRIPT_DIR/adapters" "$HOME/.claude/adapters" "~/.claude/adapters"
+
+# ============================================================
+# Step 5: Verify setup
 # ============================================================
 echo ""
 info "Verifying setup..."
 
-# Check workflow commands
-if [[ -L "$HOME/.claude/commands/workflow" ]]; then
-    WORKFLOW_COUNT=$(find "$SCRIPT_DIR/commands/workflow" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "  ✓ Workflow commands symlinked ($WORKFLOW_COUNT commands)"
+# Check skills
+if [[ -L "$HOME/.claude/skills" ]]; then
+    SKILLS_COUNT=$(find "$SCRIPT_DIR/skills" -name "SKILL.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo "  ✓ Skills directory symlinked ($SKILLS_COUNT skills)"
 else
-    error "Workflow commands NOT symlinked"
+    error "Skills directory NOT symlinked"
 fi
-
-# Check root commands
-ROOT_CMD_COUNT=$(find "$HOME/.claude/commands" -maxdepth 1 -name "*.md" -type l 2>/dev/null | wc -l | tr -d ' ')
-echo "  ✓ Root commands symlinked ($ROOT_CMD_COUNT commands)"
 
 # Check vk-tags
 if [[ -L "$HOME/.claude/vk-tags" ]]; then
@@ -225,16 +172,16 @@ else
     error "Workflow directory NOT symlinked"
 fi
 
-# Check skills
-if [[ -L "$HOME/.claude/skills" ]]; then
-    SKILLS_COUNT=$(find "$SCRIPT_DIR/skills" -name "SKILL.md" -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "  ✓ Skills directory symlinked ($SKILLS_COUNT skills)"
+# Check adapters
+if [[ -L "$HOME/.claude/adapters" ]]; then
+    ADAPTER_COUNT=$(find "$SCRIPT_DIR/adapters" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo "  ✓ Adapters directory symlinked ($ADAPTER_COUNT adapters)"
 else
-    warning "Skills directory NOT symlinked"
+    warning "Adapters directory NOT symlinked"
 fi
 
 # ============================================================
-# Step 7: Display what's available
+# Step 6: Display what's available
 # ============================================================
 echo ""
 echo "╔════════════════════════════════════════╗"
@@ -245,19 +192,18 @@ echo ""
 info "Structure created:"
 echo ""
 echo "~/.claude/"
-echo "├── commands/             → Legacy slash commands (deprecated)"
-echo "│   ├── feature.md"
-echo "│   ├── setup.md"
-echo "│   └── workflow/..."
-echo "├── skills/               → NEW: Skills (recommended)"
-echo "│   ├── feature/SKILL.md"
+echo "├── skills/               → Slash command skills"
 echo "│   ├── setup/SKILL.md"
+echo "│   ├── feature/SKILL.md"
 echo "│   ├── plan/SKILL.md"
 echo "│   ├── bug/SKILL.md"
 echo "│   ├── roadmap/SKILL.md"
-echo "│   ├── test-plan/SKILL.md"
-echo "│   └── workflow-*/SKILL.md"
-echo "├── vk-tags/              → Reusable task tags"
+echo "│   └── test-plan/SKILL.md"
+echo "├── adapters/             → Task management adapters"
+echo "│   ├── vk.md"
+echo "│   ├── local.md"
+echo "│   └── linear.md"
+echo "├── vk-tags/              → Reusable VK task tags"
 echo "├── workflow/"
 echo "│   ├── sops/             → Universal SOPs"
 echo "│   ├── templates/        → Project templates"
@@ -265,26 +211,20 @@ echo "│   └── README.md"
 echo "└── ... (Claude Code app data)"
 echo ""
 
-info "Available slash commands:"
+info "Available skills:"
 echo ""
 echo "  /setup               - Initialize .agent/ for new/existing project"
 echo "  /feature             - Define WHAT to build (feature requirements)"
-echo "  /vk-plan             - Create VK Kanban planning tickets"
-echo ""
-echo "  /workflow:plan-task      - Plan HOW to build it"
-echo "  /workflow:implement-task - Implement a task"
-echo "  /workflow:test-task      - Test implementation"
-echo "  /workflow:complete-task  - Finalize and document"
-echo "  /workflow:fix-bug        - Quick bug fix"
-echo "  /workflow:document-issue - Document known issue"
-echo "  /workflow:status         - Show project status"
-echo "  /workflow:review-docs    - Review documentation"
-echo "  /workflow:update-doc     - Update documentation"
+echo "  /plan vk 001         - Plan feature in Vibe Kanban"
+echo "  /plan local 001      - Plan feature with local task files"
+echo "  /bug                  - Document bugs"
+echo "  /roadmap             - Create/update project roadmap"
+echo "  /test-plan 001       - Generate test plan with Playwright"
 echo ""
 
 info "Typical workflow:"
 echo ""
-echo "  /setup → /feature → /workflow:plan-task → /workflow:implement-task → /workflow:test-task → /workflow:complete-task"
+echo "  /setup → /feature → /plan local 001 → implement → test → done"
 echo ""
 
 success "Setup complete! Happy coding!"
