@@ -185,6 +185,14 @@ info "Symlinking workflow directory..."
 symlink_directory "$SCRIPT_DIR/workflow" "$HOME/.claude/workflow" "~/.claude/workflow"
 
 # ============================================================
+# Step 5.5: Symlink skills directory
+# ============================================================
+echo ""
+info "Symlinking skills directory..."
+
+symlink_directory "$SCRIPT_DIR/skills" "$HOME/.claude/skills" "~/.claude/skills"
+
+# ============================================================
 # Step 6: Verify setup
 # ============================================================
 echo ""
@@ -217,6 +225,14 @@ else
     error "Workflow directory NOT symlinked"
 fi
 
+# Check skills
+if [[ -L "$HOME/.claude/skills" ]]; then
+    SKILLS_COUNT=$(find "$SCRIPT_DIR/skills" -name "SKILL.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo "  ✓ Skills directory symlinked ($SKILLS_COUNT skills)"
+else
+    warning "Skills directory NOT symlinked"
+fi
+
 # ============================================================
 # Step 7: Display what's available
 # ============================================================
@@ -229,20 +245,18 @@ echo ""
 info "Structure created:"
 echo ""
 echo "~/.claude/"
-echo "├── commands/"
-echo "│   ├── feature.md        → Define feature requirements"
-echo "│   ├── setup.md          → Initialize project"
-echo "│   ├── vk-plan.md        → Create VK planning tickets"
-echo "│   └── workflow/         → Workflow commands"
-echo "│       ├── plan-task.md"
-echo "│       ├── implement-task.md"
-echo "│       ├── test-task.md"
-echo "│       ├── complete-task.md"
-echo "│       ├── fix-bug.md"
-echo "│       ├── document-issue.md"
-echo "│       ├── status.md"
-echo "│       ├── review-docs.md"
-echo "│       └── update-doc.md"
+echo "├── commands/             → Legacy slash commands (deprecated)"
+echo "│   ├── feature.md"
+echo "│   ├── setup.md"
+echo "│   └── workflow/..."
+echo "├── skills/               → NEW: Skills (recommended)"
+echo "│   ├── feature/SKILL.md"
+echo "│   ├── setup/SKILL.md"
+echo "│   ├── plan/SKILL.md"
+echo "│   ├── bug/SKILL.md"
+echo "│   ├── roadmap/SKILL.md"
+echo "│   ├── test-plan/SKILL.md"
+echo "│   └── workflow-*/SKILL.md"
 echo "├── vk-tags/              → Reusable task tags"
 echo "├── workflow/"
 echo "│   ├── sops/             → Universal SOPs"

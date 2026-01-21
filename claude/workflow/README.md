@@ -73,12 +73,12 @@ The symlink `~/.claude` → `~/.dotfiles/claude/` is already created.
 ### On a New Machine
 
 ```bash
-cd ~/.dotfiles/config/claude/
+cd ~/.dotfiles/claude/
 ./setup.sh
 ```
 
 This will:
-- Create symlink `~/.claude` → `~/.dotfiles/config/claude/`
+- Symlink commands, skills, workflow, and vk-tags to `~/.claude/`
 - Verify all required files
 - Display configuration
 
@@ -89,25 +89,20 @@ This will:
 ```
 ~/.dotfiles/claude/                # Source (version controlled)
 ├── setup.sh                       # Setup script for new machines
-├── commands/                      # Slash commands (global)
-│   ├── feature.md                 # Define feature requirements
-│   ├── setup.md                   # Project initialization
-│   ├── roadmap.md                 # Create/update roadmaps
-│   ├── plan.md                    # Unified planning (vk, local, linear)
-│   ├── test-plan.md               # Test plan generation
-│   ├── bug.md                     # Bug documentation
-│   ├── vk-plan.md                 # [DEPRECATED] Use /plan vk
-│   ├── feature-bug.md             # [DEPRECATED] Use /bug
-│   └── workflow/                  # Workflow commands
-│       ├── plan-task.md
-│       ├── implement-task.md
-│       ├── test-task.md
-│       ├── complete-task.md
-│       ├── fix-bug.md
-│       ├── document-issue.md
-│       ├── status.md
-│       ├── review-docs.md
-│       └── update-doc.md
+├── skills/                        # NEW: Skills (recommended over commands)
+│   ├── README.md                  # Skills documentation
+│   ├── feature/SKILL.md           # Define feature requirements
+│   ├── setup/SKILL.md             # Project initialization
+│   ├── plan/SKILL.md              # Unified planning (vk, local, linear)
+│   ├── bug/SKILL.md               # Bug documentation
+│   ├── roadmap/SKILL.md           # Create/update roadmaps
+│   ├── test-plan/SKILL.md         # Test plan generation
+│   └── workflow-*/SKILL.md        # Workflow skills (9 total)
+├── commands/                      # Legacy slash commands (still work)
+│   ├── feature.md
+│   ├── setup.md
+│   ├── plan.md
+│   └── workflow/...
 ├── adapters/                      # Pluggable adapter system
 │   ├── interface.md               # Adapter contract specification
 │   ├── vk.md                      # Vibe Kanban adapter
@@ -329,6 +324,49 @@ All commands are available globally in any project.
 2. **Global** (`~/.claude/commands/`)
 
 This allows project-specific overrides while maintaining global defaults.
+
+---
+
+## Skills (New)
+
+**Location**: `~/.claude/skills/`
+
+Skills are the modern replacement for slash commands. They provide the same functionality with additional features:
+
+### Skills vs Commands
+
+| Aspect | Commands (Legacy) | Skills (New) |
+|--------|-------------------|--------------|
+| Location | `commands/name.md` | `skills/name/SKILL.md` |
+| Triggering | Manual only (`/name`) | Manual OR automatic |
+| Structure | Single file | Directory with supporting files |
+| Features | Basic | Tool restrictions, auto-invocation |
+
+### Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `feature` | Define feature requirements |
+| `setup` | Initialize project |
+| `plan` | Plan feature implementation |
+| `bug` | Document bugs |
+| `roadmap` | Create/update roadmaps |
+| `test-plan` | Generate test plans |
+| `workflow-plan-task` | Plan a task |
+| `workflow-implement-task` | Implement a task |
+| `workflow-test-task` | Test implementation |
+| `workflow-complete-task` | Complete and finalize |
+| `workflow-status` | Show project status |
+| `workflow-review-docs` | Review documentation |
+| `workflow-fix-bug` | Fix bugs |
+| `workflow-document-issue` | Document known issues |
+| `workflow-update-doc` | Update documentation |
+
+### Migration
+
+Both systems work simultaneously. Skills are recommended for new usage. The old commands remain for backward compatibility.
+
+See `~/.claude/skills/README.md` for full documentation.
 
 ---
 
