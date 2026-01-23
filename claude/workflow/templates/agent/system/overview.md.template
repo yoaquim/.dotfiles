@@ -1,70 +1,25 @@
 # System Overview
 
 **Project**: {{PROJECT_NAME}}
-**Status**: 🔄 Active Development | ✅ Production | ⚠️ Maintenance
+**Status**: Active Development | Production | Maintenance
 **Last Updated**: {{INIT_DATE}}
 
 ---
 
-## Project Description
+## Description
 
-[Brief description of what this project does and why it exists]
-
-**Purpose**:
-- Primary goal of the project
-- Who it serves
-- What problem it solves
-
-**Current State**:
-- What's working now
-- What's in progress
-- What's planned
+[What this project does and why it exists]
 
 ---
 
 ## Technology Stack
 
-### Backend
-- **Language**: {{LANGUAGE}}
-- **Framework**: {{FRAMEWORK}}
-- **Database**: {{DATABASE}}
-- **ORM/Query Builder**: [e.g., Django ORM, SQLAlchemy]
-
-### Frontend
-- **Framework**: [e.g., React, Vue, vanilla JS]
-- **Build Tool**: [e.g., Vite, Webpack]
-- **Styling**: [e.g., TailwindCSS, CSS Modules]
-
-### Infrastructure
-- **Containerization**: {{CONTAINER_PLATFORM}} (if applicable)
-- **Deployment**: [e.g., Docker Compose, Kubernetes]
-- **CI/CD**: [e.g., GitHub Actions, GitLab CI]
-
-### Testing
-- **Framework**: {{TEST_FRAMEWORK}}
-- **Coverage Goal**: 80%+
-- **Tools**: [e.g., pytest, jest, coverage.py]
-
-### Development Tools
-- **Package Manager**: [e.g., pip, npm, yarn]
-- **Linting**: [e.g., ruff, eslint, prettier]
-- **Type Checking**: [e.g., mypy, TypeScript]
-
----
-
-## Key Technical Decisions
-
-### Decision 1: [Technology/Pattern Choice]
-**What**: [Brief description of the decision]
-**Why**: [Rationale for this choice]
-**Trade-offs**: [What we gain vs what we lose]
-**Date**: YYYY-MM-DD
-
-### Decision 2: [Next Decision]
-**What**: [Brief description]
-**Why**: [Rationale]
-**Trade-offs**: [Pros and cons]
-**Date**: YYYY-MM-DD
+| Layer | Technology |
+|-------|------------|
+| Language | {{LANGUAGE}} |
+| Framework | {{FRAMEWORK}} |
+| Database | {{DATABASE}} |
+| Testing | {{TEST_FRAMEWORK}} |
 
 ---
 
@@ -72,116 +27,61 @@
 
 ```
 {{PROJECT_NAME}}/
-├── [main app directory]/
-│   ├── [feature modules]/
-│   └── [configuration]/
+├── [src/app directory]/
 ├── tests/
 ├── .agent/
-├── docker-compose.yml (if applicable)
 └── README.md
 ```
 
 **Key Directories**:
-- `[directory]` - Purpose and what it contains
-- `[directory]` - Purpose and what it contains
+- `[directory]` - [Purpose]
 
 ---
 
-## Development Workflow
+## Development Commands
 
-### Local Development
 ```bash
-# Start development environment
+# Start development
 {{DEV_COMMAND}}
 
 # Run tests
 {{TEST_COMMAND}}
 
-# Apply database migrations (if applicable)
-[migration command]
+# Build
+{{BUILD_COMMAND}}
 ```
-
-### Common Tasks
-- **Add new feature**: Create task doc → Implement → Test → Document
-- **Fix bug**: Document issue → Fix → Test → Update known-issues
-- **Deploy**: [Deployment process]
-
-**Reference**: See `.agent/sops/` for detailed procedures
-
----
-
-## External Dependencies
-
-### Third-Party Services
-- **Service Name**: [What it does, why we use it]
-- **Service Name**: [What it does, why we use it]
-
-### Key Libraries/Packages
-- **Package Name**: [Purpose, version]
-- **Package Name**: [Purpose, version]
 
 ---
 
 ## Environment Variables
 
-**Required**:
-- `VAR_NAME` - Description and purpose
-- `VAR_NAME` - Description and purpose
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `VAR_NAME` | [Purpose] | Yes/No |
 
-**Optional**:
-- `VAR_NAME` - Description and default value
-- `VAR_NAME` - Description and default value
-
-**Reference**: See `.env.example` for complete list
+See `.env.example` for complete list.
 
 ---
 
-## Current Priorities
+## Key Technical Decisions
 
-### High Priority
-1. [Task or feature name] - See `.agent/tasks/NNN-name.md`
-2. [Task or feature name] - See `.agent/tasks/NNN-name.md`
-
-### Medium Priority
-1. [Task or feature name]
-2. [Task or feature name]
-
-### Low Priority
-1. [Task or feature name]
-2. [Task or feature name]
+### [Decision Title]
+**Decision**: [What was decided]
+**Rationale**: [Why]
+**Date**: YYYY-MM-DD
 
 ---
 
-## Known Limitations
+## External Dependencies
 
-1. **Limitation Name**
-   - Description of the limitation
-   - Why it exists
-   - Plans to address (if any)
-
-2. **Limitation Name**
-   - Description
-   - Reason
-   - Future plans
+| Dependency | Purpose |
+|------------|---------|
+| [Service/Library] | [What it does] |
 
 ---
 
-## Team & Contacts
+## Related Docs
 
-**Primary Developer**: [Name/Handle]
-**Repository**: [GitHub/GitLab URL]
-**Documentation**: `.agent/README.md`
-
----
-
-## Quick Links
-
-- [Architecture Details](./architecture.md)
-- [Database Schema](./database-schema.md) (if applicable)
-- [Task List](../README.md#tasks--features)
+- [Architecture](./architecture.md)
+- [Tasks & Features](../README.md)
 - [Known Issues](../known-issues/README.md)
-
----
-
-**Last Updated**: {{INIT_DATE}}
-**Update Frequency**: After major features or tech stack changes

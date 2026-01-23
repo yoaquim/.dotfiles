@@ -2,143 +2,66 @@
 
 **Feature**: {{FEATURE_NUMBER}}-{{FEATURE_NAME}}
 **Created**: {{INIT_DATE}}
-**Status**: Draft
 
 ---
 
-## Overview
+## Scope
 
-**Feature Description**: {{FEATURE_DESCRIPTION}}
+**In Scope**:
+- [Core functionality from feature requirements]
+- [User flows]
+- [Error handling]
 
-**Testing Objectives**:
-- Verify all acceptance criteria from feature requirements
-- Test happy path scenarios
-- Test edge cases and error handling
-- Verify non-functional requirements (performance, accessibility)
-
----
-
-## Test Scope
-
-### In Scope
-- [ ] Core functionality as defined in feature requirements
-- [ ] User flows documented in feature spec
-- [ ] Error handling and validation
-- [ ] UI/UX interactions (if applicable)
-
-### Out of Scope
-- [ ] [List any areas explicitly not tested]
-
----
-
-## Test Environment
-
-**Target Environment**: {{ENVIRONMENT}}
-**Browser(s)**: {{BROWSERS}}
-**Base URL**: {{BASE_URL}}
+**Out of Scope**:
+- [What's not being tested]
 
 ---
 
 ## Test Scenarios
 
-### Scenario 1: [Happy Path - Primary Flow]
-
-**Description**: [What this scenario tests]
-
-**Preconditions**:
-- [Required state before test]
+### Happy Path: [Primary Flow]
 
 **Steps**:
 1. [Action]
 2. [Action]
-3. [Action]
+3. [Verify result]
 
-**Expected Results**:
-- [Expected outcome]
-- [Expected outcome]
-
-**Playwright Script**:
+**Playwright**:
 ```typescript
-test('[Scenario 1 description]', async ({ page }) => {
-  // Navigate to starting point
-  await page.goto('{{BASE_URL}}/path');
-
-  // Perform actions
+test('primary flow', async ({ page }) => {
+  await page.goto('/path');
   await page.click('[data-testid="button"]');
-
-  // Verify results
   await expect(page.locator('[data-testid="result"]')).toBeVisible();
 });
 ```
 
 ---
 
-### Scenario 2: [Alternative Flow]
-
-**Description**: [What this scenario tests]
-
-**Preconditions**:
-- [Required state]
+### Error Handling: [Error Condition]
 
 **Steps**:
-1. [Action]
-2. [Action]
+1. [Trigger error]
+2. [Verify error message]
 
-**Expected Results**:
-- [Expected outcome]
-
-**Playwright Script**:
+**Playwright**:
 ```typescript
-test('[Scenario 2 description]', async ({ page }) => {
-  // Test implementation
-});
-```
-
----
-
-### Scenario 3: [Error Handling]
-
-**Description**: [What error condition is tested]
-
-**Preconditions**:
-- [State that triggers error]
-
-**Steps**:
-1. [Action that causes error]
-2. [Observe error handling]
-
-**Expected Results**:
-- [Error message displayed]
-- [System remains in valid state]
-
-**Playwright Script**:
-```typescript
-test('[Error scenario description]', async ({ page }) => {
+test('handles error', async ({ page }) => {
   // Trigger error condition
-
-  // Verify error handling
-  await expect(page.locator('[data-testid="error-message"]')).toHaveText('Expected error');
+  await expect(page.locator('[data-testid="error"]')).toHaveText('Expected error');
 });
 ```
 
 ---
 
-### Scenario 4: [Edge Case]
-
-**Description**: [Edge case being tested]
-
-**Preconditions**:
-- [Unusual state or condition]
+### Edge Case: [Edge Condition]
 
 **Steps**:
-1. [Action]
+1. [Setup edge condition]
+2. [Verify behavior]
 
-**Expected Results**:
-- [How system handles edge case]
-
-**Playwright Script**:
+**Playwright**:
 ```typescript
-test('[Edge case description]', async ({ page }) => {
+test('edge case', async ({ page }) => {
   // Edge case test
 });
 ```
@@ -147,79 +70,22 @@ test('[Edge case description]', async ({ page }) => {
 
 ## Acceptance Criteria Mapping
 
-| Criteria ID | Description | Test Scenario |
-|-------------|-------------|---------------|
-| AC-1 | [From feature spec] | Scenario 1 |
-| AC-2 | [From feature spec] | Scenario 2 |
-| AC-3 | [From feature spec] | Scenario 3 |
-
----
-
-## Non-Functional Tests
-
-### Performance
-- [ ] Page loads within X seconds
-- [ ] No memory leaks during extended use
-- [ ] API responses under X ms
-
-### Accessibility
-- [ ] Keyboard navigation works
-- [ ] Screen reader compatible
-- [ ] Color contrast meets WCAG standards
-
-### Security
-- [ ] Input validation prevents injection
-- [ ] Unauthorized access blocked
-- [ ] Sensitive data not exposed
+| Criteria | Test Scenario |
+|----------|---------------|
+| [AC from feature] | Happy Path |
+| [AC from feature] | Error Handling |
 
 ---
 
 ## Test Data
 
-| Data Set | Description | Purpose |
-|----------|-------------|---------|
-| Valid user | email: test@example.com | Happy path testing |
-| Invalid user | email: invalid | Error handling |
+| Data | Purpose |
+|------|---------|
+| [Test data] | [Which scenario uses it] |
 
 ---
 
-## Dependencies
-
-- [ ] Feature implementation complete
-- [ ] Test environment available
-- [ ] Test data seeded
-- [ ] Authentication tokens (if needed)
-
----
-
-## Bugs Found
-
-| Bug ID | Description | Severity | Status |
-|--------|-------------|----------|--------|
-| - | - | - | - |
-
-*Use `/bug {{FEATURE_NUMBER}}` to document bugs found during testing.*
-
----
-
-## Test Results Summary
-
-| Category | Total | Passed | Failed | Blocked |
-|----------|-------|--------|--------|---------|
-| Happy Path | 0 | 0 | 0 | 0 |
-| Error Handling | 0 | 0 | 0 | 0 |
-| Edge Cases | 0 | 0 | 0 | 0 |
-| **Total** | **0** | **0** | **0** | **0** |
-
----
-
-## Notes
-
-[Any additional context, observations, or recommendations]
-
----
-
-## Generated Playwright Spec File
+## Generated Spec File
 
 **File**: `tests/e2e/{{FEATURE_SLUG}}.spec.ts`
 
@@ -228,10 +94,25 @@ import { test, expect } from '@playwright/test';
 
 test.describe('{{FEATURE_NAME}}', () => {
   test.beforeEach(async ({ page }) => {
-    // Common setup
     await page.goto('{{BASE_URL}}');
   });
 
-  // Paste individual test scenarios here
+  // Add test scenarios here
 });
 ```
+
+---
+
+## Results
+
+| Scenario | Status |
+|----------|--------|
+| Happy Path | Pending |
+| Error Handling | Pending |
+| Edge Case | Pending |
+
+---
+
+## Notes
+
+[Observations, issues found, recommendations]
