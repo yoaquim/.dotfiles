@@ -3,7 +3,7 @@
 **System**: Vibe Kanban
 **MCP Tools**: `mcp__vibe_kanban__list_projects`, `mcp__vibe_kanban__create_task`, `mcp__vibe_kanban__list_tasks`
 
-This adapter creates a VK "planning ticket" that instructs a Claude Code instance to break down a feature into numbered implementation tasks.
+This adapter directly creates numbered implementation tasks in VK for a feature.
 
 ---
 
@@ -80,30 +80,7 @@ Usage: /plan vk 001
 
 ### plan_tasks(feature)
 
-**VK uses a single planning ticket approach.**
-
-Instead of creating individual tasks directly, VK creates ONE planning ticket that contains comprehensive instructions. VK then executes this ticket to break down the feature.
-
-**Create planning ticket with these instructions:**
-
-#### Title Format
-```
-[PLAN] Feature {num}: {Feature Title}
-```
-
-#### Description Content
-
-```markdown
-## Plan Feature {num}: {Feature Title}
-
-**Feature Directory:** `.agent/features/{num}-{name}/`
-**Requirements:** `.agent/features/{num}-{name}/README.md`
-**Images:** `.agent/features/{num}-{name}/images/` (if exists)
-**Tag Templates:** `~/.claude/vk-tags/` (for task context)
-
----
-
-## Instructions
+**Analyze the feature and create tasks directly.**
 
 1. **Read** the feature document at `.agent/features/{num}-{name}/README.md`
 2. **Review** any images/mockups in `.agent/features/{num}-{name}/images/`
@@ -129,7 +106,7 @@ Available tags:
 - `permission-checks.md` - Auth/permissions
 - `bug_analysis.md` - Bug fixes
 - `code_refactoring.md` - Refactoring
-- `plan-feature.md` - Full planning reference (this command uses it)
+- `plan-feature.md` - Full planning reference
 
 **Note:** VK handles git workflow automatically through worktrees. Do NOT include git branching instructions in tasks.
 
@@ -265,45 +242,55 @@ VK displays tasks with most recently created at top. Create from highest level t
 // Then Level 1
 // Then Level 0 LAST (so it appears at top)
 ```
-```
 
 ---
 
 ### create_tasks(tasks, project_id)
 
-**For VK, create a single planning ticket:**
+**Create all tasks directly in VK:**
 
 ```javascript
 const projects = await mcp__vibe_kanban__list_projects();
 const projectId = projects[0].id; // or user-selected
 
-await mcp__vibe_kanban__create_task({
-  project_id: projectId,
-  title: "[PLAN] Feature {num}: {Feature Title}",
-  description: /* Planning ticket description from plan_tasks() */
-});
+// Sort tasks by level DESCENDING (highest first)
+const sortedTasks = tasks.sort((a, b) => b.level - a.level);
+
+for (const task of sortedTasks) {
+  await mcp__vibe_kanban__create_task({
+    project_id: projectId,
+    title: `[f-${featureNum}] [${task.level}.${task.seq}] ${task.title}`,
+    description: task.description // with embedded tag content
+  });
+}
 ```
 
-**Result**: One planning ticket in VK. When VK executes this ticket, Claude Code will create the individual subtasks.
+**Result**: All implementation tasks created directly in VK, ready to execute.
 
 ---
 
 ### report_completion(results)
 
 ```
-VK PLANNING TICKET CREATED
+VK TASKS CREATED for Feature {num}: {Feature Title}
 
-Feature: {num} - {Feature Title}
-Ticket: [PLAN] Feature {num}: {Feature Title}
+Level 0 (Start immediately - can run in parallel):
+  - [f-{num}] [0.1] {title}
+  - [f-{num}] [0.2] {title}
 
-The planning ticket is now in VK.
+Level 1 (After Level 0):
+  - [f-{num}] [1.1] {title}
+  - [f-{num}] [1.2] {title}
+
+Level 2 (After Level 1):
+  - [f-{num}] [2.1] {title}
+
+Total: {count} tasks created
 
 Next steps:
-1. Go to VK and start an attempt on this ticket
-2. VK will spawn Claude Code to read the feature and create subtasks
-3. Subtasks will be numbered [f-{num}] [0.1], [1.1], etc.
-
-After subtasks are created, start Level 0 tasks (they can run in parallel).
+1. Go to VK and start Level 0 tasks (they can run in parallel)
+2. After Level 0 completes, start Level 1 tasks
+3. Continue through each level
 ```
 
 ---
@@ -318,10 +305,3 @@ Tags (`@tag-name`) do NOT auto-expand in VK MCP. You MUST read tag files from `~
 
 ### Task Order
 Create tasks in reverse level order so Level 0 tasks appear at the top of VK's TODO list.
-
-### Planning Ticket Approach
-VK uses a two-stage approach:
-1. `/plan vk` creates a single planning ticket
-2. VK executes the planning ticket to create individual subtasks
-
-This allows VK's execution environment to have full context when breaking down the feature.

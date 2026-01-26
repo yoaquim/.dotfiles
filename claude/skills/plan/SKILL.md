@@ -77,8 +77,11 @@ ls -d .agent/features/*/ 2>/dev/null
 
 ### VK Adapter Flow
 1. Get project ID from VK
-2. Create planning ticket with comprehensive instructions
-3. Planning ticket tells VK how to break down the feature
+2. Read feature document and analyze requirements
+3. Read relevant tag templates from `~/.claude/vk-tags/`
+4. Evaluate build-vs-buy for each functional area
+5. Create task breakdown by levels
+6. Create all tasks directly in VK (in reverse order so Level 0 appears at top)
 
 ### Local Adapter Flow
 1. Analyze feature document
@@ -101,14 +104,21 @@ ls -d .agent/features/*/ 2>/dev/null
 
 ### VK Report Format
 ```
-VK PLANNING TICKET CREATED
+VK TASKS CREATED for Feature {num}: {Feature Title}
 
-Feature: {num} - {Feature Title}
-Ticket: [PLAN] Feature {num}: {Feature Title}
+Level 0 (Start immediately - can run in parallel):
+  - [f-{num}] [0.1] {title}
+  - [f-{num}] [0.2] {title}
+
+Level 1 (After Level 0):
+  - [f-{num}] [1.1] {title}
+
+Total: {count} tasks created
 
 Next steps:
-1. Go to VK and start an attempt on this ticket
-2. VK will spawn Claude Code to read the feature and create subtasks
+1. Go to VK and start Level 0 tasks (they can run in parallel)
+2. After Level 0 completes, start Level 1 tasks
+3. Continue through each level
 ```
 
 ### Local Report Format
@@ -171,6 +181,6 @@ All adapters use the same numbering system:
 
 | Adapter | System | Creates | Best For |
 |---------|--------|---------|----------|
-| `vk` | Vibe Kanban | Planning ticket | Parallel execution via worktrees |
+| `vk` | Vibe Kanban | Numbered tasks directly | Parallel execution via worktrees |
 | `local` | Filesystem | Task documents | Solo work, simple orchestration |
 | `linear` | Linear | Issues + local files | Team tracking, manual CC execution |
