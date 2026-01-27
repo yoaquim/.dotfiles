@@ -117,9 +117,11 @@ Level 1 (After Level 0):
 Total: {count} tasks created
 
 Next steps:
-1. Go to VK and start Level 0 tasks (they can run in parallel)
-2. After Level 0 completes, start Level 1 tasks
+1. Go to VK and start Level 0 tasks from the VK UI (they can run in parallel)
+2. After Level 0 completes, start Level 1 tasks from VK
 3. Continue through each level
+
+IMPORTANT: Do NOT start or execute tasks yourself. Your job is ONLY to create them in VK. The user will start tasks from VK's UI, which handles worktree setup and agent execution.
 ```
 
 ### Local Report Format
