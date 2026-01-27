@@ -33,12 +33,12 @@ Number tasks by **dependency level**:
 
 ## Task Sizing Guidelines
 
-- **1-2 agile points** per task (small and focused)
-- **30-120 minutes** of work per task
-- If larger, break into multiple tasks
-- Prefer many small tasks over few large ones
-- **Create as many levels and tasks as needed**—do NOT default to a fixed count
-- A complex feature may have 15+ tasks; a simple one may have 4
+- **Every task MUST be 1-2 agile points** (30-120 minutes of work, XP-style)
+- This is the ONLY sizing constraint — let it drive the task count naturally
+- If a task is larger than 2 points, break it down until every piece is 1-2 points
+- Each task should do ONE thing — if you can describe it with "and", split it
+- Do NOT target a specific number of tasks. Let the feature complexity and the 1-2 point constraint determine how many tasks you end up with.
+- Separate concerns naturally: setup, migrations, business logic, views, templates, JS/interactivity, styling, permissions, tests can each be their own task(s) if warranted
 
 ## Task Description Template
 

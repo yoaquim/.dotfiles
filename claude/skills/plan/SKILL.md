@@ -80,7 +80,7 @@ ls -d .agent/features/*/ 2>/dev/null
 2. Read feature document and analyze requirements
 3. Check for `.agent/practices.md` (created by `/setup`). If it exists, use its selected practices. If not, read `~/.claude/practices/INDEX.md` and select practices based on the feature's requirements.
 4. Evaluate build-vs-buy for each functional area
-5. Create task breakdown by levels (prefer many small tasks — 1-2 points each)
+5. Create task breakdown by levels — every task MUST be 1-2 agile points (XP-style). Let that constraint drive the task count naturally. Each task does ONE thing; if you can describe it with "and", split it.
 6. For each task, select relevant practices, read those practice files from `~/.claude/practices/`, and inline their full content into the task description
 7. Create all tasks directly in VK (in reverse order so Level 0 appears at top)
 

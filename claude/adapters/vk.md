@@ -202,10 +202,11 @@ Number tasks by **dependency level**:
 
 ## Task Sizing
 
-- **1-2 points** per task (30-120 minutes of work)
-- **Prefer many small tasks** over few large ones
-- If task feels large, break it down further
-- Do NOT artificially limit task counts
+- **Every task MUST be 1-2 agile points** (30-120 minutes of work, XP-style)
+- This is the ONLY sizing constraint — let it drive the task count naturally
+- If a task is larger than 2 points, break it down until every piece is 1-2 points
+- Each task should do ONE thing — if you can describe it with "and", split it
+- Do NOT target a specific number of tasks. The feature complexity and the 1-2 point constraint determine the count.
 
 ---
 
