@@ -19,10 +19,10 @@ This directory contains all critical documentation for the project.
 ### Standard Operating Procedures
 
 **Universal SOPs** (apply to all projects):
-See `~/.claude/workflow/sops/` for universal procedures:
-- [Git Workflow](~/.claude/workflow/sops/git-workflow.md)
-- [Testing Principles](~/.claude/workflow/sops/testing-principles.md)
-- [Documentation Standards](~/.claude/workflow/sops/documentation-standards.md)
+See `~/.claude/scaffolds/sops/` for universal procedures:
+- [Git Workflow](~/.claude/scaffolds/sops/git-workflow.md)
+- [Testing Principles](~/.claude/scaffolds/sops/testing-principles.md)
+- [Documentation Standards](~/.claude/scaffolds/sops/documentation-standards.md)
 
 **Project-Specific SOPs**:
 See `./sops/` for this project's procedures:
@@ -48,7 +48,7 @@ Current state documentation covering:
 ### `/sops`
 **Two Types**:
 
-1. **Universal** (in `~/.claude/workflow/sops/`) - Referenced, not copied
+1. **Universal** (in `~/.claude/scaffolds/sops/`) - Referenced, not copied
    - Git workflow
    - Testing principles
    - Documentation standards
@@ -91,6 +91,6 @@ Keep this documentation updated after implementing features to ensure it reflect
 
 ---
 
-**Global Config**: `~/.claude/workflow/config.yml`
-**Universal SOPs**: `~/.claude/workflow/sops/`
+**Global Config**: `~/.claude/scaffolds/config.yml`
+**Universal SOPs**: `~/.claude/scaffolds/sops/`
 **Last Updated**: {{INIT_DATE}}

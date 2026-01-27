@@ -4,13 +4,12 @@ You have a **sophisticated, well-architected setup**. Key components:
 
 | Component | What You Have |
 |-----------|---------------|
-| **Commands** | 15+ slash commands including `/setup`, `/feature`, `/plan`, `/workflow:*` family |
+| **Commands** | Slash commands including `/setup`, `/feature`, `/plan`, `/bug`, `/roadmap`, `/test-plan` |
 | **Adapters** | Pluggable system for task management (VK, Local, Linear) |
 | **Hooks** | Documented in `/hooks/` with validation guards and context loaders |
-| **Workflows** | Full feature development lifecycle with SOPs |
-| **Templates** | Standardized project initialization with variable substitution |
+| **Practices** | Coding practices (TDD, patterns, etc.) inlined into task descriptions |
+| **Scaffolds** | Standardized project initialization with templates and SOPs |
 | **Subagents Guide** | Documentation in `/guides/subagents.md` |
-| **VK Tags** | Reusable task descriptions for common patterns |
 
 ---
 
@@ -18,7 +17,7 @@ You have a **sophisticated, well-architected setup**. Key components:
 
 ### Things You're Already Doing Well
 - **CLAUDE.md as foundation** - You have templates and project-specific instructions
-- **Modular commands** - Your `/workflow:*` commands are already well-structured
+- **Modular commands** - Your skills are already well-structured
 - **Subagent awareness** - You have a guide documenting Explore, Plan, general-purpose, Bash
 - **Hooks system** - You have hook documentation and configuration
 

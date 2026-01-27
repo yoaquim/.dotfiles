@@ -70,7 +70,7 @@ Local: Check .agent/ directory exists
       sequence: number,  // 1, 2, 3 within level
       title: string,
       description: string,
-      tags: string[],    // Relevant VK tags to embed
+      practices: string[], // Relevant practices to inline (from ~/.claude/practices/)
     }
   ],
   summary: {
@@ -191,7 +191,7 @@ ls -d .agent/features/*/ 2>/dev/null
 
 ### Tag Embedding (All Adapters)
 
-Tags (`@tag-name`) do NOT auto-expand. Read tag files from `~/.claude/vk-tags/` and include content directly in task descriptions.
+Tags (`@tag-name`) do NOT auto-expand. Read `~/.claude/practices/INDEX.md` to select relevant practices, then read those files and inline content directly in task descriptions.
 
 ### Task Numbering (All Adapters)
 

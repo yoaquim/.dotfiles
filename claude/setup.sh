@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Claude Code Workflow Setup Script
-# Symlinks skills and workflow files to ~/.claude/
+# Symlinks skills and scaffolds files to ~/.claude/
 
 set -e -o pipefail  # Exit on error
 
@@ -41,10 +41,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 info "Script location: $SCRIPT_DIR"
 
 # Verify we're in the right place
-if [[ ! -d "$SCRIPT_DIR/skills" ]] || [[ ! -d "$SCRIPT_DIR/workflow" ]]; then
+if [[ ! -d "$SCRIPT_DIR/skills" ]] || [[ ! -d "$SCRIPT_DIR/scaffolds" ]]; then
     error "Expected structure not found!"
     error "Make sure you're running this from ~/.dotfiles/claude/"
-    error "Required directories: skills/, workflow/"
+    error "Required directories: skills/, scaffolds/"
     exit 1
 fi
 
@@ -120,20 +120,20 @@ info "Symlinking skills directory..."
 symlink_directory "$SCRIPT_DIR/skills" "$HOME/.claude/skills" "~/.claude/skills"
 
 # ============================================================
-# Step 2: Symlink vk-tags directory
+# Step 2: Symlink practices directory
 # ============================================================
 echo ""
-info "Symlinking vk-tags..."
+info "Symlinking practices..."
 
-symlink_directory "$SCRIPT_DIR/vk-tags" "$HOME/.claude/vk-tags" "~/.claude/vk-tags"
+symlink_directory "$SCRIPT_DIR/practices" "$HOME/.claude/practices" "~/.claude/practices"
 
 # ============================================================
-# Step 3: Symlink workflow directory (SOPs and templates)
+# Step 3: Symlink scaffolds directory (SOPs and templates)
 # ============================================================
 echo ""
-info "Symlinking workflow directory..."
+info "Symlinking scaffolds directory..."
 
-symlink_directory "$SCRIPT_DIR/workflow" "$HOME/.claude/workflow" "~/.claude/workflow"
+symlink_directory "$SCRIPT_DIR/scaffolds" "$HOME/.claude/scaffolds" "~/.claude/scaffolds"
 
 # ============================================================
 # Step 4: Symlink adapters directory
@@ -157,16 +157,16 @@ else
     error "Skills directory NOT symlinked"
 fi
 
-# Check vk-tags
-if [[ -L "$HOME/.claude/vk-tags" ]]; then
-    VK_TAG_COUNT=$(find "$SCRIPT_DIR/vk-tags" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "  ✓ VK tags symlinked ($VK_TAG_COUNT tags)"
+# Check practices
+if [[ -L "$HOME/.claude/practices" ]]; then
+    PRACTICES_COUNT=$(find "$SCRIPT_DIR/practices" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+    echo "  ✓ Practices symlinked ($PRACTICES_COUNT practices)"
 else
-    warning "VK tags NOT symlinked"
+    warning "Practices NOT symlinked"
 fi
 
-# Check workflow
-if [[ -L "$HOME/.claude/workflow" ]]; then
+# Check scaffolds
+if [[ -L "$HOME/.claude/scaffolds" ]]; then
     echo "  ✓ Workflow directory symlinked"
 else
     error "Workflow directory NOT symlinked"
@@ -203,8 +203,8 @@ echo "├── adapters/             → Task management adapters"
 echo "│   ├── vk.md"
 echo "│   ├── local.md"
 echo "│   └── linear.md"
-echo "├── vk-tags/              → Reusable VK task tags"
-echo "├── workflow/"
+echo "├── practices/            → Coding practices (TDD, patterns, etc.)"
+echo "├── scaffolds/"
 echo "│   ├── sops/             → Universal SOPs"
 echo "│   ├── templates/        → Project templates"
 echo "│   └── README.md"

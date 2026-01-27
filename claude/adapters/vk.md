@@ -84,29 +84,26 @@ Usage: /plan vk 001
 
 1. **Read** the feature document at `.agent/features/{num}-{name}/README.md`
 2. **Review** any images/mockups in `.agent/features/{num}-{name}/images/`
-3. **Read** relevant tag templates from `~/.claude/vk-tags/` for task context
+3. **Read** `~/.claude/practices/INDEX.md` to see available coding practices and when to use each
 4. **Evaluate build-vs-buy** for each functional area (see Library Evaluation section below)
 5. **Analyze** requirements and identify logical task breakdown
-6. **Create tasks** via VK MCP with proper numbering, dependencies, and **embedded tag content**
+6. **For each task**, select relevant practices from the index, read those practice files, and **inline their full content** into the task description
+7. **Create tasks** via VK MCP with proper numbering and dependencies
 
 ---
 
-## IMPORTANT: Tag Content Embedding
+## IMPORTANT: Practice Content Embedding
 
 VK tags (`@tag-name`) do NOT auto-expand when creating tasks via MCP.
 
-**You MUST read the tag files and include their content directly in task descriptions.**
+**You MUST inline practice content directly into task descriptions.** Follow this process:
 
-Tag files location: `~/.claude/vk-tags/`
+1. Read `~/.claude/practices/INDEX.md` — it lists each practice, its file, and when to use it
+2. For each task, pick the relevant practices based on the index's "Use When" column
+3. Read only the selected practice files from `~/.claude/practices/`
+4. Paste the full content of each selected practice into the task description
 
-Available tags:
-- `tdd.md` - Business logic, validation, pure functions (TDD approach)
-- `django-patterns.md` - Django code changes
-- `tailwind-utilities.md` - UI/CSS work
-- `permission-checks.md` - Auth/permissions
-- `bug_analysis.md` - Bug fixes
-- `code_refactoring.md` - Refactoring
-- `plan-feature.md` - Full planning reference
+**Do NOT use `@tag-name` syntax in MCP-created tasks — it won't expand.**
 
 **Note:** VK handles git workflow automatically through worktrees. Do NOT include git branching instructions in tasks.
 
@@ -301,7 +298,7 @@ Next steps:
 VK handles git workflow automatically through worktrees. Do NOT include git branching instructions in tasks.
 
 ### Tag Embedding
-Tags (`@tag-name`) do NOT auto-expand in VK MCP. You MUST read tag files from `~/.claude/vk-tags/` and include their content directly in task descriptions.
+Tags (`@tag-name`) do NOT auto-expand in VK MCP. You MUST read tag files from `~/.claude/practices/` and include their content directly in task descriptions.
 
 ### Task Order
 Create tasks in reverse level order so Level 0 tasks appear at the top of VK's TODO list.

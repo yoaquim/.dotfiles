@@ -13,7 +13,7 @@ You are setting up a new project with proper scaffolding and documentation.
 5. Creates `CLAUDE.md` project instructions
 6. Optionally initializes git
 
-**Templates Location:** `~/.claude/workflow/templates/`
+**Templates Location:** `~/.claude/scaffolds/templates/`
 
 ---
 
@@ -62,13 +62,13 @@ If user chooses A, backup `.agent/` to `.agent.backup.[timestamp]/`.
 **CRITICAL: Check that templates are available:**
 
 ```bash
-ls -la ~/.claude/workflow/templates/
-ls -la ~/.claude/workflow/templates/agent/
+ls -la ~/.claude/scaffolds/templates/
+ls -la ~/.claude/scaffolds/templates/agent/
 ```
 
 If templates don't exist, show error:
 ```
-ERROR: Templates not found at ~/.claude/workflow/templates/
+ERROR: Templates not found at ~/.claude/scaffolds/templates/
 
 The workflow templates are required for /setup.
 ```
@@ -169,23 +169,62 @@ mkdir -p .agent/tasks
 | `{{BUILD_COMMAND}}` | Build command |
 | `{{INIT_DATE}}` | Today's date |
 
-**Copy and process templates** from `~/.claude/workflow/templates/` to `.agent/`.
+**Copy and process templates** from `~/.claude/scaffolds/templates/` to `.agent/`.
 
 ---
 
-## Step 9: Create .gitignore
+## Step 9: Select Project Practices
+
+**Read the practices index** to determine which coding practices apply to this project:
+
+```bash
+# Read the index
+cat ~/.claude/practices/INDEX.md
+```
+
+**Select practices based on project configuration:**
+
+| Project Attribute | Practices to Include |
+|-------------------|---------------------|
+| Any project | `tdd`, `testing-principles`, `documentation-standards` |
+| Python + Django | `django-patterns`, `permission-checks` |
+| Frontend / UI work | `tailwind-utilities` |
+| Bug-heavy / maintenance project | `bug_analysis` |
+| Refactoring focus | `code_refactoring` |
+
+**Write `.agent/practices.md`** listing the selected practices:
+
+```markdown
+# Project Practices
+
+Selected coding practices for this project. These are inlined into task descriptions when planning.
+
+| Practice | File | Reason |
+|----------|------|--------|
+| TDD | `~/.claude/practices/tdd.md` | {why it applies} |
+| Django Patterns | `~/.claude/practices/django-patterns.md` | {why it applies} |
+| ... | ... | ... |
+
+Source index: `~/.claude/practices/INDEX.md`
+```
+
+This file is referenced by `/plan` when creating tasks — it reads the selected practices and inlines their content into task descriptions.
+
+---
+
+## Step 10: Create .gitignore
 
 If doesn't exist, create appropriate .gitignore for the stack.
 
 ---
 
-## Step 10: Git Integration (Optional)
+## Step 11: Git Integration (Optional)
 
 Offer to initialize git and create initial commit.
 
 ---
 
-## Step 11: Final Report
+## Step 12: Final Report
 
 ```
 PROJECT SETUP COMPLETE

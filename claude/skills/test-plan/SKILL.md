@@ -92,7 +92,7 @@ mkdir -p .agent/test-plans
 
 **Create: `.agent/test-plans/{num}-{name}-test-plan.md`**
 
-Use template from `~/.claude/workflow/templates/test-plan.md.template`.
+Use template from `~/.claude/scaffolds/templates/test-plan.md.template`.
 
 ---
 

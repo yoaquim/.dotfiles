@@ -160,8 +160,7 @@ Severity: {Severity}
 Location: {bug-dir}/BUG-{NNN}-{title}.md
 
 NEXT STEPS:
-- Fix with /workflow:fix-bug
-- Or work through VK ticket
+- Work through VK ticket or fix directly
 ```
 
 ---

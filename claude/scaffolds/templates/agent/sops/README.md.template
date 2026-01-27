@@ -6,10 +6,10 @@ This directory contains SOPs for the {{PROJECT_NAME}} project.
 
 ## Universal SOPs
 
-See `~/.claude/workflow/sops/` for procedures that apply to all projects:
-{{#IF_NOT_VK}}- [Git Workflow](~/.claude/workflow/sops/git-workflow.md) - Branching, commits, merges
-{{/IF_NOT_VK}}- [Testing Principles](~/.claude/workflow/sops/testing-principles.md) - Testing philosophy and patterns
-- [Documentation Standards](~/.claude/workflow/sops/documentation-standards.md) - How to document
+See `~/.claude/scaffolds/sops/` for procedures that apply to all projects:
+{{#IF_NOT_VK}}- [Git Workflow](~/.claude/scaffolds/sops/git-workflow.md) - Branching, commits, merges
+{{/IF_NOT_VK}}- [Testing Principles](~/.claude/scaffolds/sops/testing-principles.md) - Testing philosophy and patterns
+- [Documentation Standards](~/.claude/scaffolds/sops/documentation-standards.md) - How to document
 
 **Note**: Universal SOPs are **referenced**, not copied. They're maintained globally.
 {{#IF_VK}}

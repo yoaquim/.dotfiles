@@ -62,7 +62,7 @@ cd ~/.dotfiles/claude/
 ```
 
 This will:
-- Symlink skills, workflow, and vk-tags to `~/.claude/`
+- Symlink skills, workflow, and practices to `~/.claude/`
 - Verify all required files
 - Display configuration
 
@@ -92,12 +92,12 @@ This will:
 │   └── context-loaders.md         # Context injection examples
 ├── guides/                        # Usage guides
 │   └── subagents.md               # Subagent usage guide
-├── vk-tags/                       # Reusable VK task tags
+├── practices/                     # Coding practices (TDD, patterns, etc.)
 │   ├── README.md
 │   ├── plan-feature.md
 │   ├── bug_analysis.md
 │   └── ...
-└── workflow/                      # Universal workflows and templates
+└── scaffolds/                      # Universal workflows and templates
     ├── README.md                  # This file
     ├── sops/                      # Standard operating procedures
     │   ├── README.md
@@ -157,9 +157,9 @@ your-project/
 
 Configuration is managed through:
 - **Skills**: Edit `SKILL.md` files in `~/.dotfiles/claude/skills/`
-- **Templates**: Edit files in `~/.dotfiles/claude/workflow/templates/`
-- **SOPs**: Edit or add files in `~/.dotfiles/claude/workflow/sops/`
-- **VK Tags**: Edit files in `~/.dotfiles/claude/vk-tags/`
+- **Templates**: Edit files in `~/.dotfiles/claude/scaffolds/templates/`
+- **SOPs**: Edit or add files in `~/.dotfiles/claude/scaffolds/sops/`
+- **Practices**: Edit files in `~/.dotfiles/claude/practices/`
 
 **Key conventions**:
 - `projects_dir`: `~/Projects` (used for cross-project search)
@@ -170,7 +170,7 @@ Configuration is managed through:
 
 ## Universal SOPs
 
-**Location**: `~/.claude/workflow/sops/`
+**Location**: `~/.claude/scaffolds/sops/`
 
 These apply to **ALL projects** and are **referenced**, not copied:
 
@@ -203,7 +203,7 @@ These apply to **ALL projects** and are **referenced**, not copied:
 
 ## Templates
 
-**Location**: `~/.claude/workflow/templates/`
+**Location**: `~/.claude/scaffolds/templates/`
 
 Used by `/setup` command to create new project documentation.
 
@@ -532,9 +532,9 @@ ls ~/.claude/skills/      # Should list available skills
 
 ### Add New Universal SOP
 
-1. Create new `.md` file in `~/.dotfiles/claude/workflow/sops/`
+1. Create new `.md` file in `~/.dotfiles/claude/scaffolds/sops/`
 2. Follow documentation standards format
-3. Update `~/.dotfiles/claude/workflow/sops/README.md`
+3. Update `~/.dotfiles/claude/scaffolds/sops/README.md`
 4. Commit to dotfiles repo
 5. All projects automatically reference it
 
@@ -553,7 +553,7 @@ ls ~/.claude/skills/      # Should list available skills
 
 ### Modify Templates
 
-1. Edit files in `~/.dotfiles/claude/workflow/templates/`
+1. Edit files in `~/.dotfiles/claude/scaffolds/templates/`
 2. Test with `/setup` on a test project
 3. Commit changes to dotfiles
 4. Future projects use updated templates
@@ -744,6 +744,6 @@ cd ~/.dotfiles/claude/
 
 ---
 
-**Location**: `~/.dotfiles/claude/workflow/README.md`
-**Symlink**: `~/.claude/workflow/README.md`
+**Location**: `~/.dotfiles/claude/scaffolds/README.md`
+**Symlink**: `~/.claude/scaffolds/README.md`
 **Last Updated**: 2026-01-21

@@ -423,7 +423,7 @@ Use EARS format (Easy Approach to Requirements Syntax):
 echo "NNN-feature-name" > .agent/.last-feature
 ```
 
-This allows `/workflow:plan-task` to auto-detect the last feature defined.
+This allows `/plan` to auto-detect the last feature defined.
 
 ---
 

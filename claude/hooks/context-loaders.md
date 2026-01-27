@@ -66,7 +66,7 @@ Load current task only when implementing.
   "hooks": {
     "UserPromptSubmit": [
       {
-        "matcher": "/implement|/workflow:implement|working on",
+        "matcher": "/implement|working on",
         "hooks": [{
           "type": "command",
           "command": "cat .agent/tasks/$(cat .agent/.current-task 2>/dev/null) 2>/dev/null || echo 'No current task set'"

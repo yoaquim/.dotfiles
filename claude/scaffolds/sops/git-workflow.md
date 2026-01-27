@@ -181,6 +181,6 @@ git checkout feature/accidental-work
 
 ---
 
-**Location**: `~/.claude/workflow/sops/git-workflow.md`
+**Location**: `~/.claude/scaffolds/sops/git-workflow.md`
 **Referenced By**: All projects via `.agent/sops/README.md`
 **Last Updated**: 2025-10-25

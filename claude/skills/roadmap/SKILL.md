@@ -123,7 +123,7 @@ Before writing, verify:
 
 ## Step 7: Write/Update ROADMAP.md
 
-Use template from `~/.claude/workflow/templates/agent/ROADMAP.md.template`.
+Use template from `~/.claude/scaffolds/templates/agent/ROADMAP.md.template`.
 
 ---
 

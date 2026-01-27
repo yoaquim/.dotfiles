@@ -80,7 +80,7 @@ Use Task tool with subagent_type="Explore":
   - Note any existing code that can be reused"
 ```
 
-### /workflow:implement-task
+### Task Implementation
 
 Use Explore to find related code patterns:
 
@@ -102,7 +102,7 @@ Use Haiku + Explore for quick rule lookups:
 ## Quick SOP Lookup
 
 Use Task tool with subagent_type="Explore" and model="haiku":
-- Prompt: "Read ~/.claude/workflow/sops/git-workflow.md and extract:
+- Prompt: "Read ~/.claude/scaffolds/sops/git-workflow.md and extract:
   - The commit message format
   - Rules for PR creation"
 ```

@@ -194,6 +194,6 @@ Full test suite runs on:
 
 ---
 
-**Location**: `~/.claude/workflow/sops/testing-principles.md`
+**Location**: `~/.claude/scaffolds/sops/testing-principles.md`
 **Referenced By**: All projects via `.agent/sops/README.md`
 **Last Updated**: 2025-10-25

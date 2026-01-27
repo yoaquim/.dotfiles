@@ -47,10 +47,10 @@ Reference these universal SOPs:
 ## Standard Operating Procedures
 
 ### Universal
-See `~/.claude/workflow/sops/` for procedures that apply to all projects:
-- [Git Workflow](~/.claude/workflow/sops/git-workflow.md)
-- [Testing Principles](~/.claude/workflow/sops/testing-principles.md)
-- [Documentation Standards](~/.claude/workflow/sops/documentation-standards.md)
+See `~/.claude/scaffolds/sops/` for procedures that apply to all projects:
+- [Git Workflow](~/.claude/scaffolds/sops/git-workflow.md)
+- [Testing Principles](~/.claude/scaffolds/sops/testing-principles.md)
+- [Documentation Standards](~/.claude/scaffolds/sops/documentation-standards.md)
 
 ### Project-Specific
 See `.agent/sops/` for this project's procedures.
@@ -61,7 +61,7 @@ List universal SOPs + project-specific ones:
 
 ```markdown
 ## Universal SOPs
-See `~/.claude/workflow/sops/` (referenced, not copied):
+See `~/.claude/scaffolds/sops/` (referenced, not copied):
 - Git Workflow
 - Testing Principles
 - Documentation Standards
@@ -100,6 +100,6 @@ See `~/.claude/workflow/sops/` (referenced, not copied):
 
 ---
 
-**Location**: `~/.claude/workflow/sops/`
+**Location**: `~/.claude/scaffolds/sops/`
 **Symlinked From**: `~/.dotfiles/config/claude/sops/`
 **Last Updated**: 2025-10-25

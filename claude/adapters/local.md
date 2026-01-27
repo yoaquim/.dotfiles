@@ -3,7 +3,7 @@
 **System**: Local filesystem (`.agent/tasks/`)
 **MCP Tools**: None (uses file operations only)
 
-This adapter creates task documents in `.agent/tasks/` that integrate with the `/workflow:*` commands.
+This adapter creates task documents in `.agent/tasks/`.
 
 ---
 

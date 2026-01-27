@@ -238,7 +238,7 @@ storage/
 
 **Test Environment**: [How test env is set up]
 
-**Reference**: See `~/.claude/workflow/sops/testing-principles.md`
+**Reference**: See `~/.claude/scaffolds/sops/testing-principles.md`
 
 ---
 

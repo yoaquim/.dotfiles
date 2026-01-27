@@ -130,7 +130,7 @@ Use `.agent/task-template.md` for consistency
 ## SOP Documentation Standards
 
 ### Universal SOPs
-**Location**: `~/.claude/workflow/sops/`
+**Location**: `~/.claude/scaffolds/sops/`
 
 **Reference** (don't copy):
 - Git workflow
@@ -148,9 +148,9 @@ Use `.agent/task-template.md` for consistency
 ### README.md Structure
 ```markdown
 ## Universal SOPs
-See `~/.claude/workflow/sops/` for procedures that apply to all projects:
-- [Git Workflow](~/.claude/workflow/sops/git-workflow.md)
-- [Testing Principles](~/.claude/workflow/sops/testing-principles.md)
+See `~/.claude/scaffolds/sops/` for procedures that apply to all projects:
+- [Git Workflow](~/.claude/scaffolds/sops/git-workflow.md)
+- [Testing Principles](~/.claude/scaffolds/sops/testing-principles.md)
 
 ## Project-Specific SOPs
 - [Django Setup](./django-setup.md)
@@ -175,7 +175,7 @@ See `~/.claude/workflow/sops/` for procedures that apply to all projects:
 5. **Tags** - Keywords for searchability
 
 ### Cross-Project Search
-Known issues are searchable across all projects in `~/Projects` (configurable in `~/.claude/workflow/config.yml`)
+Known issues are searchable across all projects in `~/Projects` (configurable in `~/.claude/scaffolds/config.yml`)
 
 ---
 
@@ -196,7 +196,7 @@ Central instructions file for Claude Code
 ## Standard Operating Procedures
 
 ### Universal Procedures
-See `~/.claude/workflow/sops/` for procedures that apply to all projects:
+See `~/.claude/scaffolds/sops/` for procedures that apply to all projects:
 - Git Workflow
 - Testing Principles
 - Documentation Standards
@@ -238,8 +238,8 @@ def hello():
 - Make link text descriptive
 
 ```markdown
-Good: [See the Git Workflow guide](~/.claude/workflow/sops/git-workflow.md)
-Bad: [Click here](~/.claude/workflow/sops/git-workflow.md)
+Good: [See the Git Workflow guide](~/.claude/scaffolds/sops/git-workflow.md)
+Bad: [Click here](~/.claude/scaffolds/sops/git-workflow.md)
 ```
 
 ---
@@ -260,6 +260,6 @@ Bad: [Click here](~/.claude/workflow/sops/git-workflow.md)
 
 ---
 
-**Location**: `~/.claude/workflow/sops/documentation-standards.md`
+**Location**: `~/.claude/scaffolds/sops/documentation-standards.md`
 **Referenced By**: All projects via `.agent/sops/README.md`
 **Last Updated**: 2025-10-25
