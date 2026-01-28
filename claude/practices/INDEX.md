@@ -24,10 +24,12 @@ Coding practices to embed in task descriptions. Read this index to select releva
 
 ## Common Combinations
 
-- **Backend endpoint**: `django-patterns` + `tdd` + `permission-checks`
-- **UI component**: `tailwind-utilities` + `django-patterns`
+**`tdd` is ALWAYS included** in every combination below — it is mandatory for all implementation tasks.
+
+- **Backend endpoint**: `tdd` + `django-patterns` + `permission-checks`
+- **UI component**: `tdd` + `tailwind-utilities` + `django-patterns`
 - **Business logic**: `tdd`
-- **Bug fix**: `bug_analysis`
-- **Refactor**: `code_refactoring` + `tdd`
-- **Dockerized service**: `docker-compose` + relevant stack practice
-- **New project setup**: `docker-compose` + `testing-principles` + `documentation-standards`
+- **Bug fix**: `tdd` + `bug_analysis`
+- **Refactor**: `tdd` + `code_refactoring`
+- **Dockerized service**: `tdd` + `docker-compose` + relevant stack practice
+- **New project setup**: `tdd` + `docker-compose` + `testing-principles` + `documentation-standards`
