@@ -186,11 +186,14 @@ cat ~/.claude/practices/INDEX.md
 
 | Project Attribute | Practices to Include |
 |-------------------|---------------------|
-| Any project | `tdd`, `testing-principles`, `documentation-standards` |
+| **ALL projects (mandatory)** | `tdd` (ALWAYS), `testing-principles`, `documentation-standards` |
 | Python + Django | `django-patterns`, `permission-checks` |
 | Frontend / UI work | `tailwind-utilities` |
+| Docker | `docker-compose` |
 | Bug-heavy / maintenance project | `bug_analysis` |
 | Refactoring focus | `code_refactoring` |
+
+**Note:** `tdd` is mandatory for ALL projects — every implementation task writes tests first.
 
 **Write `.agent/practices.md`** listing the selected practices:
 
