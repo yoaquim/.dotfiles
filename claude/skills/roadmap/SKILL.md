@@ -97,15 +97,15 @@ Read existing roadmap and ask what to update:
 | Phase 3 | Advanced features, "nice to haves" |
 | Backlog | Ideas without clear phase |
 
-**Number items:**
-- Phase 1: R1.1, R1.2, R1.3...
-- Phase 2: R2.1, R2.2, R2.3...
-- Phase 3: R3.1, R3.2, R3.3...
-- Backlog: B1, B2, B3...
+**Number items sequentially across all phases:**
+- Use 001, 002, 003... format (three digits, zero-padded)
+- Numbering is global — continues across phases, not reset per phase
+- Example: Phase 1 might have 001-005, Phase 2 has 006-010, etc.
+- Backlog items also get numbers in sequence
 
 **Item format:**
 ```markdown
-| R1.1 | [Brief Title] | [One-line description] | Planned |
+| 001 | [Brief Title] | [One-line description] | Planned |
 ```
 
 ---
@@ -156,8 +156,8 @@ Changes:
 - Updated X statuses
 
 New Items:
-- R1.4: [Title]
-- B3: [Title]
+- 006: [Title]
+- 012: [Title]
 ```
 
 ---
@@ -175,7 +175,7 @@ Future → Planned → Defined → In Progress → Implemented → Released
 ## Linking Roadmap to Features
 
 When creating a feature from a roadmap item:
-1. Note the roadmap item ID (e.g., R1.2)
+1. Note the roadmap item ID (e.g., 003)
 2. Run `/feature [description]`
 3. Feature includes "Roadmap Reference" section
 4. Update roadmap item status to "Defined"

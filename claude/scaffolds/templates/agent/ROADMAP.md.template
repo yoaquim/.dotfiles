@@ -22,9 +22,9 @@
 **Items**:
 | ID | Item | Description | Status |
 |----|------|-------------|--------|
-| R1.1 | [Feature idea] | [Brief description] | Planned |
-| R1.2 | [Feature idea] | [Brief description] | Planned |
-| R1.3 | [Feature idea] | [Brief description] | Planned |
+| 001 | [Feature idea] | [Brief description] | Planned |
+| 002 | [Feature idea] | [Brief description] | Planned |
+| 003 | [Feature idea] | [Brief description] | Planned |
 
 ---
 
@@ -36,8 +36,8 @@
 **Items**:
 | ID | Item | Description | Status |
 |----|------|-------------|--------|
-| R2.1 | [Feature idea] | [Brief description] | Planned |
-| R2.2 | [Feature idea] | [Brief description] | Planned |
+| 004 | [Feature idea] | [Brief description] | Planned |
+| 005 | [Feature idea] | [Brief description] | Planned |
 
 ---
 
@@ -49,8 +49,8 @@
 **Items**:
 | ID | Item | Description | Status |
 |----|------|-------------|--------|
-| R3.1 | [Feature idea] | [Brief description] | Future |
-| R3.2 | [Feature idea] | [Brief description] | Future |
+| 006 | [Feature idea] | [Brief description] | Future |
+| 007 | [Feature idea] | [Brief description] | Future |
 
 ---
 
@@ -60,8 +60,8 @@ Ideas not yet assigned to phases:
 
 | ID | Item | Description | Notes |
 |----|------|-------------|-------|
-| B1 | [Idea] | [Description] | [Any context] |
-| B2 | [Idea] | [Description] | [Any context] |
+| 008 | [Idea] | [Description] | [Any context] |
+| 009 | [Idea] | [Description] | [Any context] |
 
 ---
 
@@ -104,7 +104,7 @@ When a roadmap item becomes a feature:
 
 Example:
 ```
-| R1.1 | User Auth | Login/logout flow | Defined → Feature 001 |
+| 001 | User Auth | Login/logout flow | Defined → Feature 001 |
 ```
 
 ---
@@ -115,6 +115,6 @@ Use `/roadmap` to update this document with new ideas, reorganize phases, or cap
 
 The command will:
 - Parse unstructured input into structured items
-- Assign appropriate IDs (R1.x, R2.x, Bx)
+- Assign sequential IDs (001, 002, 003...)
 - Suggest phase assignments
 - Update status as items progress
