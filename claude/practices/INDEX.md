@@ -4,7 +4,7 @@ Coding practices to embed in task descriptions. Read this index to select releva
 
 | Practice | File | Use When |
 |----------|------|----------|
-| TDD | `tdd.md` | Business logic, validation, pure functions, state machines, anything with clear input/output |
+| TDD | `tdd.md` | **MANDATORY** for all implementation tasks. Always inlined unless the task is pure setup or E2E tests. |
 | Django Patterns | `django-patterns.md` | Any Django code: views, models, templates, forms |
 | Tailwind Utilities | `tailwind-utilities.md` | UI/CSS work, frontend styling, component layout |
 | Permission Checks | `permission-checks.md` | Features involving auth, roles, RBAC, access control |

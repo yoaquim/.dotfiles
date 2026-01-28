@@ -40,6 +40,16 @@ Number tasks by **dependency level**:
 - Do NOT target a specific number of tasks. Let the feature complexity and the 1-2 point constraint determine how many tasks you end up with.
 - Separate concerns naturally: setup, migrations, business logic, views, templates, JS/interactivity, styling, permissions, tests can each be their own task(s) if warranted
 
+## TDD is Mandatory
+
+**Every implementation task MUST follow TDD.** The `tdd` practice content MUST be inlined into every task that writes application code (logic, views, models, JS, etc.). The only exceptions are pure setup tasks (installing deps, adding static assets, config changes) and E2E test tasks.
+
+**Task descriptions MUST begin with:** "Write failing tests first, then implement to make them pass." This is non-negotiable. The agent working on the task should write tests BEFORE writing any application code — not after, not alongside, BEFORE.
+
+E2E tests are a separate task at the final level — they verify full system integration after all implementation is done.
+
+---
+
 ## Task Description Template
 
 Include relevant context and tags:

@@ -92,6 +92,16 @@ Usage: /plan vk 001
 
 ---
 
+## MANDATORY: TDD on All Implementation Tasks
+
+**Every task that writes application code MUST follow TDD.** Inline the `tdd` practice content into every implementation task (logic, views, models, JS, etc.). The only exceptions are pure setup tasks (installing deps, static assets, config) and E2E test tasks.
+
+**Every implementation task description MUST start with:** "Write failing tests first, then implement to make them pass." The agent executing the task must write tests BEFORE any application code — not after, not alongside, BEFORE.
+
+E2E tests go in a separate task at the final dependency level.
+
+---
+
 ## IMPORTANT: Practice Content Embedding
 
 VK tags (`@tag-name`) do NOT auto-expand when creating tasks via MCP.
