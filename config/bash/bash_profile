@@ -121,7 +121,7 @@ if [ -f ~/.config/bash/bash_profile_ssh ]; then
 fi
 
 # source tool exports settings
-if [ -f ~/.config/bash/bash_tools ]; then
+if [ -f ~/.config/bash/bash_profile_tools ]; then
     source ~/.config/bash/bash_profile_tools
 fi
 

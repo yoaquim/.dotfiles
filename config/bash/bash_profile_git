@@ -7,8 +7,8 @@
 # ───────────────────────────────────────────────────
 
 # git bash completion (hombrew, mac only)
-if [ -f `brew --prefix`/etc/bash_completion ]; then
-    . `brew --prefix`/etc/bash_completion
+if [ -f /opt/homebrew/etc/bash_completion ]; then
+    . /opt/homebrew/etc/bash_completion
 fi
 
 # git coloring
