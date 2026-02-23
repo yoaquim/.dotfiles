@@ -2,3 +2,4 @@ config/tmux/plugins
 config/bash/bash_profile_local
 
 .DS_Store
+.deck/

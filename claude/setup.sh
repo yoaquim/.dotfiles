@@ -1,231 +1,116 @@
 #!/usr/bin/env bash
 
-# Claude Code Workflow Setup Script
-# Symlinks skills and scaffolds files to ~/.claude/
+# Claude Code Setup Script
+# Symlinks skills, agents, practices, and hooks to ~/.claude/
 
-set -e -o pipefail  # Exit on error
+set -e -o pipefail
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Helper functions
-info() {
-    echo -e "${BLUE}ℹ${NC} $1"
-}
+info()    { echo -e "${BLUE}i${NC} $1"; }
+success() { echo -e "${GREEN}+${NC} $1"; }
+warning() { echo -e "${YELLOW}!${NC} $1"; }
+error()   { echo -e "${RED}x${NC} $1"; }
 
-success() {
-    echo -e "${GREEN}✅${NC} $1"
-}
-
-warning() {
-    echo -e "${YELLOW}⚠${NC} $1"
-}
-
-error() {
-    echo -e "${RED}❌${NC} $1"
-}
-
-# Banner
 echo ""
-echo "╔════════════════════════════════════════╗"
-echo "║   Claude Code Workflow Setup           ║"
-echo "╚════════════════════════════════════════╝"
+echo "Claude Code Setup"
+echo "=================="
 echo ""
 
-# Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-info "Script location: $SCRIPT_DIR"
+info "Source: $SCRIPT_DIR"
 
-# Verify we're in the right place
-if [[ ! -d "$SCRIPT_DIR/skills" ]] || [[ ! -d "$SCRIPT_DIR/scaffolds" ]]; then
-    error "Expected structure not found!"
-    error "Make sure you're running this from ~/.dotfiles/claude/"
-    error "Required directories: skills/, scaffolds/"
+# Verify source structure
+if [[ ! -d "$SCRIPT_DIR/skills" ]]; then
+    error "skills/ not found in $SCRIPT_DIR"
     exit 1
 fi
 
-# Check if ~/.claude exists
+# Verify ~/.claude exists
 if [[ ! -d "$HOME/.claude" ]]; then
-    error "~/.claude directory doesn't exist"
-    error "This is the Claude Code application directory"
-    error "Please run Claude Code at least once to create it"
+    error "~/.claude doesn't exist. Run Claude Code once first."
     exit 1
 fi
 
-info "Found ~/.claude directory"
-
-# ============================================================
-# Helper function to symlink a directory
-# ============================================================
+# Symlink helper
 symlink_directory() {
     local SOURCE="$1"
     local TARGET="$2"
     local NAME="$3"
 
+    if [[ ! -d "$SOURCE" ]]; then
+        warning "$NAME source not found: $SOURCE (skipping)"
+        return 0
+    fi
+
     if [[ -L "$TARGET" ]]; then
-        # It's a symlink
         CURRENT_TARGET="$(readlink "$TARGET")"
         if [[ "$CURRENT_TARGET" == "$SOURCE" ]]; then
-            success "$NAME → $SOURCE (already linked)"
-        else
-            warning "$NAME is symlinked to: $CURRENT_TARGET"
-            read -p "Replace with our version? (y/n) " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                rm "$TARGET"
-                ln -s "$SOURCE" "$TARGET"
-                success "$NAME → $SOURCE (replaced)"
-            else
-                warning "Keeping existing $NAME symlink"
-            fi
+            success "$NAME (already linked)"
+            return 0
+        fi
+        warning "$NAME linked to $CURRENT_TARGET"
+        read -p "  Replace? (y/n) " -n 1 -r; echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            rm "$TARGET"
+            ln -s "$SOURCE" "$TARGET"
+            success "$NAME (replaced)"
         fi
     elif [[ -d "$TARGET" ]]; then
-        # It's a directory
-        warning "$NAME exists as a directory"
-        echo "Contents:"
-        ls -la "$TARGET" | head -10
-        echo ""
-        read -p "Backup and replace with symlink? (y/n) " -n 1 -r
-        echo
+        warning "$NAME exists as directory"
+        read -p "  Backup and replace? (y/n) " -n 1 -r; echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            BACKUP_DIR="$TARGET.backup.$(date +%Y%m%d_%H%M%S)"
-            mv "$TARGET" "$BACKUP_DIR"
+            mv "$TARGET" "$TARGET.backup.$(date +%Y%m%d_%H%M%S)"
             ln -s "$SOURCE" "$TARGET"
-            success "Backed up to: $BACKUP_DIR"
-            success "$NAME → $SOURCE"
-        else
-            error "Setup incomplete - $NAME not linked"
-            return 1
+            success "$NAME (backed up + linked)"
         fi
-    elif [[ -f "$TARGET" ]]; then
-        error "$NAME exists as a file (unexpected)"
-        return 1
     else
-        # Doesn't exist - create symlink
         ln -s "$SOURCE" "$TARGET"
-        success "$NAME → $SOURCE"
+        success "$NAME"
     fi
 }
 
-# ============================================================
-# Step 1: Symlink skills directory
-# ============================================================
+# Symlink directories
 echo ""
-info "Symlinking skills directory..."
+symlink_directory "$SCRIPT_DIR/skills"    "$HOME/.claude/skills"    "skills/"
+symlink_directory "$SCRIPT_DIR/agents"    "$HOME/.claude/agents"    "agents/"
+symlink_directory "$SCRIPT_DIR/practices" "$HOME/.claude/practices" "practices/"
+symlink_directory "$SCRIPT_DIR/hooks"     "$HOME/.claude/hooks"     "hooks/"
 
-symlink_directory "$SCRIPT_DIR/skills" "$HOME/.claude/skills" "~/.claude/skills"
+# Remove stale symlinks from deprecated directories
+for stale in adapters guides scaffolds; do
+    if [[ -L "$HOME/.claude/$stale" ]]; then
+        warning "Removing stale $stale/ symlink (deprecated)"
+        rm "$HOME/.claude/$stale"
+    fi
+done
 
-# ============================================================
-# Step 2: Symlink practices directory
-# ============================================================
+# Verify
 echo ""
-info "Symlinking practices..."
+info "Verifying..."
+for dir in skills agents practices hooks; do
+    if [[ -L "$HOME/.claude/$dir" ]]; then
+        echo "  + $dir/"
+    else
+        echo "  - $dir/ (not linked)"
+    fi
+done
 
-symlink_directory "$SCRIPT_DIR/practices" "$HOME/.claude/practices" "~/.claude/practices"
-
-# ============================================================
-# Step 3: Symlink scaffolds directory (SOPs and templates)
-# ============================================================
 echo ""
-info "Symlinking scaffolds directory..."
-
-symlink_directory "$SCRIPT_DIR/scaffolds" "$HOME/.claude/scaffolds" "~/.claude/scaffolds"
-
-# ============================================================
-# Step 4: Symlink adapters directory
-# ============================================================
+echo "Done."
 echo ""
-info "Symlinking adapters directory..."
-
-symlink_directory "$SCRIPT_DIR/adapters" "$HOME/.claude/adapters" "~/.claude/adapters"
-
-# ============================================================
-# Step 5: Verify setup
-# ============================================================
+echo "Skills:  /setup, /deck"
+echo "Agents:  runner"
 echo ""
-info "Verifying setup..."
-
-# Check skills
-if [[ -L "$HOME/.claude/skills" ]]; then
-    SKILLS_COUNT=$(find "$SCRIPT_DIR/skills" -name "SKILL.md" -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "  ✓ Skills directory symlinked ($SKILLS_COUNT skills)"
-else
-    error "Skills directory NOT symlinked"
-fi
-
-# Check practices
-if [[ -L "$HOME/.claude/practices" ]]; then
-    PRACTICES_COUNT=$(find "$SCRIPT_DIR/practices" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "  ✓ Practices symlinked ($PRACTICES_COUNT practices)"
-else
-    warning "Practices NOT symlinked"
-fi
-
-# Check scaffolds
-if [[ -L "$HOME/.claude/scaffolds" ]]; then
-    echo "  ✓ Workflow directory symlinked"
-else
-    error "Workflow directory NOT symlinked"
-fi
-
-# Check adapters
-if [[ -L "$HOME/.claude/adapters" ]]; then
-    ADAPTER_COUNT=$(find "$SCRIPT_DIR/adapters" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "  ✓ Adapters directory symlinked ($ADAPTER_COUNT adapters)"
-else
-    warning "Adapters directory NOT symlinked"
-fi
-
-# ============================================================
-# Step 6: Display what's available
-# ============================================================
-echo ""
-echo "╔════════════════════════════════════════╗"
-echo "║          Setup Complete! 🎉            ║"
-echo "╚════════════════════════════════════════╝"
-echo ""
-
-info "Structure created:"
-echo ""
-echo "~/.claude/"
-echo "├── skills/               → Slash command skills"
-echo "│   ├── setup/SKILL.md"
-echo "│   ├── feature/SKILL.md"
-echo "│   ├── plan/SKILL.md"
-echo "│   ├── bug/SKILL.md"
-echo "│   ├── roadmap/SKILL.md"
-echo "│   └── test-plan/SKILL.md"
-echo "├── adapters/             → Task management adapters"
-echo "│   ├── vk.md"
-echo "│   ├── local.md"
-echo "│   └── linear.md"
-echo "├── practices/            → Coding practices (TDD, patterns, etc.)"
-echo "├── scaffolds/"
-echo "│   ├── sops/             → Universal SOPs"
-echo "│   ├── templates/        → Project templates"
-echo "│   └── README.md"
-echo "└── ... (Claude Code app data)"
-echo ""
-
-info "Available skills:"
-echo ""
-echo "  /setup               - Initialize .agent/ for new/existing project"
-echo "  /feature             - Define WHAT to build (feature requirements)"
-echo "  /plan vk 001         - Plan feature in Vibe Kanban"
-echo "  /plan local 001      - Plan feature with local task files"
-echo "  /bug                  - Document bugs"
-echo "  /roadmap             - Create/update project roadmap"
-echo "  /test-plan 001       - Generate test plan with Playwright"
-echo ""
-
-info "Typical workflow:"
-echo ""
-echo "  /setup → /feature → /plan local 001 → implement → test → done"
-echo ""
-
-success "Setup complete! Happy coding!"
+echo "Workflow:"
+echo "  /setup                           — init project (CLAUDE.md, git, deps)"
+echo "  /deck epic <name>                — plan a milestone"
+echo "  /deck plan <name>                — plan a feature"
+echo "  /deck dispatch <name>            — spawn runner"
+echo "  /deck status                     — check progress"
+echo "  /deck verify <name>              — E2E test via Playwright"
 echo ""

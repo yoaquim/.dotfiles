@@ -1,248 +1,111 @@
 ---
-description: Initialize a new project with scaffolding and documentation structure
+description: Initialize a project with CLAUDE.md, git, and dependencies
 allowed-tools: Read, Write, Edit, Bash, Glob, AskUserQuestion
 ---
 
-You are setting up a new project with proper scaffolding and documentation.
+# Setup
 
-**This command:**
-1. Gathers project info through interactive questions
-2. Creates project config files (package.json, requirements.txt, etc.)
-3. Asks before running install commands
-4. Creates `.agent/` documentation structure **from templates**
-5. Creates `CLAUDE.md` project instructions
-6. Optionally initializes git
-
-**Templates Location:** `~/.claude/scaffolds/templates/`
+Initialize a project for Claude Code. Creates CLAUDE.md with project context, optionally sets up git and installs dependencies.
 
 ---
 
 ## Step 1: Check Current State
 
-**Check what exists:**
+Check what exists: CLAUDE.md, git repo, package.json/requirements.txt/go.mod/Cargo.toml, existing source files.
 
-```bash
-ls -la
-ls -la .agent/ 2>/dev/null
-ls -la package.json requirements.txt go.mod Cargo.toml 2>/dev/null
-git rev-parse --is-inside-work-tree 2>/dev/null
-```
-
-**Report findings:**
-```
-PROJECT STATE
-
-Directory: [current directory name]
-Git repo: [Yes/No]
-
-Found:
-- .agent/: [Yes/No]
-- CLAUDE.md: [Yes/No]
-- package.json: [Yes/No]
-- requirements.txt: [Yes/No]
-- Other project files: [list]
-
-[If .agent/ exists]
-This project appears to already be initialized.
-
-Would you like to:
-A) Reinitialize (will backup existing .agent/)
-B) Cancel
-
-Choose: (A/B)
-```
-
-If already initialized and user chooses B, exit.
-If user chooses A, backup `.agent/` to `.agent.backup.[timestamp]/`.
+If CLAUDE.md exists → ask: "CLAUDE.md already exists. Overwrite or cancel?"
 
 ---
 
-## Step 2: Verify Templates Exist
+## Step 2: Gather Project Info
 
-**CRITICAL: Check that templates are available:**
+Use `AskUserQuestion` for each. Skip what's obvious from existing files.
 
-```bash
-ls -la ~/.claude/scaffolds/templates/
-ls -la ~/.claude/scaffolds/templates/agent/
-```
-
-If templates don't exist, show error:
-```
-ERROR: Templates not found at ~/.claude/scaffolds/templates/
-
-The workflow templates are required for /setup.
-```
+1. **Project name** — default to directory name
+2. **Language/framework** — detect from existing files if possible, otherwise ask
+3. **Brief description** — what does it do, who is it for (1-2 sentences)
 
 ---
 
-## Step 3: Interactive Questions
+## Step 3: Analyze Codebase
 
-Use AskUserQuestion to gather project configuration:
+If existing code is present, use Explore subagents or Glob/Grep to understand:
+- Directory structure and key files
+- Architecture patterns (monolith, API + frontend, microservices, etc.)
+- Test setup and commands
+- Build/dev/run commands
 
-**Question 1: Project Name**
-- Options: "[Directory name]" / "Custom name"
-
-**Question 2: Language**
-- Options: "TypeScript" / "JavaScript" / "Python" / "Go"
-
-**Question 3: Framework** (based on language)
-- TypeScript/JS: "Express" / "React" / "Next.js" / "None"
-- Python: "Django" / "FastAPI" / "Flask" / "None"
-- Go: "Gin" / "Echo" / "None"
-
-**Question 4: Database**
-- Options: "PostgreSQL" / "MySQL" / "SQLite" / "None"
-
-**Question 5: Docker**
-- Options: "Yes" / "No"
-
-**Question 6: Task Management Workflow**
-- Options: "VK (Vibe Kanban)" / "Local Tasks" / "Both"
-
-**Question 7: Initial Roadmap**
-- Options: "Yes" / "No"
+This informs the CLAUDE.md content. For new/empty projects, skip and base it on the answers from Step 2.
 
 ---
 
-## Step 4: Gather Product Vision
+## Step 4: Write CLAUDE.md
 
-Ask for product context:
-
-```
-Tell me about your project:
-
-1. **What does it do?** (1-2 sentences)
-2. **Who is it for?** (target users)
-3. **What problem does it solve?**
-```
-
----
-
-## Step 5: Confirm Configuration
-
-Display summary and ask to proceed.
-
----
-
-## Step 6: Create Project Files
-
-Based on configuration, create appropriate files. See `stack-configs/` for language-specific configurations.
-
----
-
-## Step 7: Ask to Run Install Commands
-
-Present commands that need to run:
-- For Node.js: `npm install`
-- For Python: `python3 -m venv venv && pip install -r requirements.txt`
-- For Go: `go mod tidy`
-
-Ask before executing.
-
----
-
-## Step 8: Create .agent/ Documentation Structure FROM TEMPLATES
-
-**Create directories:**
-```bash
-mkdir -p .agent/features
-mkdir -p .agent/system
-mkdir -p .agent/sops
-mkdir -p .agent/known-issues
-```
-
-**If Local Tasks or Both workflow:**
-```bash
-mkdir -p .agent/tasks
-```
-
-**Template Variables to Replace:**
-| Variable | Value |
-|----------|-------|
-| `{{PROJECT_NAME}}` | User's project name |
-| `{{LANGUAGE}}` | Selected language |
-| `{{FRAMEWORK}}` | Selected framework |
-| `{{DATABASE}}` | Selected database |
-| `{{TEST_FRAMEWORK}}` | pytest, jest, go test |
-| `{{DEV_COMMAND}}` | Development command |
-| `{{TEST_COMMAND}}` | Test command |
-| `{{BUILD_COMMAND}}` | Build command |
-| `{{INIT_DATE}}` | Today's date |
-
-**Copy and process templates** from `~/.claude/scaffolds/templates/` to `.agent/`.
-
----
-
-## Step 9: Select Project Practices
-
-**Read the practices index** to determine which coding practices apply to this project:
-
-```bash
-# Read the index
-cat ~/.claude/practices/INDEX.md
-```
-
-**Select practices based on project configuration:**
-
-| Project Attribute | Practices to Include |
-|-------------------|---------------------|
-| **ALL projects (mandatory)** | `tdd` (ALWAYS), `testing-principles`, `documentation-standards` |
-| Python + Django | `django-patterns`, `permission-checks` |
-| Frontend / UI work | `tailwind-utilities` |
-| Docker | `docker-compose` |
-| Bug-heavy / maintenance project | `bug_analysis` |
-| Refactoring focus | `code_refactoring` |
-
-**Note:** `tdd` is mandatory for ALL projects — every implementation task writes tests first.
-
-**Write `.agent/practices.md`** listing the selected practices:
+Generate a project-specific CLAUDE.md. Keep it succinct — this is read by Claude on every session.
 
 ```markdown
-# Project Practices
+# <Project Name>
 
-Selected coding practices for this project. These are inlined into task descriptions when planning.
+<One-line description.>
 
-| Practice | File | Reason |
-|----------|------|--------|
-| TDD | `~/.claude/practices/tdd.md` | {why it applies} |
-| Django Patterns | `~/.claude/practices/django-patterns.md` | {why it applies} |
-| ... | ... | ... |
+## Stack
 
-Source index: `~/.claude/practices/INDEX.md`
-```
+- **Language**: <lang> + <framework>
+- **Database**: <db if applicable>
+- **Testing**: <test framework + command>
 
-This file is referenced by `/plan` when creating tasks — it reads the selected practices and inlines their content into task descriptions.
+## Architecture
 
----
+<2-5 sentences: how the project is structured, key directories, request flow.>
 
-## Step 10: Create .gitignore
-
-If doesn't exist, create appropriate .gitignore for the stack.
-
----
-
-## Step 11: Git Integration (Optional)
-
-Offer to initialize git and create initial commit.
-
----
-
-## Step 12: Final Report
+## Commands
 
 ```
-PROJECT SETUP COMPLETE
+<dev command>
+<test command>
+<build command if applicable>
+```
 
-Project: [Project Name]
-Language: [Language]
-Framework: [Framework]
-Database: [Database]
-Docker: [Yes/No]
-Task Management: [VK / Local Tasks / Both]
+## Conventions
 
-FILES CREATED:
-[List all created files]
+- <Key convention 1 — e.g. "All API routes in src/routes/">
+- <Key convention 2 — e.g. "Tests mirror source structure in tests/">
+- <Any project-specific patterns>
+```
 
-NEXT STEPS:
-1. Review generated files
-2. Define your first feature: /feature <description>
+Adapt sections to the project. Omit what doesn't apply. Add sections if the project warrants it (e.g. "Environment Variables" if .env is used).
+
+---
+
+## Step 5: Git Init (if needed)
+
+If not already a git repo, ask: "Initialize git repo?" → "Yes" / "No"
+
+If yes: `git init`, create appropriate .gitignore for the stack (include `.deck/`).
+
+---
+
+## Step 6: Install Dependencies (if needed)
+
+If project files exist but deps aren't installed, ask before running:
+- Node: `npm install`
+- Python: `python3 -m venv venv && pip install -r requirements.txt`
+- Go: `go mod tidy`
+- Rust: `cargo build`
+
+---
+
+## Step 7: Report
+
+```
+SETUP COMPLETE
+
+Project: <name>
+CLAUDE.md: created
+Git: <initialized / already existed / skipped>
+Deps: <installed / skipped / not applicable>
+
+Next:
+  /deck epic <name>     — plan a milestone
+  /deck plan <name>     — plan a single feature
 ```
