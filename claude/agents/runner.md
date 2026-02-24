@@ -6,7 +6,7 @@ hooks:
     - matcher: "startup"
       hooks:
         - type: command
-          command: "if [ -x .claude/setup.sh ]; then .claude/setup.sh; fi"
+          command: "if [ -x .claude/hooks/setup.sh ]; then .claude/hooks/setup.sh; fi"
           timeout: 120
           once: true
 ---

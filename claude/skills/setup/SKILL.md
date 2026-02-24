@@ -88,18 +88,19 @@ If yes: `git init`, create appropriate .gitignore for the stack (include `.deck/
 
 ## Step 6: Hooks Scaffolding
 
-Run the init-hooks script to create `.claude/` structure:
+Run the init-hooks script to create `.claude/hooks/` structure:
 
 ```bash
 bash ~/.claude/skills/setup/init-hooks.sh
 ```
 
 This creates the static scaffolding:
-- `.claude/settings.json` — hooks config (PostToolUse check + Stop verify)
-- `.claude/check.sh` — placeholder
-- `.claude/verify.sh` — placeholder
-- `.claude/setup.sh` — placeholder
-- `.claude/teardown.sh` — placeholder
+- `.claude/settings.json` — hooks config (PostToolUse check + Stop verify, with statusMessage)
+- `.claude/hooks/stop-verify.sh` — Stop hook wrapper (handles retry loop prevention)
+- `.claude/hooks/check.sh` — placeholder (receives file path as `$1`)
+- `.claude/hooks/verify.sh` — placeholder
+- `.claude/hooks/setup.sh` — placeholder
+- `.claude/hooks/teardown.sh` — placeholder
 
 If `.claude/settings.json` or any script already exists, the script skips it.
 
@@ -107,12 +108,12 @@ If `.claude/settings.json` or any script already exists, the script skips it.
 
 ## Step 7: Configure Hook Scripts
 
-Using what was learned in Steps 2-3, fill in the four scripts with project-specific commands. Each script should be short (5-15 lines). Use Docker (`docker compose exec -T` or `docker compose run --rm`) if the project uses Docker. Pipe check output through `head -20` to keep it short.
+Using what was learned in Steps 2-3, fill in the four scripts in `.claude/hooks/` with project-specific commands. Each script should be short (5-15 lines). Use Docker (`docker compose exec -T` or `docker compose run --rm`) if the project uses Docker. Do NOT edit `stop-verify.sh` — it's the wrapper that handles retry loop prevention.
 
 | Script | Purpose | Trigger | Blocking? | Speed |
 |--------|---------|---------|-----------|-------|
-| `check.sh` | Lint + typecheck | Every Edit/Write (PostToolUse) | No | < 10s |
-| `verify.sh` | Full lint + typecheck + test suite | Claude stops (Stop hook) | Yes — non-zero exit forces Claude to fix | OK to be slow |
+| `check.sh` | Lint + typecheck on `$1` (file path) | Every Edit/Write (PostToolUse) | No | < 10s |
+| `verify.sh` | Full lint + typecheck + test suite | Claude stops (Stop hook, via stop-verify.sh) | Yes on first attempt, reports-only on retry | OK to be slow |
 | `setup.sh` | Install deps, run migrations, start services | Runner SessionStart (deck dispatch) | N/A | One-time |
 | `teardown.sh` | Tear down what setup.sh created | `/deck close` | N/A | One-time |
 

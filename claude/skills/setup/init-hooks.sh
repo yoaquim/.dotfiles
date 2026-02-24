@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# init-hooks.sh — Create .claude/ hooks scaffolding in a project
+# init-hooks.sh — Create .claude/hooks/ scaffolding in a project
 # Called by /setup skill. Claude fills in the scripts after.
 
 set -e
 
-mkdir -p .claude
+mkdir -p .claude/hooks
 
 # --- settings.json (hooks config) ---
 # Only write hooks if settings.json doesn't exist or has no hooks key
@@ -19,8 +19,9 @@ if [[ ! -f .claude/settings.json ]]; then
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -x .claude/check.sh ]; then .claude/check.sh; fi",
-            "timeout": 30
+            "command": "if [ -x .claude/hooks/check.sh ]; then jq -r '.tool_input.file_path' | xargs .claude/hooks/check.sh; fi",
+            "timeout": 30,
+            "statusMessage": "Running checks..."
           }
         ]
       }
@@ -30,8 +31,9 @@ if [[ ! -f .claude/settings.json ]]; then
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -x .claude/verify.sh ]; then .claude/verify.sh || exit 2; fi",
-            "timeout": 120
+            "command": ".claude/hooks/stop-verify.sh",
+            "timeout": 120,
+            "statusMessage": "Verifying..."
           }
         ]
       }
@@ -44,17 +46,47 @@ else
     echo "~ .claude/settings.json (already exists, skipping)"
 fi
 
-# --- Hook scripts ---
+# --- stop-verify.sh (wrapper that handles stop_hook_active) ---
+if [[ ! -f .claude/hooks/stop-verify.sh ]]; then
+    cat > .claude/hooks/stop-verify.sh << 'STOP'
+#!/usr/bin/env bash
+set -e
+
+# Read hook input from stdin
+INPUT=$(cat)
+STOP_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false')
+
+if [ ! -x .claude/hooks/verify.sh ]; then
+    exit 0
+fi
+
+if [ "$STOP_ACTIVE" = "true" ]; then
+    # Second attempt — Claude already tried to fix once.
+    # Run verify but report instead of blocking (prevents infinite loops).
+    .claude/hooks/verify.sh 2>&1 || echo "Verify still failing after retry — letting through."
+    exit 0
+fi
+
+# First attempt — block if verify fails
+.claude/hooks/verify.sh || exit 2
+STOP
+    chmod +x .claude/hooks/stop-verify.sh
+    echo "+ .claude/hooks/stop-verify.sh"
+else
+    echo "~ .claude/hooks/stop-verify.sh (already exists, skipping)"
+fi
+
+# --- Project hook scripts ---
 for script in check.sh verify.sh setup.sh teardown.sh; do
-    if [[ ! -f ".claude/$script" ]]; then
-        cat > ".claude/$script" << SCRIPT
+    if [[ ! -f ".claude/hooks/$script" ]]; then
+        cat > ".claude/hooks/$script" << SCRIPT
 #!/usr/bin/env bash
 set -e
 # TODO: Configure for this project's stack
 SCRIPT
-        chmod +x ".claude/$script"
-        echo "+ .claude/$script"
+        chmod +x ".claude/hooks/$script"
+        echo "+ .claude/hooks/$script"
     else
-        echo "~ .claude/$script (already exists, skipping)"
+        echo "~ .claude/hooks/$script (already exists, skipping)"
     fi
 done

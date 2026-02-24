@@ -418,7 +418,7 @@ Finalize a plan: merge (or confirm merged), teardown worktree, mark done. Run th
 1. Skip merge entirely
 
 ### Teardown (all paths except "Open PR")
-1. Run `.claude/teardown.sh` in the worktree if it exists: `cd <worktree-path> && if [ -x .claude/teardown.sh ]; then .claude/teardown.sh; fi`
+1. Run teardown in the worktree if it exists: `cd <worktree-path> && if [ -x .claude/hooks/teardown.sh ]; then .claude/hooks/teardown.sh; fi`
 2. Remove worktree: `git worktree remove .claude/worktrees/<name>`
 3. Delete branch if it was deck-created (`deck/*`). For Linear/custom branches, leave them.
 4. Update status file: set status to `closed` (or `abandoned`), set `updated` timestamp
