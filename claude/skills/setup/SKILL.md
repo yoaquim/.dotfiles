@@ -13,7 +13,11 @@ Initialize a project for Claude Code. Creates CLAUDE.md, hooks scaffolding with 
 
 Check what exists: CLAUDE.md, .claude/, git repo, package.json/requirements.txt/go.mod/Cargo.toml, existing source files.
 
-If CLAUDE.md exists → ask: "CLAUDE.md already exists. Overwrite or cancel?"
+If CLAUDE.md exists → read it first, then ask: "CLAUDE.md already exists. How should I handle it?" → "Keep and add hooks only" / "Update with my additions" / "Overwrite completely" / "Cancel"
+
+- **Keep**: Skip Step 4 entirely. Use existing CLAUDE.md as-is, only set up hooks (Steps 6-7).
+- **Update**: Read existing content, preserve everything in it, add or update sections based on codebase analysis. Do not remove content the user or team put there.
+- **Overwrite**: Replace entirely with generated content.
 
 ---
 
@@ -137,7 +141,7 @@ If project files exist but deps aren't installed, ask before running:
 SETUP COMPLETE
 
 Project: <name>
-CLAUDE.md: created
+CLAUDE.md: <created / updated / kept / skipped>
 Git: <initialized / already existed / skipped>
 Hooks: <created / already existed>
   check.sh:    <configured / skipped>
