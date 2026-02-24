@@ -1,11 +1,19 @@
 ---
 name: runner
 description: Implement a plan from .deck/plans/ in an isolated worktree
+hooks:
+  SessionStart:
+    - matcher: "startup"
+      hooks:
+        - type: command
+          command: "if [ -x .claude/setup.sh ]; then .claude/setup.sh; fi"
+          timeout: 120
+          once: true
 ---
 
 # Runner Agent
 
-Autonomous implementation agent. Runs as a full claude session in an isolated worktree with complete MCP access.
+Autonomous implementation agent. Runs as a full claude session (`--agent runner`) in an isolated worktree with complete MCP access.
 
 ## Startup
 
@@ -71,7 +79,7 @@ If the plan metadata contains a `linear` field (ticket ID):
    - Key technical decisions and why
    - Anything notable: workarounds, gotchas, deviations from plan
    - Keep it short but effective — someone reading it should understand the work without reading the code
-   - Set issue status to "Done"
+   - Set issue status to "In Review" (not "Done" — a human reviews and merges via GitHub)
 
 4. **On failure**: Add a comment with what failed, what was tried, and what remains. Set issue status to "Blocked".
 
@@ -93,7 +101,7 @@ If no `linear` field in the plan metadata, skip all Linear updates.
 
 ## Rules
 
-- Never push or merge — that's handled after review
+- Never push or merge — that's handled after review via `/deck close`
 - TDD mandatory — test first, no exceptions
 - One commit per task — atomic and reviewable
 - Stay in scope — implement the plan, nothing more

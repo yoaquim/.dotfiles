@@ -1,7 +1,7 @@
 ---
 description: Orchestrate epics, plans, runners, and worktrees — the full lifecycle
-argument-hint: <epic|plan|dispatch|status|attach|resume|verify> [name] [context]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(tmux*), Bash(date*), Bash(git*), Bash(*claude*--dangerously*), Bash(ps*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__playwright__*, ToolSearch
+argument-hint: <epic|plan|dispatch|status|attach|resume|accept|close> [name] [context]
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(tmux*), Bash(date*), Bash(git*), Bash(*claude*--agent*--dangerously*), Bash(ps*), Bash(gh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__playwright__*, ToolSearch
 ---
 
 # Deck
@@ -12,10 +12,11 @@ Parse first argument as subcommand. No arguments → show help.
 /deck epic <name> [context]     — define big-picture work, create plan stubs
 /deck plan <name> [context]     — flesh out a plan (stub or standalone)
 /deck dispatch <name>           — spawn runner in background worktree
-/deck status [name]             — check progress
+/deck status [name]             — check progress + worktree state
 /deck attach <name>             — tmux window in worktree
 /deck resume <name>             — re-dispatch runner to continue work
-/deck verify <name>             — E2E test plan's acceptance criteria via Playwright
+/deck accept <name>             — E2E test acceptance criteria via Playwright (optional)
+/deck close <name>              — merge/confirm merged, teardown, mark done
 ```
 
 ---
@@ -122,6 +123,15 @@ Use `AskUserQuestion` for all questions. Skip what's already answered by context
 7. **Linear**: Should this plan track to a Linear ticket? If yes, capture ticket ID (e.g. `PROJ-123`) and git branch name.
 
 **Adaptive**: detailed input → only ask gaps. Brief input → ask all. Use Explore subagents to check codebase before asking user.
+
+### Discovery
+
+Before designing the implementation, resolve unknowns:
+
+1. Review the requirements gathered above — are there ambiguities, undefined behaviors, or technical questions that would block implementation?
+2. If yes → use Explore subagents and WebSearch to investigate. Check existing codebase for patterns, prior art, and constraints that inform the design.
+3. Surface findings to the user via `AskUserQuestion` only if there are decisions to make. If the research resolved the unknowns, proceed.
+4. If no unknowns → skip this phase entirely.
 
 ### Validate
 
@@ -251,13 +261,12 @@ Dispatched.
 3. Spawn runner via Bash:
 
 ```bash
-cd <worktree-path> && nohup claude -p "<prompt>" --dangerously-skip-permissions > <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
+cd <worktree-path> && nohup claude --agent runner -p "<prompt>" --dangerously-skip-permissions > <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
 ```
 
-Prompt (single string, constructed by deck):
+Prompt (passed via `-p`):
 
 ```
-You are a runner agent. Read ~/.claude/agents/runner.md for your full instructions.
 Plan name: <name>
 Plan file: <project-root>/.deck/plans/<name>.md
 Status file: <project-root>/.deck/status/<name>.md
@@ -273,7 +282,7 @@ Report: plan name, PID, branch, worktree path, next commands (`/deck status <nam
 
 ### Verifying runner alive
 
-Used by status, attach, resume, and dispatch (re-dispatch). A runner is alive only if both conditions hold:
+Used by status, attach, resume, dispatch, and close. A runner is alive only if both conditions hold:
 
 1. PID exists: `ps -p <pid> > /dev/null 2>&1`
 2. Start time matches: `ps -p <pid> -o lstart=` equals stored `pid_start`
@@ -282,7 +291,7 @@ If PID exists but start time doesn't match → PID was recycled by OS, runner is
 
 ### With name:
 1. Read `.deck/status/<name>.md`
-2. If status is `completed` or `failed` → display as-is, skip PID check
+2. If status is `completed`, `failed`, or `closed` → display as-is, skip PID check
 3. If status is `in_progress` → verify runner alive:
    - Alive → display as "running"
    - Dead → flag: "Runner exited without completing. Check `.deck/logs/<name>.log` for details. Use `/deck resume <name>` to continue."
@@ -290,19 +299,22 @@ If PID exists but start time doesn't match → PID was recycled by OS, runner is
 ### Without name:
 1. Read all `.deck/status/` files + `.deck/plans/` for unstarted plans
 2. For each status file with `in_progress`, verify runner alive (PID + start time)
-3. Group by epic if applicable
-4. Summary table:
+3. Check for orphaned worktrees: `git worktree list` → any worktree under `.claude/worktrees/` whose plan is `completed`/`failed` but worktree still exists
+4. Group by epic if applicable
+5. Summary table:
 
 ```
 DECK STATUS
 
 Epic: auth-overhaul
-  jwt-middleware    running       3/7    .claude/worktrees/jwt-middleware/
-  token-refresh     stub          —      not planned yet
-  session-migration planned       —      not dispatched
+  jwt-middleware    ● running      3/7    .claude/worktrees/jwt-middleware
+  token-refresh     ○ stub         —      not planned yet
+  session-migration ◻ planned      —      not dispatched
 
 Standalone:
-  fix-signup-bug    completed     5/5    .claude/worktrees/fix-signup-bug/
+  fix-signup-bug    ✓ completed    5/5    .claude/worktrees/fix-signup-bug  ⚠ not cleaned up
+
+Worktrees: 2 active, 1 orphaned
 ```
 
 ---
@@ -324,16 +336,15 @@ Re-dispatches a runner to continue work on an incomplete plan.
 1. Read `.deck/status/<name>.md` — fail if missing
 2. Verify runner alive → if alive: "Runner is still active. Use /deck attach <name> to interact."
 3. If status is `completed` → "Plan already completed. Nothing to resume."
-4. Spawn new background claude process in the existing worktree (same as dispatch spawn, with continue prompt):
+4. Spawn new background claude process in the existing worktree:
 
 ```bash
-cd <worktree-path> && nohup claude -p "<prompt>" --dangerously-skip-permissions > <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
+cd <worktree-path> && nohup claude --agent runner -p "<prompt>" --dangerously-skip-permissions > <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
 ```
 
 Prompt:
 
 ```
-You are a runner agent. Read ~/.claude/agents/runner.md for your full instructions.
 Plan name: <name>
 Plan file: <project-root>/.deck/plans/<name>.md
 Status file: <project-root>/.deck/status/<name>.md
@@ -344,15 +355,15 @@ A previous runner worked on this plan. Check the status file and git log for wha
 
 ---
 
-## `verify`
+## `accept`
 
-E2E verification of a plan's acceptance criteria using Playwright MCP. Independent of the runner.
+E2E acceptance testing of a plan's criteria using Playwright MCP. Optional — not required before close.
 
 ### Steps:
 
-1. `mkdir -p .deck/verify`
+1. `mkdir -p .deck/accept`
 2. Read `.deck/plans/<name>.md` → extract acceptance criteria
-3. If no acceptance criteria found → fail: "Plan has no acceptance criteria to verify."
+3. If no acceptance criteria found → fail: "Plan has no acceptance criteria to test."
 4. Ensure the app is running (ask user to confirm or provide URL)
 5. For each criterion:
    - Translate to Playwright steps (navigate, click, fill, assert)
@@ -361,7 +372,7 @@ E2E verification of a plan's acceptance criteria using Playwright MCP. Independe
 6. Report results:
 
 ```
-VERIFY: <name>
+ACCEPT: <name>
 
 [PASS] Login returns valid JWT
 [PASS] Protected routes reject invalid tokens
@@ -370,10 +381,53 @@ VERIFY: <name>
 3 criteria: 2 passed, 1 failed
 
 Screenshots:
-  .deck/verify/<name>/fail-token-refresh.png
+  .deck/accept/<name>/fail-token-refresh.png
 ```
 
-7. Save results to `.deck/verify/<name>.md` with timestamps and failure details
+7. Save results to `.deck/accept/<name>.md` with timestamps and failure details
+
+---
+
+## `close`
+
+Finalize a plan: merge (or confirm merged), teardown worktree, mark done. Run this when you're done with a plan — whether it succeeded or you're abandoning it.
+
+### Steps:
+
+1. Read `.deck/status/<name>.md` — fail if missing
+2. Read `.deck/plans/<name>.md` → get metadata (linear, branch, epic)
+3. Verify runner is NOT alive — if alive: "Runner is still active. Wait for it to finish or stop it first."
+4. Ask via `AskUserQuestion`: "How do you want to close this plan?" → "Merge locally" / "Open PR" / "Already merged (confirm)" / "Abandon"
+
+### Merge locally
+1. Get current branch: `git branch --show-current`
+2. Merge plan branch: `git merge <branch>`
+3. If merge conflicts → report and stop. User resolves manually, then re-runs close.
+
+### Open PR
+1. Push branch: `git push -u origin <branch>`
+2. Create PR via `gh pr create` with plan context (title from plan name, body from plan Context + Acceptance criteria)
+3. Report PR URL. **Do not teardown yet** — user runs `/deck close <name>` again after PR is merged.
+4. Update status to `pr_open` and stop here.
+
+### Already merged (confirm)
+1. Verify branch was merged: `gh pr list --head <branch> --state merged` or `git branch --merged` check
+2. If not actually merged → warn and stop
+
+### Abandon
+1. Skip merge entirely
+
+### Teardown (all paths except "Open PR")
+1. Run `.claude/teardown.sh` in the worktree if it exists: `cd <worktree-path> && if [ -x .claude/teardown.sh ]; then .claude/teardown.sh; fi`
+2. Remove worktree: `git worktree remove .claude/worktrees/<name>`
+3. Delete branch if it was deck-created (`deck/*`). For Linear/custom branches, leave them.
+4. Update status file: set status to `closed` (or `abandoned`), set `updated` timestamp
+5. If plan belongs to an epic:
+   - Closed → check off the plan in the epic's checklist
+   - Abandoned → note it as abandoned in the epic
+6. If plan has `linear` field and status was `abandoned` → set Linear issue to "Canceled" with a brief comment
+
+Report: plan name, close type, worktree removed, branch status.
 
 ---
 
@@ -386,27 +440,29 @@ Commands:
   /deck epic <name> [context]    Big-picture milestone → plan stubs
   /deck plan <name> [context]    Flesh out a plan (stub or standalone)
   /deck dispatch <name>          Spawn runner in background worktree
-  /deck status [name]            Check progress
+  /deck status [name]            Check progress + worktree state
   /deck attach <name>            tmux window in runner's worktree
   /deck resume <name>            Re-dispatch runner to continue work
-  /deck verify <name>            E2E test acceptance criteria via Playwright
+  /deck accept <name>            E2E test acceptance criteria (optional)
+  /deck close <name>             Merge/confirm merged, teardown, done
 
 Workflow (epic):
   1. /deck epic auth-overhaul "migrate sessions to JWT"
   2. /deck plan jwt-middleware
   3. /deck dispatch jwt-middleware
   4. /deck status
-  5. /deck verify jwt-middleware
+  5. /deck accept jwt-middleware       (optional)
+  6. /deck close jwt-middleware
 
 Workflow (standalone):
   1. /deck plan fix-signup "gmail users can't register"
   2. /deck dispatch fix-signup
-  3. /deck verify fix-signup
+  3. /deck close fix-signup
 
 Files:
   .deck/epics/    — milestone briefs
   .deck/plans/    — implementation plans (stubs or full)
   .deck/status/   — runner progress
   .deck/logs/     — runner output logs
-  .deck/verify/   — E2E test results
+  .deck/accept/   — E2E acceptance test results
 ```
