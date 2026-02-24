@@ -5,6 +5,12 @@
 
 set -e
 
+# Check for jq (required by hook scripts)
+if ! command -v jq &>/dev/null; then
+    echo "⚠ jq is not installed. Hooks that use jq (check, stop-verify) will fail silently."
+    echo "  Install: brew install jq  (macOS) or apt install jq  (Linux)"
+fi
+
 mkdir -p .claude/hooks
 
 # --- settings.json (hooks config) ---

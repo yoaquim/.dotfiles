@@ -1,7 +1,7 @@
 ---
 description: Orchestrate epics, plans, runners, and worktrees — the full lifecycle
 argument-hint: <epic|plan|dispatch|status|attach|resume|accept|close> [name] [context]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(tmux*), Bash(date*), Bash(git*), Bash(*claude*--agent*--dangerously*), Bash(ps*), Bash(gh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__playwright__*, ToolSearch
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(tmux*), Bash(date*), Bash(git*), Bash(*claude*--agent*--dangerously*), Bash(ps*), Bash(gh*), Bash(*hooks/teardown*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__playwright__*, ToolSearch
 ---
 
 # Deck
@@ -216,8 +216,9 @@ Spawns runner as a background claude process in an isolated worktree.
 
 1. Read `.deck/plans/<name>.md` — fail if missing
 2. If status is `stub` → fail: "Plan '<name>' is a stub. Run /deck plan <name> to flesh it out first."
-3. If status is `dispatched` → warn, confirm re-dispatch
-4. If `.deck/status/<name>.md` exists → verify runner alive (see status section) → if alive, warn: runner still active
+3. If status is `pr_open`, `closed`, or `abandoned` → fail: "Plan '<name>' is <status>. Run /deck close <name> or /deck plan <name> to start fresh."
+4. If status is `dispatched` → warn, confirm re-dispatch
+5. If `.deck/status/<name>.md` exists → verify runner alive (see status section) → if alive, warn: runner still active
 
 ### Setup
 
@@ -291,7 +292,7 @@ If PID exists but start time doesn't match → PID was recycled by OS, runner is
 
 ### With name:
 1. Read `.deck/status/<name>.md`
-2. If status is `completed`, `failed`, or `closed` → display as-is, skip PID check
+2. If status is `completed`, `failed`, `closed`, `pr_open`, or `abandoned` → display as-is, skip PID check
 3. If status is `in_progress` → verify runner alive:
    - Alive → display as "running"
    - Dead → flag: "Runner exited without completing. Check `.deck/logs/<name>.log` for details. Use `/deck resume <name>` to continue."
@@ -323,9 +324,11 @@ Worktrees: 2 active, 1 orphaned
 
 1. Read `.deck/status/<name>.md` → get worktree path
 2. No status file → fail: "No runner for '<name>'. Run /deck dispatch <name> first."
-3. If status is `in_progress` → verify runner alive. If alive → warn: "Runner is still active. This opens a separate interactive session alongside it — changes may conflict. Proceed?" Confirm via `AskUserQuestion`.
-4. `tmux new-window -n "deck:<name>" -c "<worktree-path>" "claude"`
-5. Confirm: "Opened tmux window 'deck:<name>' in <worktree-path>"
+3. If status is `closed` or `abandoned` → fail: "Plan '<name>' is <status>. Worktree was removed."
+4. Verify worktree path exists on disk. If missing → fail: "Worktree not found at <path>. It may have been removed. Use /deck dispatch <name> to re-create."
+5. If status is `in_progress` → verify runner alive. If alive → warn: "Runner is still active. This opens a separate interactive session alongside it — changes may conflict. Proceed?" Confirm via `AskUserQuestion`.
+6. `tmux new-window -n "deck:<name>" -c "<worktree-path>" "claude"`
+7. Confirm: "Opened tmux window 'deck:<name>' in <worktree-path>"
 
 ---
 
@@ -335,11 +338,11 @@ Re-dispatches a runner to continue work on an incomplete plan.
 
 1. Read `.deck/status/<name>.md` — fail if missing
 2. Verify runner alive → if alive: "Runner is still active. Use /deck attach <name> to interact."
-3. If status is `completed` → "Plan already completed. Nothing to resume."
-4. Spawn new background claude process in the existing worktree:
+3. If status is `completed`, `closed`, `abandoned`, or `pr_open` → "Plan already finished (status: <status>). Nothing to resume."
+4. Spawn new background claude process in the existing worktree (note `>>` to append, preserving previous runner logs):
 
 ```bash
-cd <worktree-path> && nohup claude --agent runner -p "<prompt>" --dangerously-skip-permissions > <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
+cd <worktree-path> && nohup claude --agent runner -p "<prompt>" --dangerously-skip-permissions >> <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
 ```
 
 Prompt:
@@ -351,7 +354,7 @@ Status file: <project-root>/.deck/status/<name>.md
 A previous runner worked on this plan. Check the status file and git log for what's done. Continue from where it left off.
 ```
 
-5. Capture PID and start time (`ps -p <pid> -o lstart=`). Update `pid`, `pid_start`, and `updated` in status file.
+5. Capture PID and start time (`ps -p <pid> -o lstart=`). Update `pid`, `pid_start`, `status` (set to `in_progress`), and `updated` in status file.
 
 ---
 
@@ -397,7 +400,8 @@ Finalize a plan: merge (or confirm merged), teardown worktree, mark done. Run th
 1. Read `.deck/status/<name>.md` — fail if missing
 2. Read `.deck/plans/<name>.md` → get metadata (linear, branch, epic)
 3. Verify runner is NOT alive — if alive: "Runner is still active. Wait for it to finish or stop it first."
-4. Ask via `AskUserQuestion`: "How do you want to close this plan?" → "Merge locally" / "Open PR" / "Already merged (confirm)" / "Abandon"
+4. If status is `pr_open` → skip the generic question. Ask via `AskUserQuestion`: "PR was already opened. What now?" → "Already merged (confirm)" / "Abandon". Then proceed to the matching path below.
+5. Otherwise, ask via `AskUserQuestion`: "How do you want to close this plan?" → "Merge locally" / "Open PR" / "Already merged (confirm)" / "Abandon"
 
 ### Merge locally
 1. Get current branch: `git branch --show-current`
@@ -408,7 +412,9 @@ Finalize a plan: merge (or confirm merged), teardown worktree, mark done. Run th
 1. Push branch: `git push -u origin <branch>`
 2. Create PR via `gh pr create` with plan context (title from plan name, body from plan Context + Acceptance criteria)
 3. Report PR URL. **Do not teardown yet** — user runs `/deck close <name>` again after PR is merged.
-4. Update status to `pr_open` and stop here.
+4. Update status file: set status to `pr_open`, set `updated` timestamp.
+5. Update plan file (`.deck/plans/<name>.md`): set `status` in deck metadata to `pr_open`.
+6. Stop here.
 
 ### Already merged (confirm)
 1. Verify branch was merged: `gh pr list --head <branch> --state merged` or `git branch --merged` check
@@ -422,10 +428,11 @@ Finalize a plan: merge (or confirm merged), teardown worktree, mark done. Run th
 2. Remove worktree: `git worktree remove .claude/worktrees/<name>`
 3. Delete branch if it was deck-created (`deck/*`). For Linear/custom branches, leave them.
 4. Update status file: set status to `closed` (or `abandoned`), set `updated` timestamp
-5. If plan belongs to an epic:
+5. Update plan file (`.deck/plans/<name>.md`): set `status` in deck metadata to `closed` (or `abandoned`)
+6. If plan belongs to an epic:
    - Closed → check off the plan in the epic's checklist
    - Abandoned → note it as abandoned in the epic
-6. If plan has `linear` field and status was `abandoned` → set Linear issue to "Canceled" with a brief comment
+7. If plan has `linear` field and status was `abandoned` → set Linear issue to "Canceled" with a brief comment
 
 Report: plan name, close type, worktree removed, branch status.
 
