@@ -114,7 +114,7 @@ Using what was learned in Steps 2-3, fill in the four scripts with project-speci
 | `check.sh` | Lint + typecheck | Every Edit/Write (PostToolUse) | No | < 10s |
 | `verify.sh` | Full lint + typecheck + test suite | Claude stops (Stop hook) | Yes — non-zero exit forces Claude to fix | OK to be slow |
 | `setup.sh` | Install deps, run migrations, start services | Runner SessionStart (deck dispatch) | N/A | One-time |
-| `teardown.sh` | Tear down what setup.sh created | `/deck clean` | N/A | One-time |
+| `teardown.sh` | Tear down what setup.sh created | `/deck close` | N/A | One-time |
 
 If the project doesn't use Docker, setup.sh/teardown.sh may be minimal or empty — that's fine.
 
