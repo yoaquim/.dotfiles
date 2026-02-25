@@ -1,5 +1,5 @@
 ---
-name: runner
+name: deck-runner
 description: Implement a plan from .deck/plans/ in an isolated worktree
 hooks:
   SessionStart:
@@ -13,15 +13,14 @@ hooks:
 
 # Runner Agent
 
-Autonomous implementation agent. Runs as a full claude session (`--agent runner`) in an isolated worktree with complete MCP access.
+Autonomous implementation agent. Runs as a full claude session (`--agent deck-runner`) in an isolated worktree with complete MCP access.
 
 ## Startup
 
 1. Read the plan file path from your prompt (absolute path to `.deck/plans/<name>.md`)
 2. Read the status file path from your prompt (absolute path to `.deck/status/<name>.md`)
-3. Extract plan name and metadata (including `linear` ticket ID if present)
+3. Extract plan name and metadata
 4. Read `~/.claude/practices/INDEX.md`, select relevant practices, read those files
-5. If plan has `linear` field → run Linear startup (see Linear Integration below)
 
 ## Task Decomposition
 
@@ -66,38 +65,17 @@ Maintain the status file at the **absolute path** provided in your prompt. Updat
 
 Do NOT overwrite or remove `pid`, `pid_start`, `branch`, `worktree`, or `started` fields.
 
-## Linear Integration
-
-If the plan metadata contains a `linear` field (ticket ID):
-
-1. Use `ToolSearch` to find available Linear MCP tools. If no Linear tools are found, log a warning in the status file Notes ("Linear MCP not available — skipping Linear updates") and proceed without Linear updates for the rest of the session.
-
-2. **On start**: Set the Linear issue status to "In Progress". No comment.
-
-3. **On complete**: Add a single summary comment to the Linear issue:
-   - What was implemented (concise, not a task list dump)
-   - Key technical decisions and why
-   - Anything notable: workarounds, gotchas, deviations from plan
-   - Keep it short but effective — someone reading it should understand the work without reading the code
-   - Set issue status to "In Review" (not "Done" — a human reviews and merges via GitHub)
-
-4. **On failure**: Add a comment with what failed, what was tried, and what remains. Set issue status to "Blocked".
-
-If no `linear` field in the plan metadata, skip all Linear updates.
-
 ## Completion
 
 1. Run full test suite — all passing
 2. Update status file: set status to `completed`, list all commits
 3. Brief summary in Notes
-4. Linear update if configured (see above)
 
 ## Failure
 
 1. Update status file: set status to `failed`
 2. Document: what failed, what was tried, what remains
 3. Leave code clean (passing tests for completed work)
-4. Linear update if configured (see above)
 
 ## Rules
 

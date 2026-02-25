@@ -1,7 +1,7 @@
 ---
 description: Orchestrate epics, plans, runners, and worktrees — the full lifecycle
 argument-hint: <epic|plan|dispatch|status|attach|resume|accept|close> [name] [context]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(tmux*), Bash(date*), Bash(git*), Bash(*claude*--agent*--dangerously*), Bash(ps*), Bash(gh*), Bash(*hooks/teardown*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__playwright__*, ToolSearch
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(tmux*), Bash(date*), Bash(git*), Bash(*claude*--agent*--dangerously*), Bash(ps*), Bash(gh*), Bash(*hooks/teardown*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__playwright__*
 ---
 
 # Deck
@@ -120,7 +120,6 @@ Use `AskUserQuestion` for all questions. Skip what's already answered by context
 4. **Constraints**: Technical, business, performance, security?
 5. **Acceptance criteria**: Definition of done, written as Given-When-Then scenarios (see format below). What would make it fail?
 6. **Scope**: What's explicitly out?
-7. **Linear**: Should this plan track to a Linear ticket? If yes, capture ticket ID (e.g. `PROJ-123`) and git branch name.
 
 **Adaptive**: detailed input → only ask gaps. Brief input → ask all. Use Explore subagents to check codebase before asking user.
 
@@ -173,7 +172,6 @@ Write `.deck/plans/<name>.md` (overwrites stub if it was one):
 status: planned
 epic: <epic-name if applicable>
 created: <today's date>
-linear: <ticket-id if applicable>
 branch: <git-branch if applicable>
 -->
 
@@ -200,7 +198,7 @@ Given-When-Then format:
 - ...
 ```
 
-If `linear` is set, the `branch` field should reflect the Linear ticket's git branch. If no `branch` is provided, dispatch will default to `deck/<name>`.
+If no `branch` is provided, dispatch will default to `deck/<name>`.
 
 If plan belongs to an epic, update the epic's checklist (mark this plan as defined, not checked — checked means completed).
 
@@ -262,7 +260,7 @@ Dispatched.
 3. Spawn runner via Bash:
 
 ```bash
-cd <worktree-path> && nohup claude --agent runner -p "<prompt>" --dangerously-skip-permissions > <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
+cd <worktree-path> && nohup claude --agent deck-runner -p "<prompt>" --dangerously-skip-permissions > <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
 ```
 
 Prompt (passed via `-p`):
@@ -342,7 +340,7 @@ Re-dispatches a runner to continue work on an incomplete plan.
 4. Spawn new background claude process in the existing worktree (note `>>` to append, preserving previous runner logs):
 
 ```bash
-cd <worktree-path> && nohup claude --agent runner -p "<prompt>" --dangerously-skip-permissions >> <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
+cd <worktree-path> && nohup claude --agent deck-runner -p "<prompt>" --dangerously-skip-permissions >> <project-root>/.deck/logs/<name>.log 2>&1 & echo $!
 ```
 
 Prompt:
@@ -398,7 +396,7 @@ Finalize a plan: merge (or confirm merged), teardown worktree, mark done. Run th
 ### Steps:
 
 1. Read `.deck/status/<name>.md` — fail if missing
-2. Read `.deck/plans/<name>.md` → get metadata (linear, branch, epic)
+2. Read `.deck/plans/<name>.md` → get metadata (branch, epic)
 3. Verify runner is NOT alive — if alive: "Runner is still active. Wait for it to finish or stop it first."
 4. If status is `pr_open` → skip the generic question. Ask via `AskUserQuestion`: "PR was already opened. What now?" → "Already merged (confirm)" / "Abandon". Then proceed to the matching path below.
 5. Otherwise, ask via `AskUserQuestion`: "How do you want to close this plan?" → "Merge locally" / "Open PR" / "Already merged (confirm)" / "Abandon"
@@ -426,13 +424,12 @@ Finalize a plan: merge (or confirm merged), teardown worktree, mark done. Run th
 ### Teardown (all paths except "Open PR")
 1. Run teardown in the worktree if it exists: `cd <worktree-path> && if [ -x .claude/hooks/teardown.sh ]; then .claude/hooks/teardown.sh; fi`
 2. Remove worktree: `git worktree remove .claude/worktrees/<name>`
-3. Delete branch if it was deck-created (`deck/*`). For Linear/custom branches, leave them.
+3. Delete branch if it was deck-created (`deck/*`). For custom branches, leave them.
 4. Update status file: set status to `closed` (or `abandoned`), set `updated` timestamp
 5. Update plan file (`.deck/plans/<name>.md`): set `status` in deck metadata to `closed` (or `abandoned`)
 6. If plan belongs to an epic:
    - Closed → check off the plan in the epic's checklist
    - Abandoned → note it as abandoned in the epic
-7. If plan has `linear` field and status was `abandoned` → set Linear issue to "Canceled" with a brief comment
 
 Report: plan name, close type, worktree removed, branch status.
 
