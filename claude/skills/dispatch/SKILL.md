@@ -1,12 +1,14 @@
 ---
 description: Dispatch Linear tickets to autonomous runners in isolated worktrees
 argument-hint: <ticket-id|search-query|status|attach> [name]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(tmux*), Bash(date*), Bash(git*), Bash(*claude*--agent*--dangerously*), Bash(ps*), Bash(gh*), AskUserQuestion, Task, mcp__linear__*
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, mcp__linear__*
 ---
 
 # Dispatch
 
 Parse first argument as subcommand. No arguments → show help.
+
+Scripts live alongside this file at `~/.claude/skills/dispatch/`. Use them — do not construct raw bash commands for spawn, status checks, or attach.
 
 ```
 /dispatch <ticket-id>              — fetch ticket, discover, spawn runner
@@ -29,9 +31,10 @@ Argument detection: if the argument matches a ticket ID pattern (letters + hyphe
 
 Lowercase the ticket identifier (e.g. `ENG-142` → `eng-142`).
 
-Check `.dispatch/status/<name>.md` for prior runs:
-- Exists and `in_progress` with alive runner (PID + start time check) → stop: "Runner is still active. Use `/dispatch status <name>` or `/dispatch attach <name>`."
-- Exists and `completed` or `failed` → ask via `AskUserQuestion`: "This ticket was previously dispatched (status: <status>). Re-dispatch?" → "Yes, re-dispatch" / "No, cancel"
+Check for prior runs: `bash ~/.claude/skills/dispatch/status.sh <project-root> <name>`. Parse the `state:` line:
+- `state:alive` → stop: "Runner is still active. Use `/dispatch status <name>` or `/dispatch attach <name>`."
+- `state:completed` or `state:failed` → ask via `AskUserQuestion`: "This ticket was previously dispatched (status: <status>). Re-dispatch?" → "Yes, re-dispatch" / "No, cancel"
+- No status file → proceed (fresh dispatch)
 
 ### 3. Discover
 
@@ -50,25 +53,29 @@ Adaptive:
 - Detailed ticket with clear requirements → single confirmation: "Ready to dispatch with this scope?"
 - Vague or broad ticket → more targeted questions: scope boundaries, approach preferences, ambiguities
 
-### 5. Worktree
-
-```bash
-mkdir -p .dispatch/status .dispatch/logs
-```
-
-Branch: use Linear issue's branch name if set in the issue, else `dispatch/<name>`.
+### 5. Prompt File
 
 Get absolute project root: `git rev-parse --show-toplevel`
 
-Create worktree (same logic as deck):
-- Worktree exists at `.claude/worktrees/<name>` → reuse it
-- Branch exists (`git rev-parse --verify <branch> 2>/dev/null`): `git worktree add .claude/worktrees/<name> <branch>`
-- Branch doesn't exist: `git worktree add .claude/worktrees/<name> -b <branch>`
-- If branch is checked out in another worktree → fail: "Branch '<branch>' is already checked out at <path>. Remove that worktree first."
+Write prompt to `.dispatch/prompts/<name>.txt` (use `mkdir -p .dispatch/prompts` first):
+
+```
+Ticket: <TICKET-ID>
+Status file: <project-root>/.dispatch/status/<name>.md
+Branch: <branch>
+
+## Discovery
+<structured findings from step 3>
+
+## Context
+<user answers from step 4>
+```
+
+Branch: use Linear issue's branch name if set, else `dispatch/<name>`.
 
 ### 6. Status File
 
-Write `.dispatch/status/<name>.md`:
+Write `.dispatch/status/<name>.md` (use `mkdir -p .dispatch/status` first):
 
 ```markdown
 # <name>
@@ -96,26 +103,21 @@ Dispatched.
 ### 7. Spawn
 
 ```bash
-cd <worktree-path> && nohup claude --agent linear-runner -p "<prompt>" --dangerously-skip-permissions > <project-root>/.dispatch/logs/<name>.log 2>&1 & echo $!
+bash ~/.claude/skills/dispatch/spawn.sh <name> <branch> <project-root> <project-root>/.dispatch/prompts/<name>.txt
 ```
 
-Prompt format:
+The script handles: worktree creation (reuse/existing-branch/new-branch), runner spawn with `--dangerously-skip-permissions`, PID capture. Output is key:value lines:
 
 ```
-Ticket: <TICKET-ID>
-Status file: <absolute-path>/.dispatch/status/<name>.md
-Branch: <branch>
-
-## Discovery
-<structured findings from step 3>
-
-## Context
-<user answers from step 4>
+worktree_status:reused|created-existing-branch|created-new-branch
+worktree:<path>
+pid:<number>
+pid_start:<lstart string>
 ```
 
-### 8. PID
+### 8. Update Status
 
-Capture PID from command output. Get process start time: `ps -p <pid> -o lstart=`. Update status file's `pid` and `pid_start` fields.
+Parse spawn.sh output. Update the status file's `pid` and `pid_start` fields with the values from the script output.
 
 Report: ticket ID, title, PID, branch, worktree path, next commands (`/dispatch status <name>`, `/dispatch attach <name>`).
 
@@ -135,48 +137,44 @@ If search returns nothing, tell the user and suggest refining their query or pro
 
 ## `status [name]`
 
-### Verifying runner alive
+Run the status script:
 
-A runner is alive only if both conditions hold:
-1. PID exists: `ps -p <pid> > /dev/null 2>&1`
-2. Start time matches: `ps -p <pid> -o lstart=` equals stored `pid_start`
+```bash
+bash ~/.claude/skills/dispatch/status.sh <project-root> [name]
+```
 
-If PID exists but start time doesn't match → PID was recycled, runner is dead.
+**With name** — output has a structured header then the full status file:
+```
+state:alive|dead|completed|failed
+worktree:<path>
+---
+<full status file>
+```
 
-### With name
+If `state:dead` → warn: "Runner exited without completing. Check `.dispatch/logs/<name>.log` for details."
 
-1. Read `.dispatch/status/<name>.md`
-2. If status is `completed` or `failed` → display as-is, skip PID check
-3. If status is `in_progress` → verify runner alive:
-   - Alive → display as "running"
-   - Dead → flag: "Runner exited without completing. Check `.dispatch/logs/<name>.log` for details."
-
-### Without name
-
-1. Read all `.dispatch/status/` files
-2. For each with `in_progress`, verify runner alive (PID + start time)
-3. Summary table:
-
+**Without name** — formatted summary table:
 ```
 DISPATCH STATUS
 
-  eng-142       ● running      2/5    Fix auth token refresh
-  eng-155       ✓ completed    4/4    Add user export endpoint
-  eng-160       ✗ failed       1/3    Migrate to new billing API
+  eng-142          ● running      2/5    Fix auth token refresh
+  eng-155          ✓ completed    4/4    Add user export endpoint
+  eng-160          ✗ failed       1/3    Migrate to new billing API
 
 Runners: 1 active, 1 completed, 1 failed
 ```
+
+Display the script output directly.
 
 ---
 
 ## `attach <name>`
 
-1. Read `.dispatch/status/<name>.md` → get worktree path
+1. Run `bash ~/.claude/skills/dispatch/status.sh <project-root> <name>` → parse `state:` and `worktree:` from output.
 2. No status file → fail: "No runner for '<name>'. Run `/dispatch <ticket-id>` first."
-3. Verify worktree path exists on disk. If missing → fail: "Worktree not found at <path>."
-4. If status is `in_progress` → verify runner alive. If alive → warn via `AskUserQuestion`: "Runner is still active. This opens a separate interactive session alongside it — changes may conflict. Proceed?" → "Yes" / "No"
-5. `tmux new-window -n "dispatch-<name>" -c "<worktree-path>" "claude"`
-6. Confirm: "Opened tmux window 'dispatch-<name>' in <worktree-path>"
+3. If `state:alive` → warn via `AskUserQuestion`: "Runner is still active. This opens a separate interactive session alongside it — changes may conflict. Proceed?" → "Yes" / "No"
+4. Run: `bash ~/.claude/skills/dispatch/attach.sh <name> <worktree-path>`
+5. Confirm: "Opened tmux window 'dispatch-<name>' in <worktree-path>"
 
 ---
 
@@ -200,4 +198,5 @@ Workflow:
 Files:
   .dispatch/status/   — runner progress
   .dispatch/logs/     — runner output logs
+  .dispatch/prompts/  — runner prompt files
 ```
