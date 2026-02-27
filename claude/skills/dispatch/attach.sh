@@ -18,7 +18,7 @@ if [[ ! -d "$WORKTREE" ]]; then
     exit 1
 fi
 
-tmux new-window -n "dispatch-$NAME" -c "$WORKTREE" "claude --dangerously-skip-permissions"
+tmux new-window -n "dispatch-$NAME" -c "$WORKTREE" "env -u CLAUDECODE claude --dangerously-skip-permissions"
 tmux split-window -h -t "dispatch-$NAME" -c "$WORKTREE"
 tmux select-pane -t "dispatch-$NAME.0"
 echo "Opened tmux window 'dispatch-$NAME' in $WORKTREE (claude left, shell right)"
