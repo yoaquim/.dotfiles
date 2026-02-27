@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # spawn.sh — Create worktree (if needed) and spawn linear-runner agent
 #
-# Usage: spawn.sh <name> <branch> <project-root> <prompt-file>
+# Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [target-repo]
+#
+# If target-repo is provided and differs from project-root, the worktree is
+# created in the target repo instead (for cross-repo dispatch).
 #
 # Output (key:value on stdout):
 #   worktree_status:reused|created-existing-branch|created-new-branch
@@ -15,9 +18,21 @@ NAME="$1"
 BRANCH="$2"
 ROOT="$3"
 PROMPT_FILE="$4"
+TARGET_REPO="${5:-$ROOT}"
 
 if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$PROMPT_FILE" ]]; then
-    echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file>" >&2
+    echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [target-repo]" >&2
+    exit 1
+fi
+
+# Resolve target repo to absolute path
+if [[ "$TARGET_REPO" != /* ]]; then
+    TARGET_REPO="$(cd "$TARGET_REPO" && pwd)"
+fi
+
+# Verify target repo is a git repo
+if ! git -C "$TARGET_REPO" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "error: target-repo is not a git repository: $TARGET_REPO" >&2
     exit 1
 fi
 
@@ -31,10 +46,11 @@ if [[ ! -f "$PROMPT_FILE" ]]; then
     exit 1
 fi
 
-WORKTREE="$ROOT/.claude/worktrees/$NAME"
-LOG_DIR="$ROOT/.dispatch/logs"
+# Worktree and dispatch artifacts live in the target repo
+WORKTREE="$TARGET_REPO/.claude/worktrees/$NAME"
+LOG_DIR="$TARGET_REPO/.dispatch/logs"
 
-mkdir -p "$LOG_DIR" "$ROOT/.dispatch/status"
+mkdir -p "$LOG_DIR" "$TARGET_REPO/.dispatch/status"
 
 # --- Worktree ---
 if [[ -d "$WORKTREE/.git" || -f "$WORKTREE/.git" ]]; then
@@ -43,8 +59,8 @@ else
     WT_ERR="$(mktemp)"
     trap 'rm -f "$WT_ERR"' EXIT
 
-    if git -C "$ROOT" rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
-        if ! git -C "$ROOT" worktree add "$WORKTREE" "$BRANCH" 2>"$WT_ERR"; then
+    if git -C "$TARGET_REPO" rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
+        if ! git -C "$TARGET_REPO" worktree add "$WORKTREE" "$BRANCH" 2>"$WT_ERR"; then
             if grep -q "already checked out" "$WT_ERR"; then
                 echo "error: branch '$BRANCH' is already checked out in another worktree" >&2
                 exit 1
@@ -54,7 +70,7 @@ else
         fi
         echo "worktree_status:created-existing-branch"
     else
-        if ! git -C "$ROOT" worktree add "$WORKTREE" -b "$BRANCH" 2>"$WT_ERR"; then
+        if ! git -C "$TARGET_REPO" worktree add "$WORKTREE" -b "$BRANCH" 2>"$WT_ERR"; then
             cat "$WT_ERR" >&2
             exit 1
         fi

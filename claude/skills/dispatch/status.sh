@@ -17,11 +17,6 @@ if [[ -z "$ROOT" ]]; then
     exit 1
 fi
 
-if [[ ! -d "$STATUS_DIR" ]]; then
-    echo "No dispatched runners found."
-    exit 0
-fi
-
 # --- Helpers ---
 
 get_field() {
@@ -50,10 +45,42 @@ count_progress() {
     fi
 }
 
+# --- Find status file for a named runner ---
+# Searches: local .dispatch, sibling repos, and child repos
+find_status_file() {
+    local name="$1"
+
+    # 1. Local
+    if [[ -f "$STATUS_DIR/$name.md" ]]; then
+        echo "$STATUS_DIR/$name.md"
+        return 0
+    fi
+
+    # 2. Sibling repos (parent/*/.dispatch/status/)
+    local parent
+    parent="$(dirname "$ROOT")"
+    for f in "$parent"/*/.dispatch/status/"$name".md; do
+        if [[ -f "$f" ]]; then
+            echo "$f"
+            return 0
+        fi
+    done
+
+    # 3. Child repos (root/*/.dispatch/status/) — for when root is a parent dir, not a git repo
+    for f in "$ROOT"/*/.dispatch/status/"$name".md; do
+        if [[ -f "$f" ]]; then
+            echo "$f"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 # --- Single runner ---
 if [[ -n "$NAME" ]]; then
-    FILE="$STATUS_DIR/$NAME.md"
-    if [[ ! -f "$FILE" ]]; then
+    FILE="$(find_status_file "$NAME")" || true
+    if [[ -z "$FILE" || ! -f "$FILE" ]]; then
         echo "No status file for '$NAME'."
         exit 1
     fi
@@ -80,6 +107,11 @@ if [[ -n "$NAME" ]]; then
 fi
 
 # --- All runners ---
+if [[ ! -d "$STATUS_DIR" ]]; then
+    echo "No dispatched runners found."
+    exit 0
+fi
+
 ACTIVE=0
 COMPLETED=0
 FAILED=0

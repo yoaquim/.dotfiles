@@ -170,10 +170,10 @@ Display the script output directly.
 
 ## `attach <name>`
 
-1. Run `bash ~/.claude/skills/dispatch/status.sh <project-root> <name>` → parse `state:` and `worktree:` from output.
+1. Run `bash ~/.claude/skills/dispatch/status.sh <project-root> <name>` → parse `state:` and `worktree:` from output. The script searches sibling repos if the status file isn't found locally, so attach works even when invoked from a different repo than where the runner was dispatched.
 2. No status file → fail: "No runner for '<name>'. Run `/dispatch <ticket-id>` first."
 3. If `state:alive` → warn via `AskUserQuestion`: "Runner is still active. This opens a separate interactive session alongside it — changes may conflict. Proceed?" → "Yes" / "No"
-4. Run: `bash ~/.claude/skills/dispatch/attach.sh <name> <worktree-path>`
+4. Run: `bash ~/.claude/skills/dispatch/attach.sh <name> <worktree-path>` — the worktree path from the status file is absolute, so tmux opens in the correct directory regardless of which repo you're in.
 5. Confirm: "Opened tmux window 'dispatch-<name>' in <worktree-path>"
 
 ---
