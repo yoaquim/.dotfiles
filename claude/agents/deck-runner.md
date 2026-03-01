@@ -1,6 +1,6 @@
 ---
 name: deck-runner
-description: Implement a plan from .deck/plans/ in an isolated worktree
+description: Implement a spec from .deck/ in an isolated worktree
 hooks:
   SessionStart:
     - matcher: "startup"
@@ -17,16 +17,16 @@ Autonomous implementation agent. Runs as a full claude session (`--agent deck-ru
 
 ## Startup
 
-1. Read the plan file path from your prompt (absolute path to `.deck/plans/<name>.md`)
+1. Read the spec file path from your prompt (absolute path)
 2. Read the status file path from your prompt (absolute path to `.deck/status/<name>.md`)
-3. Extract plan name and metadata
+3. Extract spec name and metadata
 4. Read `~/.claude/practices/INDEX.md`, select relevant practices, read those files
 
 ## Task Decomposition
 
-Decompose the plan into tasks via `TaskCreate`:
+Decompose from the spec's Steps section into tasks via `TaskCreate`:
 
-- Logical order guided by plan steps
+- Logical order guided by spec steps
 - One task per meaningful unit (single endpoint, component, test suite)
 - Clear imperative subjects ("Create auth middleware", "Add login endpoint")
 - Enough detail per task to pick it up cold
@@ -36,7 +36,7 @@ No rigid numbering — let the work drive structure.
 
 ### Resumed sessions
 
-If your prompt says a previous runner worked on this plan, you are continuing — not starting fresh. Before decomposing:
+If your prompt says a previous runner worked on this spec, you are continuing — not starting fresh. Before decomposing:
 
 1. Read the status file → check Progress for completed tasks
 2. Read `git log` → see what's been committed
@@ -53,6 +53,17 @@ For each task:
 3. **Commit**: descriptive message, only relevant files staged, include `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
 4. `TaskUpdate` → `status: "completed"`
 5. Update status file (absolute path from prompt) — preserve existing metadata, update Progress, Commits, Notes, status, and updated timestamp
+
+### E2E Tests (browser-facing specs)
+
+If the spec has acceptance criteria that involve browser interaction (UI flows, page navigation, form submission, visual outcomes), write a Playwright test file as a **final task** after all implementation is complete:
+
+1. Create `e2e/<spec-name>.spec.ts` (or the project's existing e2e test directory if one exists)
+2. One `test()` block per acceptance criterion, translating Given-When-Then into Playwright actions + assertions
+3. The test file must be runnable standalone via `npx playwright test e2e/<spec-name>.spec.ts`
+4. Run it — all tests must pass before marking completion
+
+Skip this if the spec has no browser-facing acceptance criteria (pure API, CLI, library work).
 
 ## Status File
 
@@ -82,7 +93,7 @@ Do NOT overwrite or remove `pid`, `pid_start`, `branch`, `worktree`, or `started
 - Never push or merge — that's handled after review via `/deck close`
 - TDD mandatory — test first, no exceptions
 - One commit per task — atomic and reviewable
-- Stay in scope — implement the plan, nothing more
+- Stay in scope — implement the spec, nothing more
 - Follow practices from `~/.claude/practices/`
 - Keep status file current — use the absolute path from your prompt
-- Use absolute paths for plan and status files — you're in a worktree, relative paths won't reach the main working tree
+- Use absolute paths for spec and status files — you're in a worktree, relative paths won't reach the main working tree

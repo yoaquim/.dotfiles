@@ -151,6 +151,5 @@ Hooks: <created / already existed>
 Deps: <installed / skipped / not applicable>
 
 Next:
-  /deck epic <name>     — plan a milestone
-  /deck plan <name>     — plan a single feature
+  /deck spec <name>     — spec out a feature
 ```
