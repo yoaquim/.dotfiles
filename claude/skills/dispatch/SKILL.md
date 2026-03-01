@@ -57,7 +57,7 @@ Adaptive:
 
 Get absolute project root: `git rev-parse --show-toplevel`
 
-Write prompt to `.dispatch/prompts/<name>.txt` (use `mkdir -p .dispatch/prompts` first):
+Write prompt to `.dispatch/prompts/<name>.md` (use `mkdir -p .dispatch/prompts` first):
 
 ```
 Ticket: <TICKET-ID>
@@ -103,7 +103,7 @@ Dispatched.
 ### 7. Spawn
 
 ```bash
-bash ~/.claude/skills/dispatch/spawn.sh <name> <branch> <project-root> <project-root>/.dispatch/prompts/<name>.txt
+bash ~/.claude/skills/dispatch/spawn.sh <name> <branch> <project-root> <project-root>/.dispatch/prompts/<name>.md
 ```
 
 The script handles: worktree creation (reuse/existing-branch/new-branch), runner spawn with `--dangerously-skip-permissions`, PID capture. Output is key:value lines:
