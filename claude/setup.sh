@@ -81,6 +81,36 @@ symlink_directory "$SCRIPT_DIR/agents"    "$HOME/.claude/agents"    "agents/"
 symlink_directory "$SCRIPT_DIR/practices" "$HOME/.claude/practices" "practices/"
 symlink_directory "$SCRIPT_DIR/hooks"     "$HOME/.claude/hooks"     "hooks/"
 
+# Symlink settings.json
+if [[ -f "$SCRIPT_DIR/settings.json" ]]; then
+    TARGET="$HOME/.claude/settings.json"
+    if [[ -L "$TARGET" ]]; then
+        CURRENT_TARGET="$(readlink "$TARGET")"
+        if [[ "$CURRENT_TARGET" == "$SCRIPT_DIR/settings.json" ]]; then
+            success "settings.json (already linked)"
+        else
+            warning "settings.json linked to $CURRENT_TARGET"
+            read -p "  Replace? (y/n) " -n 1 -r; echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                rm "$TARGET"
+                ln -s "$SCRIPT_DIR/settings.json" "$TARGET"
+                success "settings.json (replaced)"
+            fi
+        fi
+    elif [[ -f "$TARGET" ]]; then
+        warning "settings.json exists as file"
+        read -p "  Backup and replace? (y/n) " -n 1 -r; echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            mv "$TARGET" "$TARGET.backup.$(date +%Y%m%d_%H%M%S)"
+            ln -s "$SCRIPT_DIR/settings.json" "$TARGET"
+            success "settings.json (backed up + linked)"
+        fi
+    else
+        ln -s "$SCRIPT_DIR/settings.json" "$TARGET"
+        success "settings.json"
+    fi
+fi
+
 # Remove stale symlinks from deprecated directories
 for stale in adapters guides scaffolds; do
     if [[ -L "$HOME/.claude/$stale" ]]; then
