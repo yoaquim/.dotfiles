@@ -565,6 +565,7 @@ install_brew_list() {
         "gh"
         "rclone"
         "node"
+        "direnv"
     )
     
     for package in "${packages[@]}"; do

@@ -50,7 +50,7 @@ For each task:
 
 1. `TaskUpdate` → `status: "in_progress"`
 2. **TDD (mandatory)**: failing test → make it pass → refactor → all tests green
-3. **Commit**: descriptive message, only relevant files staged, include `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
+3. **Commit**: descriptive message, only relevant files staged. No co-authorship trailers.
 4. `TaskUpdate` → `status: "completed"`
 5. Update status file (absolute path from prompt) — preserve existing metadata, update Progress, Commits, Notes, status, and updated timestamp
 

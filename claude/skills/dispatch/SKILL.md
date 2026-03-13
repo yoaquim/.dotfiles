@@ -1,5 +1,6 @@
 ---
-description: Dispatch Linear tickets to autonomous runners in isolated worktrees
+name: dispatch
+description: Dispatch Linear tickets to autonomous runners in isolated worktrees. Use when assigning Linear issues to background Claude runners, checking runner status, or attaching to runner worktrees.
 argument-hint: <ticket-id|search-query|status|attach> [name]
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, mcp__linear__*
 ---
@@ -200,3 +201,23 @@ Files:
   .dispatch/logs/     — runner output logs
   .dispatch/prompts/  — runner prompt files
 ```
+
+---
+
+## Examples
+
+`/dispatch ENG-142` → fetches ticket, runs discovery, confirms scope, spawns runner on `dispatch/eng-142` branch.
+
+`/dispatch fix auth bug` → searches Linear, presents top matches, user picks ticket, then dispatches.
+
+`/dispatch status` → table of all runners with state, progress, worktree paths.
+
+---
+
+## Troubleshooting
+
+**Linear MCP unavailable**: Verify `mcp__linear__*` tools are connected. Test with a raw `mcp__linear__get_issue` call.
+
+**Runner exited unexpectedly**: Check `.dispatch/logs/<name>.log`. Common cause: missing deps in worktree.
+
+**"Runner is still active"**: A prior dispatch is running. Use `/dispatch status <name>` to check, or `/dispatch attach <name>` to interact.

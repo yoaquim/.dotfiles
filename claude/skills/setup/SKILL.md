@@ -1,5 +1,6 @@
 ---
-description: Initialize a project with CLAUDE.md, git, hooks, and dependencies
+name: setup
+description: Initialize a project with CLAUDE.md, git, hooks, and dependencies. Use when starting a new project or onboarding an existing codebase to Claude Code.
 allowed-tools: Read, Write, Edit, Bash, Glob, AskUserQuestion
 ---
 
@@ -153,3 +154,21 @@ Deps: <installed / skipped / not applicable>
 Next:
   /deck spec <name>     — spec out a feature
 ```
+
+---
+
+## Examples
+
+`/setup` in a Node+Express project → detects stack, asks 3 questions, writes CLAUDE.md, scaffolds hooks with ESLint + Jest, installs deps.
+
+`/setup` in an empty directory → asks project name/language/description, writes minimal CLAUDE.md, scaffolds hook placeholders, optionally inits git.
+
+---
+
+## Troubleshooting
+
+**CLAUDE.md conflicts**: Step 1 asks how to handle it — never silently overwrites.
+
+**Hooks not running**: Verify `.claude/settings.json` has correct hook config. Re-run `bash ~/.claude/skills/setup/init-hooks.sh` to regenerate scaffolding.
+
+**Wrong stack detected**: If auto-detection picks the wrong language/framework, answer the Step 2 questions manually to override.

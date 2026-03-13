@@ -1,5 +1,6 @@
 ---
-description: Orchestrate specs, runners, and worktrees — the full lifecycle
+name: deck
+description: Orchestrate specs, runners, and worktrees — the full lifecycle. Use when planning features, spawning background runners, checking progress, or closing out completed work.
 argument-hint: <spec|dispatch|status|attach|resume|accept|close> [name] [context]
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*deck/spawn.sh*), Bash(*deck/status.sh*), Bash(*deck/attach.sh*), Bash(gh*), Bash(*hooks/teardown*), Bash(npx playwright*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__playwright__*
 ---
@@ -142,7 +143,7 @@ Spawns runner as a background claude process in an isolated worktree.
 
 ### Setup
 
-1. `mkdir -p .deck/status`
+1. `mkdir -p .deck/status .deck/prompts`
 2. Determine branch:
    - Spec has `branch` field → use that
    - Else → `deck/<name>`
@@ -174,13 +175,24 @@ Runner starting...
 Dispatched.
 ```
 
+### Prompt File
+
+Write `.deck/prompts/<name>.md`:
+
+```markdown
+Spec name: <name>
+Spec file: <spec-path>
+Status file: <project-root>/.deck/status/<name>.md
+Branch: <branch>
+```
+
 ### Spawn
 
 ```bash
-bash ~/.claude/skills/deck/spawn.sh <name> <branch> <project-root> <spec-path>
+bash ~/.claude/skills/deck/spawn.sh <name> <branch> <project-root> <project-root>/.deck/prompts/<name>.md
 ```
 
-The script handles: worktree creation (reuse/existing-branch/new-branch), prompt construction, runner spawn with `--dangerously-skip-permissions`, PID capture. Output is key:value lines:
+The script handles: worktree creation (reuse/existing-branch/new-branch), runner spawn with `--dangerously-skip-permissions`, PID capture. Output is key:value lines:
 
 ```
 worktree_status:reused|created-existing-branch|created-new-branch
@@ -251,13 +263,24 @@ Re-dispatches a runner to continue work on an incomplete spec.
    - `state:completed`, `state:closed`, `state:abandoned`, or `state:pr_open` → "Spec already finished (status: <status>). Nothing to resume."
 2. Get absolute project root: `git rev-parse --show-toplevel`
 3. Read branch from status file or spec file (`.deck/specs/<name>.md`).
-4. Spawn via script (`--resume` appends to log and adds continuation note to prompt):
+4. Write prompt file `.deck/prompts/<name>.md`:
 
-```bash
-bash ~/.claude/skills/deck/spawn.sh <name> <branch> <project-root> .deck/specs/<name>.md --resume
+```markdown
+Spec name: <name>
+Spec file: <spec-path>
+Status file: <project-root>/.deck/status/<name>.md
+Branch: <branch>
+
+A previous runner worked on this spec. Check the status file and git log for what's done. Continue from where it left off.
 ```
 
-5. Parse spawn.sh output. Update `pid`, `pid_start`, `status` (set to `in_progress`), and `updated` in status file.
+5. Spawn via script (`--resume` appends to log instead of overwriting):
+
+```bash
+bash ~/.claude/skills/deck/spawn.sh <name> <branch> <project-root> <project-root>/.deck/prompts/<name>.md --resume
+```
+
+6. Parse spawn.sh output. Update `pid`, `pid_start`, `status` (set to `in_progress`), and `updated` in status file.
 
 ---
 
@@ -342,5 +365,28 @@ Workflow:
 Files:
   .deck/specs/    — feature specs
   .deck/status/   — runner progress
+  .deck/prompts/  — runner prompt files
   .deck/logs/     — runner output logs
 ```
+
+---
+
+## Examples
+
+`/deck spec jwt-middleware "add JWT auth to API routes"` → gathers requirements, discovers codebase, writes `.deck/specs/jwt-middleware.md`.
+
+`/deck dispatch jwt-middleware` → validates spec, spawns runner in isolated worktree on `deck/jwt-middleware` branch.
+
+`/deck status` → table of all specs with runner state, progress, worktree paths.
+
+`/deck close jwt-middleware` → offers merge/PR/abandon, tears down worktree, updates status.
+
+---
+
+## Troubleshooting
+
+**"Spec is a stub"**: Run `/deck spec <name>` to flesh it out before dispatching.
+
+**Runner exited unexpectedly**: Check `.deck/logs/<name>.log`. Use `/deck resume <name>` to continue from where it left off.
+
+**Merge conflicts on close**: Close reports the conflict and stops. Resolve manually in the worktree, then re-run `/deck close`.

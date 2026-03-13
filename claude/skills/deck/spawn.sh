@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # spawn.sh — Create worktree (if needed) and spawn deck-runner agent
 #
-# Usage: spawn.sh <name> <branch> <project-root> <spec-path> [--resume]
+# Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [--resume]
 #
-# --resume: append to log file and add continuation note to prompt
+# --resume: append to log file instead of overwriting
 #
 # Output (key:value on stdout):
 #   worktree_status:reused|created-existing-branch|created-new-branch
@@ -16,7 +16,7 @@ set -eo pipefail
 NAME="$1"
 BRANCH="$2"
 ROOT="$3"
-SPEC_PATH="$4"
+PROMPT_FILE="$4"
 RESUME=""
 
 # Check for --resume flag
@@ -25,8 +25,18 @@ for arg in "$@"; do
     [[ "$arg" == "--resume" ]] && RESUME=1
 done
 
-if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$SPEC_PATH" ]]; then
-    echo "Usage: spawn.sh <name> <branch> <project-root> <spec-path> [--resume]" >&2
+if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$PROMPT_FILE" ]]; then
+    echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [--resume]" >&2
+    exit 1
+fi
+
+# Resolve relative prompt path against project root
+if [[ "$PROMPT_FILE" != /* ]]; then
+    PROMPT_FILE="$ROOT/$PROMPT_FILE"
+fi
+
+if [[ ! -f "$PROMPT_FILE" ]]; then
+    echo "error: prompt file not found: $PROMPT_FILE" >&2
     exit 1
 fi
 
@@ -63,17 +73,9 @@ fi
 
 echo "worktree:$WORKTREE"
 
-# --- Build prompt ---
-PROMPT="Spec name: $NAME
-Spec file: $SPEC_PATH
-Status file: $ROOT/.deck/status/$NAME.md"
-
-if [[ -n "$RESUME" ]]; then
-    PROMPT="$PROMPT
-A previous runner worked on this spec. Check the status file and git log for what's done. Continue from where it left off."
-fi
-
 # --- Spawn ---
+PROMPT="$(cat "$PROMPT_FILE")"
+
 cd "$WORKTREE"
 if [[ -n "$RESUME" ]]; then
     nohup env -u CLAUDECODE claude --agent deck-runner -p "$PROMPT" --dangerously-skip-permissions \
