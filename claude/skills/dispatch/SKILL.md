@@ -65,6 +65,9 @@ Ticket: <TICKET-ID>
 Status file: <project-root>/.dispatch/status/<name>.md
 Branch: <branch>
 
+## Task
+<what to do AND why — include enough architectural context that the runner can resolve ambiguity without guessing. If this ticket is part of a larger effort, briefly describe the end-state so the runner understands how its piece fits.>
+
 ## Discovery
 <structured findings from step 3>
 

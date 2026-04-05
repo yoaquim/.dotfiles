@@ -361,6 +361,7 @@ link_symlinks() {
     create_symlink "${SCRIPT_DIR}/config/tmux" "$HOME/.config/tmux"
     create_symlink "${SCRIPT_DIR}/config/kitty" "$HOME/.config/kitty"
     create_symlink "${SCRIPT_DIR}/config/gitconfig" "$HOME/.gitconfig"
+    mkdir -p "$HOME/.config/git"
     create_symlink "${SCRIPT_DIR}/config/rclone" "$HOME/.config/rclone"
 
     # Link SSH configuration

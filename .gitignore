@@ -1,5 +1,6 @@
 config/tmux/plugins
 config/bash/bash_profile_local
+config/git/config.local
 
 .DS_Store
 .deck/

@@ -151,7 +151,11 @@ The `install.sh` script provides several installation modes:
 - Installs Claude Code CLI
 - Completes environment setup
 
-#### 8. **AstroNvim Setup** (separate script)
+#### 8. **Claude Code Setup** (separate script)
+- Run `cd ~/.dotfiles/claude && ./setup.sh` after Claude Code is installed
+- Symlinks skills, agents, practices, and settings into `~/.claude/`
+
+#### 9. **AstroNvim Setup** (separate script)
 - Run `bash ./setup-astronvim.sh` after SSH keys are configured
 - Checks for SSH keys (`~/.ssh/git` and `~/.ssh/git.pub`)
 - Clones AstroNvim template
@@ -177,7 +181,8 @@ The `install.sh` script provides several installation modes:
     │   ├── 📄 bash_profile_functions # Custom functions
     │   ├── 📄 bash_profile_git     # Git-specific configurations
     │   ├── 📄 bash_profile_tools   # Tool integrations
-    │   ├── 📄 bash_profile_local   # Local machine settings
+    │   ├── 📄 bash_profile_ssh    # SSH agent configuration
+    │   ├── 📄 bash_profile_local  # Local machine settings (not in git)
     │   └── 📄 README.md            # Bash configuration guide
     ├── 🐱 kitty/                   # Kitty terminal configuration
     │   ├── 📄 kitty.conf           # Terminal settings
@@ -205,19 +210,26 @@ The `install.sh` script provides several installation modes:
     │   └── 📄 README.md            # rclone setup guide
     ├── 🔐 ssh/                     # SSH configuration
     │   └── 📄 config               # SSH config file
+    ├── 📁 git/                      # Git local configuration
+    │   └── 📄 config.local         # Machine-specific git settings (not in git)
     └── 📄 gitconfig                # Git configuration
 └── 📁 claude/                      # Claude Code global configuration
-    ├── 📄 setup.sh                 # Claude setup script
-    ├── 📁 commands/                # Custom slash commands
-    │   ├── 📄 feature.md           # Define feature requirements
-    │   ├── 📄 setup.md             # Project initialization
-    │   ├── 📄 vk-plan.md           # VK Kanban integration
-    │   └── 📁 workflow/            # Workflow commands
-    ├── 📁 vk-tags/                 # Reusable VK task tags
-    └── 📁 workflow/                # Universal workflows and templates
-        ├── 📄 README.md            # Complete workflow documentation
-        ├── 📁 sops/                # Standard operating procedures
-        └── 📁 templates/           # Project initialization templates
+    ├── 📄 setup.sh                 # Claude setup script (symlinks into ~/.claude/)
+    ├── 📄 settings.json            # Claude Code settings
+    ├── 📁 agents/                  # Autonomous agent definitions
+    │   ├── 📄 deck-runner.md       # Deck spec runner agent
+    │   └── 📄 linear-runner.md     # Linear ticket runner agent
+    ├── 📁 practices/               # Development practice guides
+    │   ├── 📄 INDEX.md             # Practice index
+    │   ├── 📄 django.md            # Django best practices
+    │   ├── 📄 docker.md            # Docker best practices
+    │   ├── 📄 react.md             # React best practices
+    │   ├── 📄 tailwind.md          # Tailwind best practices
+    │   └── 📄 tdd.md               # TDD best practices
+    └── 📁 skills/                  # Custom Claude Code skills
+        ├── 📁 setup/               # /setup — init project (CLAUDE.md, git, hooks, deps)
+        ├── 📁 deck/                # /deck — spec, dispatch, status, accept, close
+        └── 📁 dispatch/            # /dispatch — fetch Linear ticket, spawn runner
 ```
 
 ### 🔗 Symlink Structure
@@ -236,7 +248,10 @@ After installation, configurations are linked to standard locations:
 | `config/hammerspoon/` | `~/.hammerspoon/` | Hammerspoon automation |
 | `config/rclone/` | `~/.config/rclone/` | rclone cloud storage |
 | `config/ssh/config` | `~/.ssh/config` | SSH configuration |
-| `claude/` | `~/.claude/` | Claude Code global configuration |
+| `claude/skills/` | `~/.claude/skills/` | Claude Code skills (via `claude/setup.sh`) |
+| `claude/agents/` | `~/.claude/agents/` | Claude Code agents (via `claude/setup.sh`) |
+| `claude/practices/` | `~/.claude/practices/` | Claude Code practices (via `claude/setup.sh`) |
+| `claude/settings.json` | `~/.claude/settings.json` | Claude Code settings (via `claude/setup.sh`) |
 
 ---
 
@@ -293,6 +308,10 @@ After installation, configurations are linked to standard locations:
 - **Tree-sitter** - Parser generator
 - **Go** - Programming language
 - **gdu** - Disk usage analyzer
+- **Calibre** - E-book management
+- **Quarto** - Scientific publishing
+- **Folx** - Download manager
+- **Hidden Bar** - Menu bar management
 
 ---
 
@@ -351,138 +370,63 @@ nvim ~/.config/kitty/kitty.conf
 
 ## 🤖 Claude Code Workflow
 
-This dotfiles setup includes a **custom Claude Code configuration** that provides standardized workflows, slash commands, and documentation templates for all projects.
+This dotfiles setup includes a **custom Claude Code configuration** with skills, agents, and development practice guides.
 
 ### 🎯 What's Included
 
-**Custom Slash Commands** (available globally in any project):
-- `/setup` - Initialize `.agent/` documentation system for new/existing projects
-- `/feature` - Define WHAT to build (feature requirements with EARS format)
-- `/vk-plan` - Create VK Kanban planning tickets for features
-- `/workflow:plan-task` - Plan HOW to build it (technical implementation)
-- `/workflow:implement-task` - Implement documented tasks with git workflow
-- `/workflow:test-task` - Test implementations with automated and manual verification
-- `/workflow:complete-task` - Finalize tasks with documentation updates
-- `/workflow:fix-bug` - Intelligent bug fixing (quick hotfix or full bug task workflow)
-- `/workflow:document-issue` - Document known issues for future reference
-- `/workflow:status` - Comprehensive project status report
-- `/workflow:review-docs` - Review documentation for accuracy and consistency
-- `/workflow:update-doc` - Update project documentation
+**Skills** (custom slash commands, available globally):
+- `/setup` — Initialize a project with CLAUDE.md, git, hooks, and dependencies
+- `/deck` — Full feature lifecycle: spec, dispatch to runners, track status, accept, close
+- `/dispatch` — Fetch a Linear ticket, discover context, and spawn an autonomous runner in an isolated worktree
 
-**Universal SOPs** (Standard Operating Procedures):
-- Git workflow and branching strategies
-- Testing principles and best practices
-- Documentation standards
-- Project structure conventions
+**Agents** (autonomous runners for background work):
+- **deck-runner** — Implements a spec from `.deck/` in an isolated worktree
+- **linear-runner** — Implements a Linear ticket in an isolated worktree
 
-**Project Templates**:
-- `.agent/` directory structure templates
-- Task documentation templates
-- System documentation templates
-- Automatic cross-project known-issues search
+**Practices** (development guides loaded as context):
+- Django, Docker, React, Tailwind, TDD
 
 ### ⚙️ Setup
 
-The Claude configuration is automatically symlinked during dotfiles installation:
+After dotfiles installation, run the Claude setup script to symlink skills, agents, practices, and settings into `~/.claude/`:
 
 ```bash
-# Symlink created by install.sh
-~/.claude → ~/.dotfiles/claude/
+cd ~/.dotfiles/claude && ./setup.sh
 ```
 
-All slash commands and workflows are immediately available in any project after installation.
+This symlinks individual directories (`skills/`, `agents/`, `practices/`) and `settings.json` into `~/.claude/`.
 
 ### 🚀 Quick Start
 
 **Initialize a new project:**
 ```bash
-# In any project directory
 /setup
 ```
 
-This creates a complete `.agent/` documentation system with:
-- Project overview and architecture docs
-- Feature requirements directory
-- Task management system
-- Known issues tracking
-- References to universal SOPs
-
-**Define and build a feature:**
+**Spec and build a feature (deck workflow):**
 ```bash
-/feature "asset upload"             # Define WHAT to build (user requirements)
-/workflow:plan-task                 # Plan HOW to build (auto-uses last feature)
-/workflow:implement-task            # Implement the latest task
-/workflow:test-task                 # Test the implementation
-/workflow:complete-task             # Finalize and document
+/deck spec <name>        # Spec out a feature
+/deck dispatch <name>    # Spawn runner in isolated worktree
+/deck status             # Check progress
+/deck accept <name>      # E2E test acceptance criteria
+/deck close <name>       # Merge, teardown, done
 ```
 
-**Quick feature (skip requirements):**
+**Dispatch from Linear:**
 ```bash
-/workflow:plan-task "simple feature"  # Plan directly without requirements
-/workflow:implement-task
-```
-
-**Quick bug fix:**
-```bash
-/workflow:fix-bug <bug description>   # Intelligently routes to hotfix or full workflow
-```
-
-**Check project status:**
-```bash
-/workflow:status                      # View tasks, health, and next steps
+/dispatch ENG-142        # Fetch ticket, discover context, spawn runner
+/dispatch status         # Check all runners
+/dispatch attach eng-142 # Interactive session in worktree
 ```
 
 ### 🎨 Customization
 
 Since the configuration is symlinked from your dotfiles:
 
-1. **Edit commands** in `~/.dotfiles/claude/commands/`
-2. **Changes apply globally** to all projects immediately
-3. **No need to restart** - just start a new Claude chat or invoke the command
-
-Example - updating a slash command:
-```bash
-# Edit any slash command
-nvim ~/.dotfiles/claude/commands/workflow/fix-bug.md
-
-# Changes are immediately available in all projects
-# (start new chat or type / to see updates)
-```
-
-### 📚 Documentation
-
-For complete documentation on the workflow system, templates, and SOPs:
-
-**→ See [claude/workflow/README.md](claude/workflow/README.md)**
-
-This includes:
-- Complete workflow system overview
-- Template customization guide
-- Universal SOPs documentation
-- Cross-project features
-- Maintenance and troubleshooting
-
-### 🔧 Supported Languages & Tools
-
-The slash commands support multi-language projects:
-- **Python**: pytest, docker
-- **JavaScript/Node**: npm, docker
-- **Git**: All git operations
-- **Docker**: Containerized workflows
-
-Commands automatically detect and use the appropriate tools for your project.
-
-### 💡 Key Features
-
-**Cross-Project Search**: Search known-issues across all your projects to learn from past solutions
-
-**Symlinked Architecture**: Edit once in dotfiles, applies everywhere instantly
-
-**Standardized Naming**: Consistent lowercase directories, kebab-case files, numbered tasks (000-999)
-
-**Git Integration**: Built-in git workflow support with branch management and commit helpers
-
-**Multi-Language Support**: Works with Python, Node, Docker, and more
+1. **Edit skills** in `~/.dotfiles/claude/skills/`
+2. **Edit agents** in `~/.dotfiles/claude/agents/`
+3. **Edit practices** in `~/.dotfiles/claude/practices/`
+4. **Changes apply globally** to all projects immediately
 
 ---
 
@@ -557,10 +501,13 @@ tmux attach -t dev
 #### Multi-Machine Setup
 ```bash
 # Clone on different machines
-git clone https://github.com/cintron/.dotfiles.git
+git clone https://github.com/yoaquim/.dotfiles.git
 
 # Customize per machine
 echo "export HOST_SPECIFIC_VAR='value'" >> ~/.config/bash/bash_profile_local
+
+# Machine-specific git settings (e.g., CodeRabbit machineId)
+nvim ~/.config/git/config.local
 ```
 
 #### Custom Tool Integration
@@ -729,7 +676,7 @@ tmux list-sessions | grep -v attached | cut -d: -f1 | xargs -t -n1 tmux kill-ses
 - **[Tmux Powerline Guide](config/tmux-powerline/README.md)** - Status line setup
 - **[AstroNvim Guide](config/nvim/README.md)** - Neovim configuration
 - **[Hammerspoon Guide](config/hammerspoon/README.md)** - macOS automation setup
-- **[Claude Code Workflow Guide](claude/workflow/README.md)** - AI coding workflow system
+- **[rclone Cave Guide](config/rclone/README.md)** - WebDAV cloud storage mount
 
 ### 🔗 External Resources
 - **[Homebrew Documentation](https://brew.sh/)** - Package manager
@@ -743,4 +690,4 @@ tmux list-sessions | grep -v attached | cut -d: -f1 | xargs -t -n1 tmux kill-ses
 
 ---
 
-*Last updated: July 2025*
+*Last updated: March 2026*
