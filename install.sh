@@ -550,7 +550,6 @@ install_brew_list() {
     print_info "Installing Homebrew packages"
     
     local packages=(
-        "lulu"
         "awscli"
         "bash"
         "bash-completion"
@@ -605,6 +604,7 @@ install_brew_casks() {
     print_info "Installing Homebrew casks"
     
     local casks=(
+        "lulu"
         "alfred"
         "spotify"
         "whatsapp"
