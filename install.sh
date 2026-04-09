@@ -550,6 +550,7 @@ install_brew_list() {
     print_info "Installing Homebrew packages"
     
     local packages=(
+        "lulu"
         "awscli"
         "bash"
         "bash-completion"
