@@ -652,6 +652,7 @@ install_brew_fonts() {
         "font-ubuntu-mono-nerd-font"
         "font-space-mono-nerd-font"
         "font-caskaydia-cove-nerd-font"
+        "font-maple-mono"
     )
     
     for font in "${fonts[@]}"; do
