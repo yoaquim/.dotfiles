@@ -2,7 +2,7 @@
 name: dispatch
 description: Dispatch Linear tickets to autonomous runners in isolated worktrees. Use when assigning Linear issues to background Claude runners, checking runner status, or attaching to runner worktrees.
 argument-hint: <ticket-id|search-query|status|attach> [name]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, mcp__linear__*
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear__*
 ---
 
 # Dispatch
@@ -155,7 +155,7 @@ worktree:<path>
 <full status file>
 ```
 
-If `state:dead` → warn: "Runner exited without completing. Check `.dispatch/logs/<name>.log` for details."
+If `state:dead` → warn: "Runner exited without completing. Check `.dispatch/logs/<name>.log` for details. Re-dispatch with `/dispatch <ticket-id>` to start a fresh runner."
 
 **Without name** — formatted summary table:
 ```

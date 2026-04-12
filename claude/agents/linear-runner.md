@@ -9,6 +9,10 @@ hooks:
           command: "if [ -x .claude/hooks/setup.sh ]; then .claude/hooks/setup.sh; fi"
           timeout: 120
           once: true
+        - type: command
+          command: "$HOME/.claude/hooks/inject-practices.sh"
+          timeout: 10
+          once: true
 ---
 
 # Linear Runner Agent
@@ -19,7 +23,7 @@ Autonomous implementation agent for Linear tickets. Runs as a full claude sessio
 
 1. Parse the `-p` prompt → extract ticket ID, status file path, branch, discovery findings, user context
 2. Fetch the full Linear issue via `mcp__linear__get_issue`
-3. Read `~/.claude/practices/INDEX.md` — if it exists, select and read relevant practices. If not, skip.
+3. Practices are auto-injected at session start — review them before beginning work
 4. Set Linear issue to "In Progress" via `mcp__linear__update_issue`
 
 ## Task Decomposition
