@@ -1,21 +1,23 @@
 # Practices Index
 
-Coding practices and preferences. Runner reads this index to select relevant practices per task, then reads those files.
+Coding practices and preferences. Used by `inject-practices.sh` to auto-detect and inject relevant practices at runner startup.
 
-| Practice | File | Use When |
-|----------|------|----------|
-| TDD | `tdd.md` | **MANDATORY** for all implementation tasks |
-| Django | `django.md` | Django projects: views, models, templates, forms |
-| Tailwind | `tailwind.md` | UI/CSS work, frontend styling |
-| React | `react.md` | React projects: components, hooks, state, data fetching |
-| Docker | `docker.md` | Dockerized projects, Dockerfiles, compose services |
+| Practice | File | Use When | Detect |
+|----------|------|----------|--------|
+| TDD | `tdd.md` | **MANDATORY** for all implementation tasks | always |
+| Django | `django.md` | Django projects: views, models, templates, forms | manage.py |
+| Tailwind | `tailwind.md` | UI/CSS work, frontend styling | tailwind.config.* |
+| React | `react.md` | React projects: components, hooks, state, data fetching | package.json:react |
+| Docker | `docker.md` | Dockerized projects, Dockerfiles, compose services | Dockerfile,compose.yml |
 
-## How to Use
+## Detect Rules
 
-1. Analyze task requirements
-2. Select practices matching the stack/task
-3. Read those files from `~/.claude/practices/`
-4. Follow their rules during implementation
+- `always` — inject unconditionally
+- `filename` — inject if file exists in project root
+- `filename:string` — inject if file exists AND contains that string
+- `glob.*` — inject if any file matches the glob
+- `file1,file2` — inject if any of the listed files exist
+- _(empty)_ — listed in fallback for runner to decide
 
 ## Common Combinations
 
