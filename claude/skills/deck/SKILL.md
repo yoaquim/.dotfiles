@@ -87,6 +87,17 @@ Shift from WHAT to HOW:
 5. List files to create/modify
 6. **8+ major steps** → suggest splitting via `AskUserQuestion`
 
+### Scope Check
+
+Before confirming, evaluate the spec against this rubric:
+
+1. **Single goal**: Can you state what the spec achieves in one sentence without "and"?
+2. **Step count**: More than 8 steps → suggest splitting
+3. **File spread**: More than 10 files touched → likely too broad
+4. **Concern count**: Count distinct technical concerns (auth, database, UI, API, etc.). 3+ distinct concerns → surface to user: "This spec spans [X, Y, Z]. Consider splitting into focused specs — runners work best with narrow scope."
+
+If any check fails, present findings via `AskUserQuestion` and offer: "Split now" / "Keep as-is". Advisory, not blocking — user can override.
+
 ### Confirm + Save
 
 Confirm via `AskUserQuestion`: "Does this spec look right?" → "Yes, save it" / "Need changes" / "Start over"

@@ -9,6 +9,10 @@ hooks:
           command: "if [ -x .claude/hooks/setup.sh ]; then .claude/hooks/setup.sh; fi"
           timeout: 120
           once: true
+        - type: command
+          command: "$HOME/.claude/hooks/inject-practices.sh"
+          timeout: 10
+          once: true
 ---
 
 # Runner Agent
@@ -20,7 +24,7 @@ Autonomous implementation agent. Runs as a full claude session (`--agent deck-ru
 1. Read the spec file path from your prompt (absolute path)
 2. Read the status file path from your prompt (absolute path to `.deck/status/<name>.md`)
 3. Extract spec name and metadata
-4. Read `~/.claude/practices/INDEX.md`, select relevant practices, read those files
+4. Practices are auto-injected at session start — review them before beginning work
 
 ## Task Decomposition
 

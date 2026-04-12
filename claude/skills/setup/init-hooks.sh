@@ -96,3 +96,22 @@ SCRIPT
         echo "~ .claude/hooks/$script (already exists, skipping)"
     fi
 done
+
+# --- Git pre-commit hook (runs verify.sh before every commit) ---
+if git rev-parse --git-dir &>/dev/null; then
+    GIT_DIR=$(git rev-parse --git-dir)
+    HOOK_PATH="$GIT_DIR/hooks/pre-commit"
+    if [[ ! -f "$HOOK_PATH" ]]; then
+        cat > "$HOOK_PATH" << 'PRECOMMIT'
+#!/usr/bin/env bash
+# Run project verify before allowing commit
+if [ -x .claude/hooks/verify.sh ]; then
+    .claude/hooks/verify.sh
+fi
+PRECOMMIT
+        chmod +x "$HOOK_PATH"
+        echo "+ $HOOK_PATH"
+    else
+        echo "~ $HOOK_PATH (already exists, skipping)"
+    fi
+fi
