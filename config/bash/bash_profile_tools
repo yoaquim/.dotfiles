@@ -12,15 +12,15 @@ fi
 export NVM_DIR="$HOME/.nvm"
 
 # Lazy-load nvm: define placeholder functions that load nvm on first use
-_load_nvm() {
-    unset -f nvm node npm npx _load_nvm
+load_nvm() {
+    unset -f nvm node npm npx load_nvm
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
     [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
 }
-nvm()  { _load_nvm; nvm  "$@"; }
-node() { _load_nvm; node "$@"; }
-npm()  { _load_nvm; npm  "$@"; }
-npx()  { _load_nvm; npx  "$@"; }
+nvm()  { load_nvm; nvm  "$@"; }
+node() { load_nvm; node "$@"; }
+npm()  { load_nvm; npm  "$@"; }
+npx()  { load_nvm; npx  "$@"; }
 
 
 # pyenv (lazy-loaded)
@@ -33,15 +33,15 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 
 # Lazy-load pyenv: define placeholder functions that load pyenv on first use
-_load_pyenv() {
-    unset -f pyenv python python3 pip pip3 _load_pyenv
+load_pyenv() {
+    unset -f pyenv python python3 pip pip3 load_pyenv
     eval "$(pyenv init - bash)"
 }
-pyenv()   { _load_pyenv; pyenv   "$@"; }
-python()  { _load_pyenv; python  "$@"; }
-python3() { _load_pyenv; python3 "$@"; }
-pip()     { _load_pyenv; pip     "$@"; }
-pip3()    { _load_pyenv; pip3    "$@"; }
+pyenv()   { load_pyenv; pyenv   "$@"; }
+python()  { load_pyenv; python  "$@"; }
+python3() { load_pyenv; python3 "$@"; }
+pip()     { load_pyenv; pip     "$@"; }
+pip3()    { load_pyenv; pip3    "$@"; }
 
 
 # direnv 
