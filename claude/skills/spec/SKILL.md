@@ -72,6 +72,8 @@ During exploration, read `~/.claude/practices/INDEX.md` for each target repo. Id
 
 ### 4. Feature Spec
 
+**Skip the spec doc** if the feature is small enough to be fully described by the master ticket alone (≤2 sub-issues, narrow scope, no constraints worth documenting). In that case, write the description inline on the master ticket and skip to step 5.
+
 #### Spec Document
 
 Create via `mcp__claude_ai_Linear__create_document`:
@@ -109,10 +111,10 @@ Confirm spec content via `AskUserQuestion` before creating in Linear.
 
 Create via `mcp__claude_ai_Linear__save_issue`:
 
-- **Title**: Clear, changelog-style (e.g., "Add JWT authentication to API routes")
-- **Description**: One-line summary linking to the spec document
+- **Title**: 3-5 words, Title Case, no verbs, no marker suffixes (no `(spec)`, `[Feature]`, etc.) — labels handle classification
+- **Description**: One-line summary linking to the spec document (or inline content if spec was skipped)
 - Set team, project, milestone, labels, priority, estimate from step 2
-- Attach the spec document to the issue
+- Attach the spec document to the issue (if created)
 
 ### 5. Implementation Plan
 
@@ -130,7 +132,7 @@ Informed by codebase discovery + practices:
 
 Create each via `mcp__claude_ai_Linear__save_issue` as child of the master issue:
 
-- **Title**: Imperative, specific (e.g., "Create auth middleware with JWT validation")
+- **Title**: 3-5 words, Title Case, no verbs, no marker suffixes
 - **Description**:
 
 ```markdown
@@ -187,8 +189,8 @@ Confirm the full plan via `AskUserQuestion`: show the ordered list of sub-issues
 
 After confirmation, create everything:
 
-1. Create the spec document
-2. Create the master issue, attach the document
+1. Create the spec document (if not skipped)
+2. Create the master issue, attach the document (if created)
 3. Create sub-issues in order, setting parent and blocking relationships
 
 Report: master ticket ID + URL, sub-issue count, total points, next step (`/dispatch <ticket-id>` for each sub-issue).
@@ -206,7 +208,7 @@ If yes:
   - Status: set to `Done`
   - Same project / milestone as the feature spec
   - Description: concise summary of what was explored, key findings, decisions reached
-  - Link to the feature spec master ticket
+  - Link to the spec document if one was created; otherwise link to the master issue
   - Estimate: 1-2 points
 
 If no → skip.
