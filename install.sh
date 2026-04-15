@@ -703,31 +703,37 @@ install_nvim_deps() {
 
 install_claude_code() {
     print_info "Installing Claude Code CLI"
-    
+
     if command -v claude &> /dev/null; then
         print_debug "Claude Code already installed"
         return 0
     fi
-    
-    # Check if npm is available (Node.js installed)
-    if command -v npm &> /dev/null; then
-        print_info "Installing Claude Code via npm"
-        if npm install -g @anthropic-ai/claude-code; then
-            # Verify installation
-            if command -v claude &> /dev/null; then
-                local version
-                version=$(claude --version 2>/dev/null || echo "unknown")
-                print_success "Claude Code installed successfully (version: ${version})"
-            else
-                print_warning "Claude Code installation verification failed"
-                return 1
-            fi
+
+    if ! command -v curl &> /dev/null; then
+        print_warning "curl not found. Cannot install Claude Code via native installer"
+        return 1
+    fi
+
+    # Native installer (recommended). Installs to ~/.local/bin/claude with
+    # background auto-updates. No Node.js/npm dependency required.
+    # https://docs.claude.com/en/docs/claude-code/setup
+    print_info "Installing Claude Code via native installer"
+    if curl -fsSL https://claude.ai/install.sh | bash; then
+        # Native installer drops the binary in ~/.local/bin, which may not be
+        # on PATH in this shell yet — check that location explicitly as a
+        # fallback for verification.
+        local claude_bin="$HOME/.local/bin/claude"
+        if command -v claude &> /dev/null || [[ -x "${claude_bin}" ]]; then
+            local version
+            version=$(claude --version 2>/dev/null || "${claude_bin}" --version 2>/dev/null || echo "unknown")
+            print_success "Claude Code installed successfully (version: ${version})"
+            print_info "If 'claude' is not on PATH, ensure \$HOME/.local/bin is in your PATH"
         else
-            print_warning "Failed to install Claude Code via npm"
+            print_warning "Claude Code installation verification failed"
             return 1
         fi
     else
-        print_warning "npm not found. Claude Code will be available after running post-setup.sh to install Node.js"
+        print_warning "Failed to install Claude Code via native installer"
         return 1
     fi
 }
@@ -867,11 +873,11 @@ full_install() {
     # Complete basic setup
     post_brew_install_setup
     
-    # Install and setup Claude Code (requires Node.js from post-setup)
+    # Install and setup Claude Code (native installer — no Node.js required)
     if install_claude_code; then
         setup_claude_code
     else
-        print_info "Claude Code installation skipped - run post-setup.sh first to install Node.js, then install Claude Code manually with: npm install -g @anthropic-ai/claude-code"
+        print_info "Claude Code installation skipped - install manually with: curl -fsSL https://claude.ai/install.sh | bash"
     fi
     
     print_success "Full installation complete."
@@ -915,14 +921,18 @@ uninstall_all() {
     uninstall_astronvim
     
     # Uninstall Claude Code if requested
-    if command -v claude &> /dev/null; then
+    if command -v claude &> /dev/null || [[ -x "$HOME/.local/bin/claude" ]]; then
         if confirm_action "Uninstall Claude Code CLI?"; then
-            if command -v npm &> /dev/null; then
-                npm uninstall -g @anthropic-ai/claude-code || print_warning "Failed to uninstall Claude Code"
-                print_success "Claude Code uninstalled successfully"
-            else
-                print_warning "npm not found, cannot uninstall Claude Code"
+            # Remove native installation
+            rm -f "$HOME/.local/bin/claude" || print_warning "Failed to remove ~/.local/bin/claude"
+            rm -rf "$HOME/.local/share/claude" || print_warning "Failed to remove ~/.local/share/claude"
+
+            # Also remove any legacy npm installation if present
+            if command -v npm &> /dev/null && npm list -g @anthropic-ai/claude-code &> /dev/null; then
+                npm uninstall -g @anthropic-ai/claude-code || print_warning "Failed to uninstall legacy npm Claude Code"
             fi
+
+            print_success "Claude Code uninstalled successfully"
         fi
     fi
     

@@ -170,10 +170,7 @@ setup_nvm() {
         local npm_version="$(npm --version 2>/dev/null || echo "unknown")"
         
         print_success "Node.js ${node_version} and npm ${npm_version} installed via nvm"
-        
-        # Install Claude Code now that npm is available
-        install_claude_code
-        
+
         # Add nvm to local bash profile if not already present
         local bash_profile_local="$HOME/.config/bash/bash_profile_local"
         
@@ -266,31 +263,33 @@ EOF
 
 install_claude_code() {
     print_info "Installing Claude Code CLI"
-    
+
     if command -v claude &> /dev/null; then
         print_debug "Claude Code already installed"
         return 0
     fi
-    
-    # Install Claude Code via npm (npm should be available now)
-    if command -v npm &> /dev/null; then
-        print_info "Installing Claude Code via npm"
-        if npm install -g @anthropic-ai/claude-code; then
-            # Verify installation
-            if command -v claude &> /dev/null; then
-                local version
-                version=$(claude --version 2>/dev/null || echo "unknown")
-                print_success "Claude Code installed successfully (version: ${version})"
-            else
-                print_warning "Claude Code installation verification failed"
-                return 1
-            fi
+
+    if ! command -v curl &> /dev/null; then
+        print_warning "curl not found - cannot install Claude Code"
+        return 1
+    fi
+
+    # Native installer (recommended). No Node.js/npm dependency required.
+    # https://docs.claude.com/en/docs/claude-code/setup
+    print_info "Installing Claude Code via native installer"
+    if curl -fsSL https://claude.ai/install.sh | bash; then
+        local claude_bin="$HOME/.local/bin/claude"
+        if command -v claude &> /dev/null || [[ -x "${claude_bin}" ]]; then
+            local version
+            version=$(claude --version 2>/dev/null || "${claude_bin}" --version 2>/dev/null || echo "unknown")
+            print_success "Claude Code installed successfully (version: ${version})"
+            print_info "If 'claude' is not on PATH, ensure \$HOME/.local/bin is in your PATH"
         else
-            print_warning "Failed to install Claude Code via npm"
+            print_warning "Claude Code installation verification failed"
             return 1
         fi
     else
-        print_warning "npm not found - cannot install Claude Code"
+        print_warning "Failed to install Claude Code via native installer"
         return 1
     fi
 }
