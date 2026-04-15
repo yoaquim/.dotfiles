@@ -2,6 +2,8 @@ config/tmux/plugins
 config/bash/bash_profile_local
 config/git/config.local
 
+claude/hooks/nono-hook.sh
+claude/skills/local-*
+
 .DS_Store
 .deck/
-claude/skills/local-*
