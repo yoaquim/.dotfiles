@@ -4,3 +4,4 @@ config/git/config.local
 
 .DS_Store
 .deck/
+claude/skills/local-*
