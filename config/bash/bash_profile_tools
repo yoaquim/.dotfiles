@@ -13,7 +13,11 @@ export NVM_DIR="$HOME/.nvm"
 
 # Lazy-load nvm: define placeholder functions that load nvm on first use
 load_nvm() {
+<<<<<<< Updated upstream
     unset -f nvm node npm npx load_nvm
+=======
+    unset -f nvm node npm npx _load_nvm
+>>>>>>> Stashed changes
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
     [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
 }
@@ -34,7 +38,11 @@ export PYENV_ROOT="$HOME/.pyenv"
 
 # Lazy-load pyenv: define placeholder functions that load pyenv on first use
 load_pyenv() {
+<<<<<<< Updated upstream
     unset -f pyenv python python3 pip pip3 load_pyenv
+=======
+    unset -f pyenv python python3 pip pip3 _load_pyenv
+>>>>>>> Stashed changes
     eval "$(pyenv init - bash)"
 }
 pyenv()   { load_pyenv; pyenv   "$@"; }
