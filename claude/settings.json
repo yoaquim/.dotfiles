@@ -1,4 +1,8 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "hooks": {
     "PostToolUse": [
       {
@@ -13,10 +17,6 @@
       }
     ]
   },
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  },
   "statusLine": {
     "type": "command",
     "command": "bash -c 'node \"$(ls -td ~/.claude/plugins/cache/claude-hud/claude-hud/*/ 2>/dev/null | head -1)dist/index.js\"'"
@@ -25,8 +25,15 @@
     "claude-hud@claude-hud": true,
     "frontend-design@claude-plugins-official": true
   },
-  "skipDangerousModePermissionPrompt": true,
   "effortLevel": "high",
-  "voiceEnabled": true
+  "skipDangerousModePermissionPrompt": true,
+  "voiceEnabled": true,
+  "extraKnownMarketplaces": {
+    "claude-hud": {
+      "source": {
+        "source": "github",
+        "repo": "jarrodwatts/claude-hud"
+      }
+    }
+  }
 }
-
