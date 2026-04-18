@@ -624,6 +624,7 @@ install_brew_casks() {
         "quarto"
         "folx"
         "hiddenbar"
+        "qlmarkdown"
     )
     
     for cask in "${casks[@]}"; do
