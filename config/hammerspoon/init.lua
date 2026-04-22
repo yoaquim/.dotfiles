@@ -59,6 +59,14 @@ hs.notify.new({
     informativeText="Kitty hotkey loaded (Alt+Space)"
 }):send()
 
+-- Lock Screen Hotkey
+-- ───────────────────────────────────────────────────
+
+-- bind cmd+l to lock the screen
+hs.hotkey.bind({"cmd"}, "l", function()
+    hs.caffeinate.lockScreen()
+end)
+
 -- Optional: Additional Hotkeys
 -- ───────────────────────────────────────────────────
 
