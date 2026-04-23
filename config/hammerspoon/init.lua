@@ -62,8 +62,8 @@ hs.notify.new({
 -- Lock Screen Hotkey
 -- ───────────────────────────────────────────────────
 
--- bind cmd+l to lock the screen
-hs.hotkey.bind({"cmd"}, "l", function()
+-- bind cmd+shift+l to lock the screen
+hs.hotkey.bind({"cmd", "shift"}, "l", function()
     hs.caffeinate.lockScreen()
 end)
 
