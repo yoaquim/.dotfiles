@@ -1,0 +1,4 @@
+{
+  "_comment": "Maps git repo names to Linear project(s) and team. Used by resolve-project.sh.",
+  "repos": {}
+}

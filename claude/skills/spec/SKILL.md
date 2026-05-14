@@ -1,139 +1,157 @@
 ---
 name: spec
 description: Formalize conversations into Linear feature specs with implementation sub-issues. Use after discussing a problem and solution to capture it as a structured Linear ticket with sub-issues ready for /dispatch.
-argument-hint: [context/project hints]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__claude_ai_Linear__*
+version: 2.0.0
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*/resolve-project.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__claude_ai_Linear__*
 ---
 
 # Spec
 
 Formalize the current conversation into a Linear feature spec with implementation sub-issues. The conversation has already explored the problem and solution — this skill captures and structures it.
 
-No arguments → show help.
+Arguments are optional hints (project name, area, context). No arguments -> use conversation context.
 
-## Main Flow (`/spec [context]`)
+## 1. Synthesize
 
-Arguments are hints — project name, area, or additional context. Not required.
+Review the conversation. Extract: **problem** (what/why), **solution direction**, **requirements**, **constraints**, **open questions**. Ask via `AskUserQuestion` only if gaps would block writing a clear spec — don't re-interview.
 
-### 1. Synthesize
+## 2. Linear Constraints
 
-Review the conversation so far. Extract:
+Run `~/.claude/scripts/resolve-project.sh` to resolve team and project deterministically. Then determine milestone, labels (`Feature` required), priority (default Normal), and estimate (sum of sub-issues).
 
-- **Problem**: What are we solving and why?
-- **Solution direction**: What approach was discussed?
-- **Requirements**: What must be true when done?
-- **Constraints**: Technical, business, timeline?
-- **Open questions**: Anything unresolved?
+Single `AskUserQuestion` confirmation: "Creating in [Team] / [Project] / [Milestone], labeled [labels], [X] points. Correct?"
 
-If there are gaps or ambiguities that would block writing a clear spec, ask via `AskUserQuestion`. Keep it targeted — the conversation already happened, don't re-interview.
+## 3. Codebase Discovery
 
-### 2. Linear Constraints
+**Repos:** Use `~/.claude/skills/spec/repos.md` as the registry of known repos. Include current dir if git repo.
 
-Determine where this lives in Linear:
+**Explore:** Spawn Explore subagents per repo. Collect relevant paths, test infra, reference files. Concise — paths and patterns, not contents.
 
-- **Team**: Which Linear team?
-- **Project**: Check arguments first, then CLAUDE.md for defaults, then conversation context. Confident → confirm. Unsure → ask.
-- **Milestone**: Infer from project context. Ambiguous → ask.
-- **Labels**: `Feature` required. Add area/domain labels as appropriate.
-- **Priority**: Infer from conversation urgency. Default to "Normal" if unclear.
-- **Estimate**: Point estimate for the master ticket (sum of expected sub-issue effort).
+**Practices:** Read `~/.claude/practices/INDEX.md` per repo. Check detect rules, read matched practice files to inform the implementation plan.
 
-Use `mcp__claude_ai_Linear__list_projects`, `mcp__claude_ai_Linear__list_milestones`, `mcp__claude_ai_Linear__list_issue_labels` to validate choices exist in Linear.
+## 4. Feature Spec (ZeeSpec)
 
-Confirm via `AskUserQuestion` in a single summary: "Creating in [Team] / [Project] / [Milestone], labeled [labels], [X] points. Correct?"
+**Skip the spec doc** if the feature is small enough to be fully described by the master ticket alone (<=2 sub-issues, narrow scope). Write the description inline on the master ticket and skip to step 5.
 
-### 3. Codebase Discovery
+Otherwise, delegate spec writing to an isolated subagent. The subagent uses the **ZeeSpec methodology** to structure the document. Pass it the synthesized context from step 1.
 
-Explore relevant codebases to inform the implementation plan.
+### ZeeSpec Methodology
 
-#### Repo Registry
+ZeeSpec structures specs around **6 dimensions** derived from the 5W1H model. Each dimension forces explicit decisions — anything left unanswered is a gap the implementing agent will guess at. The goal is **zero ambiguity**: when the spec is complete, there is no room for hallucination or creative interpretation.
 
-Maintain `~/.claude/skills/spec/repos.md` — a registry of known repo paths and their purpose. On every run:
+Core principle: **"For every question — if you can't answer it, your system is undefined."**
 
-1. If current directory is a git repo → include it automatically
-2. Read `repos.md` for known repos
-3. Ask via `AskUserQuestion`: "Which repos should I explore?" — list known repos as options, include "add new repo" option
-4. Update `repos.md` with any new repos added
+#### Dimension 1: WHAT (Data & Entities)
 
-#### Exploration
+Define the data entities involved and their valid states. This dimension answers:
 
-Spawn Explore subagents (one per repo) informed by the synthesized requirements. Collect:
+- What are the core entities/objects this feature introduces or modifies?
+- What are the valid states for each entity? (e.g., Loan can be ACTIVE, OVERDUE, CANCELLED, RETURNED)
+- What state transitions are allowed? Which are forbidden?
+- What data fields does each entity carry? Which are required vs optional?
+- What are the invariants? (e.g., "A cancelled loan cannot have outstanding fees")
+- What are the boundary values and edge cases? (e.g., max length, empty state, null handling)
 
-- Relevant file paths and patterns
-- Existing implementations to build on or integrate with
-- Test infrastructure (framework, config, test directories)
-- Reference files (similar features, related modules)
+**Example:**
+> Loan entity: status can be `ACTIVE`, `OVERDUE`, `CANCELLED`, `RETURNED`. A loan can only transition to `CANCELLED` if it has no outstanding late fees. Cancellation updates status — never deletes the record. Fields: `id`, `member_id`, `book_id`, `status`, `due_date`, `cancelled_at` (nullable).
 
-Keep findings structured and concise — paths and patterns, not file contents.
+#### Dimension 2: WHERE (Scope & Boundaries)
 
-#### Practices
+Define where this feature lives and what it touches. This dimension answers:
 
-During exploration, read `~/.claude/practices/INDEX.md` for each target repo. Identify which practices apply by checking the detect rules against the repo's files. Read the matched practice files — these inform the implementation plan design.
+- Which services, modules, or layers are affected?
+- What are the system boundaries? (e.g., "only the API layer, not the worker")
+- Which external systems or integrations are involved?
+- What is explicitly out of scope?
+- Are there geographic, environmental, or deployment boundaries? (e.g., "US region only", "staging first")
 
-### 4. Feature Spec
+**Example:**
+> Affects the Loans API (`/api/loans`) and the notification service. Does not touch the payment gateway — fee checks read from the fees table only. Out of scope: bulk cancellation, admin override.
 
-**Skip the spec doc** if the feature is small enough to be fully described by the master ticket alone (≤2 sub-issues, narrow scope, no constraints worth documenting). In that case, write the description inline on the master ticket and skip to step 5.
+#### Dimension 3: WHEN (Timing & Sequencing)
 
-#### Spec Document
+Define temporal rules and ordering constraints. This dimension answers:
 
-Create via `mcp__claude_ai_Linear__create_document`:
+- What triggers this feature? (user action, cron, event, webhook?)
+- What is the sequence of operations? What must happen before what?
+- Are there time windows, deadlines, or SLAs? (e.g., "cancellation must complete within 5s")
+- What happens on timeout or delay?
+- Are there scheduling or batching considerations?
+- What are the concurrency rules? (e.g., "only one cancellation per loan at a time")
 
-```markdown
-## Problem
-What user/business problem are we solving?
+**Example:**
+> Triggered by POST `/api/loans/:id/cancel`. Sequence: validate no outstanding fees → set status to CANCELLED → write audit log → send notification. If fee check takes >3s, timeout and return 503. No concurrent cancellations — use optimistic locking on loan status.
 
-## Outcome
-What changes when this is shipped?
+#### Dimension 4: WHO (Access & Permissions)
 
-## Scope
-What's in / what's out.
+Define who can do what. This dimension answers:
 
-## Acceptance Criteria
-- Concrete, verifiable assertions
-- Written so an agent or engineer can test them unambiguously
+- Which user roles or actors interact with this feature?
+- What permissions are required for each action?
+- Are there ownership rules? (e.g., "only the loan owner or staff can cancel")
+- What about service-to-service auth? API keys? Scopes?
+- Are there audit/compliance requirements for tracking who did what?
 
-## Constraints
-Technical, business, performance, security.
+**Example:**
+> Only the Member who owns the loan or a user with the `library_staff` role can cancel. API requires `loans:write` scope. All cancellations are audit-logged with actor ID, timestamp, and reason.
 
-## Notes
-Dependencies, links, edge cases, decisions made during discovery.
-```
+#### Dimension 5: WHY (Business Rules & Constraints)
 
-Spec-writing principles:
+Define the business motivation and rules that constrain the implementation. This dimension answers:
 
-- **Codeless** — zero implementation details. That's the sub-issues' job.
-- **Testable** — acceptance criteria as concrete, verifiable assertions.
-- **Succinct** — value-dense, no filler. Enough context to understand without a meeting.
+- What business problem does this solve? Why now?
+- What are the regulatory or compliance constraints? (e.g., "financial records retained 7 years")
+- What are the business rules that override technical convenience? (e.g., "never hard-delete")
+- What are the success metrics? How will we know this worked?
+- What are the failure modes the business cares about?
 
-Confirm spec content via `AskUserQuestion` before creating in Linear.
+**Example:**
+> Members currently call the front desk to cancel — this saves ~200 calls/month. All financial transactions must be archived for 7 years per regulation — cancellation updates status, never deletes. Success metric: 80% of cancellations self-service within 3 months.
 
-#### Master Issue
+#### Dimension 6: HOW (Procedures & Workflows)
 
-Create via `mcp__claude_ai_Linear__save_issue`:
+Define the implementation approach at a procedural level — not code, but the workflow steps. This dimension answers:
 
-- **Title**: 3-5 words, Title Case, no verbs, no marker suffixes (no `(spec)`, `[Feature]`, etc.) — labels handle classification
-- **Description**: One-line summary linking to the spec document (or inline content if spec was skipped)
-- Set team, project, milestone, labels, priority, estimate from step 2
-- Attach the spec document to the issue (if created)
+- What is the step-by-step procedure for the happy path?
+- What are the error handling procedures? (what happens when X fails?)
+- What are the rollback or recovery procedures?
+- What monitoring, alerting, or observability is needed?
+- What is the migration or deployment procedure?
 
-### 5. Implementation Plan
+**Example:**
+> On cancel: (1) check outstanding fees, (2) set status → CANCELLED, (3) set `cancelled_at` → now, (4) write audit log entry, (5) enqueue notification job. On fee-check failure: return 422 with fee details. On DB write failure: retry once, then return 500. No rollback needed — partial state is safe (audit log entry without status change is acceptable).
 
-Design sub-issues under the master ticket. Each sub-issue is picked up by `/dispatch` for autonomous execution.
+### Writing the Spec Document
 
-#### Design Sub-Issues
+The subagent:
 
-Informed by codebase discovery + practices:
+1. **Structures the spec using all 6 ZeeSpec dimensions**, writing each as a section with concrete, specific entries. Use the examples above as a quality bar — every entry should be a decision, not a description.
+2. **Drops any dimension that has fewer than 2 meaningful entries** — don't pad with filler. A narrow feature may only need 3-4 dimensions.
+3. **Picks an icon and color** for the Linear document based on the feature domain.
+4. **Returns** the spec content, icon, and color.
 
-1. Break the feature into ordered, independently-shippable steps
-2. Each step = one sub-issue
-3. Sequence when order matters — use Linear blocking relationships for dependencies
+**Spec-writing principles:**
 
-#### Sub-Issue Structure
+- **Codeless** — no implementation details like class names, file paths, or code snippets. That's for the implementing agent/PR.
+- **Decision-forcing** — every entry is an explicit decision. "The system should handle errors gracefully" is slop. "On timeout: retry once, then return 503 with a retry-after header" is a decision.
+- **Succinct** — value-dense, no filler. Enough context to implement without a meeting, not a word more.
+- **Plain English** — no schemas, no DSLs. A senior engineer should be able to read this cold and know exactly what to build.
 
-Create each via `mcp__claude_ai_Linear__save_issue` as child of the master issue:
+### Creating the Spec
 
-- **Title**: 3-5 words, Title Case, no verbs, no marker suffixes
-- **Description**:
+Create the master issue first via `/issue`, then create the spec doc via `mcp__claude_ai_Linear__save_document` with `issue` set to the created issue identifier. Labels and style are handled by `/issue`.
+
+## 5. Implementation Plan
+
+Break feature into ordered sub-issues under the master ticket. Each designed for autonomous `/dispatch` execution.
+
+Create each sub-issue via `/issue` with `parentId` set to the master issue. `/issue` handles title style, labels, estimates, and description — this skill only defines what's unique to sub-issues: ordering, parent linkage, and blocking relationships.
+
+Keep phases to 8 issues or fewer, logically grouped. If a phase exceeds 8, split it.
+
+### Sub-Issue Description
+
+Each sub-issue description should include:
 
 ```markdown
 ## Goal
@@ -158,52 +176,36 @@ What's in / out for this specific step.
 - <practice-name>: <one-line why it applies to this step>
 ```
 
-- Set: same team / project / milestone as parent
-- Label: `Feature`
-- Estimate: points for this sub-issue
-- Set blocking relationships where order matters
-
-#### Practices in Sub-Issues
+### Practices in Sub-Issues
 
 The `## Practices` section lists which practices from `~/.claude/practices/` apply to this specific sub-issue and why. This is directed guidance — the runner's `inject-practices.sh` hook will inject the full practice files deterministically at startup, but the sub-issue listing tells the runner which practices are most relevant to *this* task.
 
-Only list practices that are genuinely relevant to the sub-issue's work. A database migration sub-issue doesn't need the React practice listed even if the project has React.
+Only list practices that are genuinely relevant to the sub-issue's work.
 
-#### Sub-Issue Qualities
+### Sub-Issue Qualities
 
 - **Small** — completable in a single `/dispatch` session
 - **Independent** — no waiting on other sub-issues where possible
 - **Ordered** — sequenced when order matters
 - **Dispatch-ready** — enough detail for an agent to implement without clarification
 
-#### Scope Check
+Confirm full plan via `AskUserQuestion`: ordered list with titles, scope, points.
 
-Before creating:
+## 6. Create in Linear
 
-- **8+ sub-issues** → surface to user: "This is a large feature. Consider splitting into phases."
-- **Sub-issue too broad** (touching 5+ files, multiple concerns) → suggest splitting further
+Create: master issue (via `/issue`) -> spec document (attached to master issue) -> sub-issues in order (via `/issue`, set parent + blocking).
 
-Confirm the full plan via `AskUserQuestion`: show the ordered list of sub-issues with titles, brief scope, and estimated points.
+Report: master ticket ID + URL, sub-issue count, total points, next step (`/dispatch <ticket-id>`).
 
-### 6. Create in Linear
-
-After confirmation, create everything:
-
-1. Create the spec document (if not skipped)
-2. Create the master issue, attach the document (if created)
-3. Create sub-issues in order, setting parent and blocking relationships
-
-Report: master ticket ID + URL, sub-issue count, total points, next step (`/dispatch <ticket-id>` for each sub-issue).
-
-### 7. Discovery Capture (Optional)
+## 7. Discovery Capture (Optional)
 
 After creating the feature spec, offer via `AskUserQuestion`:
 
 "The conversation that led to this spec was itself discovery work. Want to capture it as a completed ticket?"
 
 If yes:
-- Create issue via `mcp__claude_ai_Linear__save_issue`:
-  - Title: "Discovery: [topic summary]"
+- Create issue via `/issue`:
+  - Subject: "Discovery: [topic summary]"
   - Label: `Discovery`
   - Status: set to `Done`
   - Same project / milestone as the feature spec
@@ -211,14 +213,14 @@ If yes:
   - Link to the spec document if one was created; otherwise link to the master issue
   - Estimate: 1-2 points
 
-If no → skip.
+If no -> skip.
 
 ---
 
 ## Help (no arguments)
 
 ```
-SPEC — Conversation -> Linear feature spec
+SPEC — Conversation -> Linear feature spec (ZeeSpec)
 
 Usage:
   /spec [context]              Formalize conversation into Linear feature spec
@@ -230,7 +232,7 @@ Workflow:
   3. /dispatch ENG-142         — runner picks up each sub-issue
 
 What it creates:
-  - Spec document (attached to master ticket)
+  - Spec document (ZeeSpec: What/Where/When/Who/Why/How dimensions)
   - Master ticket (feature spec) in Linear
   - Sub-issues (implementation plan) ready for /dispatch
   - Optional: Discovery ticket for the conversation itself
@@ -243,9 +245,9 @@ Repos:
 
 ## Examples
 
-`/spec` → synthesizes conversation, confirms Linear project, explores codebase, creates feature spec with sub-issues.
+`/spec` -> synthesizes conversation, confirms Linear project, explores codebase, creates ZeeSpec feature spec with sub-issues.
 
-`/spec add to Auth Rewrite` → same flow, targets the "Auth Rewrite" Linear project.
+`/spec add to Auth Rewrite` -> same flow, targets the "Auth Rewrite" Linear project.
 
 ---
 
