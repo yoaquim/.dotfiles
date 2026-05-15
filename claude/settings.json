@@ -24,6 +24,38 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/hooks/validate-commit.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(gh pr create*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/hooks/validate-pr.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/hooks/notify-done.sh",
+            "timeout": 5
+          }
+        ]
       }
     ]
   },

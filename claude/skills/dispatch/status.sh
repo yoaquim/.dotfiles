@@ -25,12 +25,14 @@ get_field() {
 }
 
 check_alive() {
-    local pid="$1" expected_start="$2"
-    [[ -z "$pid" || "$pid" == "pending" ]] && return 1
-    ps -p "$pid" >/dev/null 2>&1 || return 1
-    local actual_start
-    actual_start="$(ps -p "$pid" -o lstart= 2>/dev/null | xargs)"
-    [[ "$actual_start" == "$expected_start" ]]
+    local session_id="$1"
+    [[ -z "$session_id" || "$session_id" == "pending" ]] && return 1
+    local state_file="$HOME/.claude/jobs/$session_id/state.json"
+    if [[ -f "$state_file" ]]; then
+        jq -e '.state == "working" or .state == "needs_input"' "$state_file" >/dev/null 2>&1
+    else
+        return 1
+    fi
 }
 
 count_progress() {
@@ -86,12 +88,11 @@ if [[ -n "$NAME" ]]; then
     fi
 
     STATUS="$(get_field status "$FILE")"
-    PID="$(get_field pid "$FILE")"
-    PID_START="$(get_field pid_start "$FILE")"
+    SESSION_ID="$(get_field session_id "$FILE")"
     WORKTREE="$(get_field worktree "$FILE")"
 
     if [[ "$STATUS" == "in_progress" ]]; then
-        if check_alive "$PID" "$PID_START"; then
+        if check_alive "$SESSION_ID"; then
             echo "state:alive"
         else
             echo "state:dead"
@@ -132,12 +133,11 @@ for FILE in "${FILES[@]}"; do
     FNAME="$(basename "$FILE" .md)"
     TITLE="$(get_field title "$FILE")"
     STATUS="$(get_field status "$FILE")"
-    PID="$(get_field pid "$FILE")"
-    PID_START="$(get_field pid_start "$FILE")"
+    SESSION_ID="$(get_field session_id "$FILE")"
     PROGRESS="$(count_progress "$FILE")"
 
     if [[ "$STATUS" == "in_progress" ]]; then
-        if check_alive "$PID" "$PID_START"; then
+        if check_alive "$SESSION_ID"; then
             ICON="●"
             LABEL="running"
         else

@@ -215,21 +215,37 @@ The `install.sh` script provides several installation modes:
     └── 📄 gitconfig                # Git configuration
 └── 📁 claude/                      # Claude Code global configuration
     ├── 📄 setup.sh                 # Claude setup script (symlinks into ~/.claude/)
-    ├── 📄 settings.json            # Claude Code settings
+    ├── 📄 settings.json            # Claude Code settings + hooks
     ├── 📁 agents/                  # Autonomous agent definitions
-    │   ├── 📄 deck-runner.md       # Deck spec runner agent
-    │   └── 📄 linear-runner.md     # Linear ticket runner agent
+    │   └── 📄 runner.md            # Unified implementation runner
+    ├── 📁 scripts/                 # Reusable scripts for skills + hooks
+    │   ├── 📄 resolve-project.sh   # Git repo → Linear team/project
+    │   ├── 📄 resolve-label.sh     # Subject text → issue label
+    │   ├── 📄 validate-title.sh    # Title style validation
+    │   ├── 📄 check-pr-reviews.sh  # Machine review status (Codex/CodeRabbit)
+    │   └── 📄 repo-projects.json   # Repo → Linear project mapping
+    ├── 📁 hooks/                   # Event-driven automation
+    │   ├── 📄 inject-practices.sh  # Auto-inject practices at runner startup
+    │   ├── 📄 lint-spec.sh         # Scope check on sketch/spec writes
+    │   ├── 📄 validate-issue.sh    # Style check after Linear issue creation
+    │   ├── 📄 validate-commit.sh   # Commit message style check
+    │   ├── 📄 validate-pr.sh       # PR title style check
+    │   └── 📄 notify-done.sh       # macOS notification when runner finishes
     ├── 📁 practices/               # Development practice guides
-    │   ├── 📄 INDEX.md             # Practice index
-    │   ├── 📄 django.md            # Django best practices
-    │   ├── 📄 docker.md            # Docker best practices
-    │   ├── 📄 react.md             # React best practices
-    │   ├── 📄 tailwind.md          # Tailwind best practices
-    │   └── 📄 tdd.md               # TDD best practices
+    │   ├── 📄 INDEX.md             # Practice index with detect rules
+    │   ├── 📄 tdd.md               # TDD (always active)
+    │   ├── 📄 django.md            # Django
+    │   ├── 📄 docker.md            # Docker
+    │   ├── 📄 react.md             # React
+    │   └── 📄 tailwind.md          # Tailwind
     └── 📁 skills/                  # Custom Claude Code skills
-        ├── 📁 setup/               # /setup — init project (CLAUDE.md, git, hooks, deps)
-        ├── 📁 deck/                # /deck — spec, dispatch, status, accept, close
-        └── 📁 dispatch/            # /dispatch — fetch Linear ticket, spawn runner
+        ├── 📁 setup/               # /setup — init project
+        ├── 📁 sketch/              # /sketch — lightweight local spec
+        ├── 📁 spec/                # /spec — Linear feature spec (ZeeSpec)
+        ├── 📁 issue/               # /issue — single Linear issue
+        ├── 📁 dispatch/            # /dispatch — spawn runner (tickets or sketches)
+        ├── 📁 pr/                  # /pr — review, fix, create PR
+        └── 📁 gh-stack/            # /gh-stack — stacked branches/PRs
 ```
 
 ### 🔗 Symlink Structure
@@ -370,63 +386,62 @@ nvim ~/.config/kitty/kitty.conf
 
 ## 🤖 Claude Code Workflow
 
-This dotfiles setup includes a **custom Claude Code configuration** with skills, agents, and development practice guides.
+Custom Claude Code configuration with skills, agents, hooks, and practices.
 
-### 🎯 What's Included
-
-**Skills** (custom slash commands, available globally):
-- `/setup` — Initialize a project with CLAUDE.md, git, hooks, and dependencies
-- `/deck` — Full feature lifecycle: spec, dispatch to runners, track status, accept, close
-- `/dispatch` — Fetch a Linear ticket, discover context, and spawn an autonomous runner in an isolated worktree
-
-**Agents** (autonomous runners for background work):
-- **deck-runner** — Implements a spec from `.deck/` in an isolated worktree
-- **linear-runner** — Implements a Linear ticket in an isolated worktree
-
-**Practices** (development guides loaded as context):
-- Django, Docker, React, Tailwind, TDD
-
-### ⚙️ Setup
-
-After dotfiles installation, run the Claude setup script to symlink skills, agents, practices, and settings into `~/.claude/`:
+### Setup
 
 ```bash
 cd ~/.dotfiles/claude && ./setup.sh
 ```
 
-This symlinks individual directories (`skills/`, `agents/`, `practices/`) and `settings.json` into `~/.claude/`.
+Symlinks skills, agents, hooks, scripts, practices, and settings into `~/.claude/`.
 
-### 🚀 Quick Start
+### Skills
 
-**Initialize a new project:**
-```bash
-/setup
+| Skill | Purpose |
+|-------|---------|
+| `/setup` | Init project: CLAUDE.md, git, hooks, deps |
+| `/sketch <name>` | Lightweight local spec (ZeeSpec-lite) |
+| `/spec` | Linear feature spec with sub-issues (ZeeSpec) |
+| `/issue` | Single well-formed Linear issue |
+| `/dispatch <id\|name>` | Spawn runner from Linear ticket or sketch |
+| `/pr` | Review, fix, create PR |
+| `/gh-stack` | Stacked branches and PRs |
+
+### Workflows
+
+**Local (no Linear):**
+```
+/sketch jwt-auth → /dispatch jwt-auth → runner → /pr
 ```
 
-**Spec and build a feature (deck workflow):**
-```bash
-/deck spec <name>        # Spec out a feature
-/deck dispatch <name>    # Spawn runner in isolated worktree
-/deck status             # Check progress
-/deck accept <name>      # E2E test acceptance criteria
-/deck close <name>       # Merge, teardown, done
+**Linear:**
+```
+/spec → /dispatch ENG-142 → runner → /pr
 ```
 
-**Dispatch from Linear:**
-```bash
-/dispatch ENG-142        # Fetch ticket, discover context, spawn runner
-/dispatch status         # Check all runners
-/dispatch attach eng-142 # Interactive session in worktree
-```
+### Hooks
 
-### 🎨 Customization
+| Hook | Trigger | Purpose |
+|------|---------|---------|
+| `inject-practices.sh` | Runner SessionStart | Auto-detect and inject practices |
+| `lint-spec.sh` | Write/Edit on sketches | Scope check (>8 steps, >10 files) |
+| `validate-issue.sh` | Linear `save_issue` | Issue title/description style |
+| `validate-commit.sh` | `git commit` | Commit message style |
+| `validate-pr.sh` | `gh pr create` | PR title style |
+| `notify-done.sh` | Stop | macOS notification when session ends |
 
-Since the configuration is symlinked from your dotfiles:
+### Agent
 
-1. **Edit skills** in `~/.dotfiles/claude/skills/`
-2. **Edit agents** in `~/.dotfiles/claude/agents/`
-3. **Edit practices** in `~/.dotfiles/claude/practices/`
-4. **Changes apply globally** to all projects immediately
+One unified **runner** agent handles all dispatched work. On completion: pushes, creates PR via `/pr`, iterates on Codex/CodeRabbit comments until machine reviews are green.
+
+### Practices
+
+Auto-detected at runner startup via `inject-practices.sh`. TDD is always active; Django, Docker, React, Tailwind activate based on project files.
+
+### Customization
+
+Edit in `~/.dotfiles/claude/` — changes apply globally via symlinks.
 
 ---
 

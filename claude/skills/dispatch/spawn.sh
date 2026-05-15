@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# spawn.sh — Create worktree (if needed) and spawn linear-runner agent
+# spawn.sh — Create worktree (if needed) and spawn runner agent
 #
 # Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [target-repo]
 #
@@ -9,8 +9,7 @@
 # Output (key:value on stdout):
 #   worktree_status:reused|created-existing-branch|created-new-branch
 #   worktree:<path>
-#   pid:<number>
-#   pid_start:<lstart string>
+#   session_id:<id>
 
 set -eo pipefail
 
@@ -81,20 +80,21 @@ fi
 echo "worktree:$WORKTREE"
 
 # --- Spawn ---
-PROMPT="$(cat "$PROMPT_FILE")"
+# Pass prompt via file to avoid shell argument length limits
+SESSION_OUTPUT=$(cd "$WORKTREE" && claude --bg \
+    --agent runner \
+    --name "dispatch-$NAME" \
+    --permission-mode bypassPermissions \
+    --append-system-prompt-file "$PROMPT_FILE" \
+    "Execute the task described in the system prompt." 2>&1)
 
-cd "$WORKTREE"
-nohup env -u CLAUDECODE claude --agent linear-runner -p "$PROMPT" --dangerously-skip-permissions \
-    > "$LOG_DIR/$NAME.log" 2>&1 &
-PID=$!
+# Extract session ID from --bg output (format: "backgrounded · <8-hex-chars>")
+SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
 
-# Retry PID start time capture — process tree may need a moment to initialize
-PID_START="unknown"
-for i in 1 2 3; do
-    sleep 1
-    PID_START="$(ps -p "$PID" -o lstart= 2>/dev/null | xargs)" && [[ -n "$PID_START" ]] && break
-    PID_START="unknown"
-done
+if [[ -z "$SESSION_ID" ]]; then
+    echo "error: failed to spawn background session" >&2
+    echo "$SESSION_OUTPUT" >&2
+    exit 1
+fi
 
-echo "pid:$PID"
-echo "pid_start:$PID_START"
+echo "session_id:$SESSION_ID"

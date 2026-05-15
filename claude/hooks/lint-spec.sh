@@ -13,8 +13,9 @@ else
   exit 0
 fi
 
-# Only lint .deck/specs/ files
+# Only lint sketch and spec files
 case "$FILE" in
+  */.dispatch/sketches/*.md) ;;
   */.deck/specs/*.md) ;;
   *) exit 0 ;;
 esac
