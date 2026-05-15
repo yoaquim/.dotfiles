@@ -21,7 +21,7 @@ Single confirmation: "Creating in [Team] / [Project] / [Milestone], labeled [lab
 
 ## 3. Codebase Discovery
 
-**Repos:** `~/.claude/skills/spec/repos.md` as registry. Include current dir if git repo.
+**Repos:** Use `~/.claude/scripts/repo-projects.json` as the registry of known repos. Include current dir if git repo.
 
 **Explore:** Subagents per repo. Collect paths, test infra, reference files — not contents.
 
@@ -171,5 +171,5 @@ What it creates:
   - Optional: Discovery ticket for the conversation itself
 
 Repos:
-  ~/.claude/skills/spec/repos.md — known repo registry (auto-maintained)
+  ~/.claude/scripts/repo-projects.json — repo registry (placement + discovery)
 ```

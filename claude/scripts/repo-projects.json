@@ -1,4 +1,66 @@
 {
-  "_comment": "Maps git repo names to Linear project(s) and team. Used by resolve-project.sh.",
-  "repos": {}
+  "_comment": "Maps git repo names to Linear project(s), team, and description. Used by resolve-project.sh (placement) and /spec (discovery).",
+  "repos": {
+    "aws-infrastructure": {
+      "team": "Engineering",
+      "projects": ["AWS Infrastructure", "Pulse", "Helm", "Magic Inbox"],
+      "description": "Terragrunt/Terraform IaC: ECS, ECR, RDS, S3, Route53, IAM for all workloads"
+    },
+    "crm": {
+      "team": "Engineering",
+      "projects": [
+        "Deal Triage Phase 1",
+        "Collaboration Model",
+        "Recruitment Phase 2",
+        "Prospects and Lead Phase 2",
+        "Conferences Phase 2",
+        "Maintenance",
+        "Market Mapping Phase 1",
+        "Placement Planner MVP",
+        "Magic Inbox",
+        "Features"
+      ],
+      "description": "Rails CRM: deal flow tracking, pipeline management"
+    },
+    "claude": {
+      "team": "Data",
+      "projects": ["Claude Code Plugin"],
+      "description": "Claude Code plugin: shared skills, hooks, practices for Augment Risk engineering"
+    },
+    "semantic-layer": {
+      "team": "Data",
+      "projects": ["Semantic Layer Platform"],
+      "description": "Malloy semantic models + publisher infra"
+    },
+    "data-manager": {
+      "team": "Data",
+      "projects": ["Data Manager Next", "Productionize Data Manager"],
+      "description": "Data manager application"
+    },
+    "pulse-backend": {
+      "team": "Engineering",
+      "projects": ["Pulse"],
+      "description": "Pulse backend API"
+    },
+    "pulse-frontend": {
+      "team": "Engineering",
+      "projects": ["Pulse"],
+      "description": "Pulse frontend application"
+    },
+    "helm": {
+      "team": "Engineering",
+      "projects": ["Helm"],
+      "description": "Helm: strategic initiative portfolio tool (React 19 + Vite + Tailwind CSS 4, Express 5)"
+    },
+    "tf-modules": {
+      "team": "Data",
+      "projects": ["AWS Infrastructure"],
+      "description": "Reusable Terraform modules (compute, data-stores, networking, etc.)"
+    },
+    "windmill": {
+      "team": "Data",
+      "projects": ["Windmill Platform", "FP&A Integration", "Broker Performance Phase 1"],
+      "description": "Windmill platform: ELT pipelines, apps (lakeviewer), helm, infra"
+    }
+  }
 }
