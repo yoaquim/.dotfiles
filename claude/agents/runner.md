@@ -13,6 +13,11 @@ hooks:
           command: "$HOME/.claude/hooks/inject-practices.sh"
           timeout: 10
           once: true
+  Stop:
+    - hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/enforce-completion.sh"
+          timeout: 30
 ---
 
 # Runner Agent

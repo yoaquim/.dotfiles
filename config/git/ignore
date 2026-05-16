@@ -1,0 +1,11 @@
+# Global gitignore — applies to every repo.
+# Linked to ~/.config/git/ignore by install.sh; git picks it up via the XDG default.
+
+# Per-machine Claude Code overrides — never share these.
+**/.claude/settings.local.json
+
+# Dispatch runtime artifacts (status files, logs, prompts, sketches, hook state).
+.dispatch/
+
+# Runner worktrees created by /dispatch.
+.claude/worktrees/
