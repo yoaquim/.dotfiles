@@ -61,6 +61,11 @@
       "team": "Data",
       "projects": ["Windmill Platform", "FP&A Integration", "Broker Performance Phase 1"],
       "description": "Windmill platform: ELT pipelines, apps (lakeviewer), helm, infra"
+    },
+    "nullbreaker": {
+      "team": "Me",
+      "projects": ["Nullbreaker"],
+      "description": "Cyberpunk turn-based tactical RPG (Phaser + React client, Colyseus server). Solo project."
     }
   }
 }
