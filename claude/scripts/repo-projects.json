@@ -66,6 +66,11 @@
       "team": "Me",
       "projects": ["Nullbreaker"],
       "description": "Cyberpunk turn-based tactical RPG (Phaser + React client, Colyseus server). Solo project."
+    },
+    "parcha": {
+      "team": "Me",
+      "projects": ["Parcha"],
+      "description": "Browser-hosted live-coding DAW with MCP-first architecture (Preact + CodeMirror + Strudel). Solo project."
     }
   }
 }

@@ -81,9 +81,10 @@ echo "worktree:$WORKTREE"
 
 # --- Spawn ---
 # Pass prompt via file to avoid shell argument length limits
+PROJECT_NAME="$(basename "$TARGET_REPO")"
 SESSION_OUTPUT=$(cd "$WORKTREE" && claude --bg \
     --agent runner \
-    --name "dispatch-$NAME" \
+    --name "$PROJECT_NAME-dispatch-$NAME" \
     --permission-mode bypassPermissions \
     --append-system-prompt-file "$PROMPT_FILE" \
     "Execute the task described in the system prompt." 2>&1)
