@@ -75,6 +75,52 @@ EOF
   exit 2
 fi
 
+# --- Gate 1.5: PR content must conform to /pr conventions ---
+# Authoritative gate: re-validate the actual created PR (the PreToolUse hook
+# is best-effort on title; heredoc bodies bypass its body check).
+PR_CONTENT=$(gh pr view "$PR_NUMBER" --json title,body 2>/dev/null || echo '{}')
+PR_TITLE=$(jq -r '.title // ""' <<<"$PR_CONTENT" 2>/dev/null || echo "")
+PR_BODY=$(jq -r '.body // ""' <<<"$PR_CONTENT" 2>/dev/null || echo "")
+
+CONTENT_ERRORS=()
+
+if [[ -n "$PR_TITLE" ]]; then
+  T_RESULT=$("$HOME/.claude/scripts/validate-title.sh" "$PR_TITLE" 2>/dev/null || true)
+  T_VALID=$(jq -r 'if .valid == false then "false" else "true" end' <<<"$T_RESULT" 2>/dev/null || echo true)
+  if [[ "$T_VALID" == "false" ]]; then
+    while IFS= read -r ERR; do
+      [[ -n "$ERR" ]] && CONTENT_ERRORS+=("Title: $ERR")
+    done < <(jq -r '.errors[]?' <<<"$T_RESULT" 2>/dev/null)
+  fi
+fi
+
+TICKET_ID=""
+if [[ "$BRANCH" =~ ([A-Za-z]+-[0-9]+) ]]; then
+  TICKET_ID=$(echo "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')
+fi
+
+B_RESULT=$("$HOME/.claude/scripts/validate-pr-body.sh" "$PR_BODY" "$TICKET_ID" 2>/dev/null || true)
+B_VALID=$(jq -r 'if .valid == false then "false" else "true" end' <<<"$B_RESULT" 2>/dev/null || echo true)
+if [[ "$B_VALID" == "false" ]]; then
+  while IFS= read -r ERR; do
+    [[ -n "$ERR" ]] && CONTENT_ERRORS+=("Body: $ERR")
+  done < <(jq -r '.errors[]?' <<<"$B_RESULT" 2>/dev/null)
+fi
+
+if (( ${#CONTENT_ERRORS[@]} > 0 )); then
+  {
+    echo "You cannot end this session yet. PR #$PR_NUMBER does not conform to /pr conventions."
+    echo
+    for ERR in "${CONTENT_ERRORS[@]}"; do
+      echo "  - $ERR"
+    done
+    echo
+    echo "Fix with: gh pr edit $PR_NUMBER --title \"...\" --body \"...\""
+    echo "Or re-run /pr. Rules: ~/.claude/skills/pr/SKILL.md"
+  } >&2
+  exit 2
+fi
+
 # --- Gate 2: one clean review pass must be recorded ---
 if [[ -f "$REVIEW_PASS_MARKER" ]]; then
   exit 0

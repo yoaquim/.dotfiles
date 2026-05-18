@@ -81,7 +81,7 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
 
 1. Full test suite passing
 2. `git push -u origin <branch>`
-3. `/pr` to review and create PR. If unavailable: `gh pr create` (Title Case noun phrase, no verb prefixes, explain WHY, link ticket)
+3. `/pr` to review and create PR. Required — `gh pr create` is hook-blocked unless it conforms to the same rules, so there is no manual fallback.
 4. **Review loop** — resolve machine review comments (Codex, CodeRabbit):
    - Wait 60s after push for reviews to arrive
    - Run `~/.claude/scripts/check-pr-reviews.sh <pr-number>`

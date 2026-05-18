@@ -4,6 +4,18 @@
     "pr": ""
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(gh pr create*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/hooks/validate-pr.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
@@ -31,16 +43,6 @@
           {
             "type": "command",
             "command": "\"$HOME\"/.claude/hooks/validate-commit.sh",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "Bash(gh pr create*)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HOME\"/.claude/hooks/validate-pr.sh",
             "timeout": 10
           }
         ]
