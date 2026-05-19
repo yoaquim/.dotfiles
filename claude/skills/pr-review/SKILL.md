@@ -2,8 +2,8 @@
 name: pr-review
 description: Review a GitHub PR or the current branch against Yoaquim's curated review criteria. Cites which criteria fired per finding and posts to the PR when given a PR number.
 version: 1.0.0
-argument-hint: "[<PR-number>]  (omit for current branch vs main)"
-allowed-tools: Bash(gh*), Bash(git*), Read, Glob, Grep
+argument-hint: "[--fg] [<PR-number>]  (PR# auto-backgrounds as 'review-pr-N' unless --fg; omit PR# for current branch in foreground)"
+allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Read, Glob, Grep
 hooks:
   PreToolUse:
     - matcher: "Bash"
@@ -17,9 +17,38 @@ hooks:
 
 Review a GitHub PR (by number) or the current branch diff against `criteria/` files, then post the result if a PR number was provided.
 
+## 0. Dispatch as background agent (default)
+
+This skill **defaults to backgrounding itself** as a named agent so reviews show up in `claude agents`. Foreground execution is opt-in via `--fg`.
+
+Parse `$ARGUMENTS`:
+- If `--fg` is present anywhere in the arguments → strip it and proceed to step 1 in the current session.
+- If a PR number is present (a bare integer like `18`) and `--fg` is **not** present → dispatch a background and STOP. Do not perform the review in this session.
+- If no PR number and no `--fg` → there's no name to derive (branch reviews use the working-directory context). Proceed to step 1 in the current session and skip the dispatch.
+
+### Background dispatch
+
+When dispatching, run exactly this:
+
+```bash
+SESSION_OUTPUT=$(claude --bg \
+    --name "review-pr-<PR>" \
+    --permission-mode default \
+    "/pr-review --fg <PR>" 2>&1)
+SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
+```
+
+Substitute `<PR>` with the PR number. Then report to the user, plainly:
+
+> Dispatched `/pr-review <PR>` as background agent **review-pr-<PR>** (session `<SESSION_ID>`). Open `claude agents` to watch or attach.
+
+If `SESSION_ID` is empty, surface `SESSION_OUTPUT` to the user and stop — do not silently fall back to running in foreground.
+
+Then STOP. The child session will execute the review with `--fg` set; this session has nothing more to do.
+
 ## 1. Resolve scope
 
-- **Arg is a PR number** (e.g. `/pr-review 18`) → `gh pr view <n>` and `gh pr diff <n>` from the current repo. If `-R owner/repo` is needed, infer from the working directory or ask once.
+- **Arg is a PR number** (e.g. `/pr-review --fg 18`) → `gh pr view <n>` and `gh pr diff <n>` from the current repo. If `-R owner/repo` is needed, infer from the working directory or ask once.
 - **No arg** → `git diff main...HEAD` (or `master`, whichever is the default branch). No auto-post — output stays in chat.
 
 ## 2. Load criteria
