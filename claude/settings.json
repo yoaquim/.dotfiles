@@ -4,39 +4,7 @@
     "pr": ""
   },
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash(gh pr create*)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HOME\"/.claude/hooks/validate-pr.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HOME\"/.claude/hooks/lint-spec.sh",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__claude_ai_Linear__save_issue",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HOME\"/.claude/hooks/validate-issue.sh",
-            "timeout": 10
-          }
-        ]
-      },
       {
         "matcher": "Bash(git commit*)",
         "hooks": [

@@ -5,6 +5,13 @@ version: 1.0.0
 argument-hint: "[subject]"
 arguments: subject
 allowed-tools: Read, Glob, Grep, Bash(git*), Bash(date*), Bash(open*), Bash(*/resolve-project.sh*), Bash(*/resolve-label.sh*), Bash(*/validate-title.sh*), AskUserQuestion, mcp__claude_ai_Linear__list_projects, mcp__claude_ai_Linear__list_milestones, mcp__claude_ai_Linear__list_issue_labels, mcp__claude_ai_Linear__list_issue_statuses, mcp__claude_ai_Linear__list_teams, mcp__claude_ai_Linear__list_issues, mcp__claude_ai_Linear__save_issue, mcp__claude_ai_Linear__get_project, mcp__claude_ai_Linear__get_issue
+hooks:
+  PostToolUse:
+    - matcher: "mcp__claude_ai_Linear__save_issue"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/validate-issue.sh"
+          timeout: 10
 ---
 
 # Issue

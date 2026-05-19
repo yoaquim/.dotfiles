@@ -4,6 +4,13 @@ description: Quickly capture a feature idea as a dispatch-ready spec file. Light
 version: 1.0.0
 argument-hint: <name> [context]
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode
+hooks:
+  PostToolUse:
+    - matcher: "Write|Edit"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/lint-spec.sh"
+          timeout: 10
 ---
 
 # Sketch

@@ -3,6 +3,18 @@ name: spec
 description: Formalize conversations into Linear feature specs with implementation sub-issues. Use after discussing a problem and solution to capture it as a structured Linear ticket with sub-issues ready for /dispatch.
 version: 2.0.0
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*/resolve-project.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__claude_ai_Linear__*
+hooks:
+  PostToolUse:
+    - matcher: "mcp__claude_ai_Linear__save_issue"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/validate-issue.sh"
+          timeout: 10
+    - matcher: "Write|Edit"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/lint-spec.sh"
+          timeout: 10
 ---
 
 # Spec

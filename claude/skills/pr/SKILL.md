@@ -4,6 +4,13 @@ description: Review code, fix issues, and create a pull request. Use when ready 
 version: 1.0.0
 argument-hint: "[--draft]"
 allowed-tools: Bash(git*), Bash(gh*), Read, Edit, Write, AskUserQuestion
+hooks:
+  PreToolUse:
+    - matcher: "Bash(gh pr create*)"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/validate-pr.sh"
+          timeout: 10
 ---
 
 # Create Pull Request
