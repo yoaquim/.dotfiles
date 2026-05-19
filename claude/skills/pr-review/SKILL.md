@@ -2,7 +2,7 @@
 name: pr-review
 description: Review a GitHub PR or the current branch against Yoaquim's curated review criteria. Cites which criteria fired per finding and posts to the PR when given a PR number.
 version: 1.0.0
-argument-hint: "[--fg] [<PR-number>]  (PR# auto-backgrounds as 'review-pr-N' unless --fg; omit PR# for current branch in foreground)"
+argument-hint: "[--fg] [<PR-number>]  (PR# auto-backgrounds as '<project>-review-N' unless --fg; omit PR# for current branch in foreground)"
 allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Read, Glob, Grep
 hooks:
   PreToolUse:
@@ -28,11 +28,16 @@ Parse `$ARGUMENTS`:
 
 ### Background dispatch
 
-When dispatching, run exactly this:
+Derive the project name from the current git repo and run exactly this (mirrors `/dispatch`'s `spawn.sh`):
 
 ```bash
+PROJECT=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null)
+if [[ -z "$PROJECT" ]]; then
+  echo "Not in a git repo — cannot derive project name. Re-run with --fg, or cd into the repo first." >&2
+  exit 1
+fi
 SESSION_OUTPUT=$(claude --bg \
-    --name "review-pr-<PR>" \
+    --name "$PROJECT-review-<PR>" \
     --permission-mode default \
     "/pr-review --fg <PR>" 2>&1)
 SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
@@ -40,7 +45,7 @@ SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8
 
 Substitute `<PR>` with the PR number. Then report to the user, plainly:
 
-> Dispatched `/pr-review <PR>` as background agent **review-pr-<PR>** (session `<SESSION_ID>`). Open `claude agents` to watch or attach.
+> Dispatched `/pr-review <PR>` as background agent **$PROJECT-review-<PR>** (session `<SESSION_ID>`). Open `claude agents` to watch or attach.
 
 If `SESSION_ID` is empty, surface `SESSION_OUTPUT` to the user and stop — do not silently fall back to running in foreground.
 
