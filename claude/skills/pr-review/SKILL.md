@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: Review a GitHub PR or current branch primarily for bugs (correctness, null/undefined, async/race, error handling, security, resource leaks, test rigor). Cites file:line per finding. House-rules criteria run as additive extras.
-version: 2.1.0
+version: 2.2.0
 argument-hint: "[--fg] [<PR-number>]"
 allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Read, Glob, Grep
 hooks:
@@ -21,25 +21,38 @@ hooks:
 
 ## 0. Dispatch (default background)
 
-Parse `$ARGUMENTS`:
-- `--fg` present → strip it; proceed to step 1 in this session.
-- PR number, no `--fg` → dispatch background and STOP.
-- No PR number, no `--fg` → foreground branch review.
+Parse `$ARGUMENTS` for three things in this order:
+
+1. **`--fg` flag** anywhere → strip it; proceed to step 1 in this session. Done.
+2. **PR identifier**, accepting any of:
+   - Bare integer (e.g. `18`) — current repo
+   - Full URL (e.g. `https://github.com/owner/repo/pull/18`) — extracts `owner/repo` and PR number
+   - PR number + `-R owner/repo` — uses the explicit repo
+3. **Nothing identifiable** → foreground branch review (skip dispatch entirely).
+
+### Resolve PROJECT name (in order)
+
+1. If a URL or `-R owner/repo` was provided → `PROJECT` = the repo segment (e.g. URL `…/nullbreaker/pull/21` → `nullbreaker`).
+2. Else, if `git rev-parse --show-toplevel` succeeds → `PROJECT` = its basename.
+3. Else → stop with the literal message: `Cannot derive project name. Pass a PR URL, use -R owner/repo, or re-run with --fg.` **Do not silently fall back to foreground.**
+
+### Dispatch command
+
+`$PR_ARG` below is whatever preserves repo context for the child: the full URL if a URL was passed, or `-R owner/repo <PR>` if `-R` was passed, or the bare integer if neither.
 
 ```bash
-PROJECT=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null)
-if [[ -z "$PROJECT" ]]; then
-  echo "Not in a git repo — re-run with --fg." >&2
-  exit 1
-fi
 SESSION_OUTPUT=$(claude --bg \
-    --name "$PROJECT-review-<PR>" \
+    --name "$PROJECT-review-$PR" \
     --permission-mode bypassPermissions \
-    "/pr-review --fg <PR>" 2>&1)
+    "/pr-review --fg $PR_ARG" 2>&1)
 SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
 ```
 
-Report `Dispatched as $PROJECT-review-<PR> (session <SESSION_ID>). Open claude agents to watch.` If `SESSION_ID` is empty, surface `SESSION_OUTPUT` and stop. Do not fall back to foreground.
+Report: `Dispatched as $PROJECT-review-$PR (session $SESSION_ID). Open claude agents to watch.`
+
+### Failure handling — read carefully
+
+If `SESSION_ID` is empty, the dispatch failed. **Surface `SESSION_OUTPUT` verbatim to the user and stop.** Do not paraphrase. Do not invent reasons (e.g. "the --bg flag isn't available"). The `--bg` flag DOES exist on Claude Code; it is hidden from `claude --help` but valid. If the literal bash output says something else, report exactly what it says. **Do not fall back to running in foreground.** The user can re-run with `--fg` if they want that.
 
 ## 1. Read the diff
 
