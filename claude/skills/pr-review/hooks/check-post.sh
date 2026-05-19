@@ -1,6 +1,9 @@
 #!/bin/bash
 # PreToolUse Hook: Block `gh pr review|comment` posts unless they carry the
-# /pr-review skill header and cite at least one criterion file.
+# /pr-review skill header AND show real engagement with the diff (at least one
+# file:line citation, or an explicit "no bug-class findings" line). Criteria
+# citations are encouraged but no longer required — bugs are the primary review,
+# and criteria are additive extras that may not fire on a given PR.
 #
 # Exit 0 → allow the tool call.
 # Exit 2 → block; stderr is shown to the agent.
@@ -59,23 +62,24 @@ if ! grep -qF "$HEADER" <<<"$COMMAND"; then
   ERRORS+=("Cat the skill's header.md into the body before posting.")
 fi
 
-# Must cite at least one criterion. Accept either a slug in backticks or a
-# criteria/<slug> path reference.
-CRITERIA_DIR="$HOME/.claude/skills/pr-review/criteria"
-CITED=0
-if [[ -d "$CRITERIA_DIR" ]]; then
-  while IFS= read -r -d '' file; do
-    slug=$(basename "$file" .md)
-    if grep -qE "(\`$slug\`|criteria/$slug)" <<<"$COMMAND"; then
-      CITED=$((CITED + 1))
-    fi
-  done < <(find "$CRITERIA_DIR" -name '*.md' -print0)
-fi
+# Engagement check: the body must either cite specific code (file:line) or
+# explicitly declare no findings. A review with neither is a non-review.
+#
+# file:line pattern: at least one occurrence of <something>.<ext>[:<line>] for
+# common source extensions, e.g. Editor.tsx:471, server.ts:380-383, foo.py:12.
+FILELINE_RE='[A-Za-z_][A-Za-z0-9_./-]*\.(ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cc|cpp|h|hpp|cs|sh|sql|css|scss|html|md|json|ya?ml|toml|tf|hcl)(:[0-9]+(-[0-9]+)?)?'
+NOFINDINGS_RE='_No bug-class findings'
 
-if [[ "$CITED" -eq 0 ]]; then
-  ERRORS+=("Post does not cite any criterion from criteria/.")
-  ERRORS+=("Every finding must name the criterion that fired,")
-  ERRORS+=("either as a backticked slug (e.g. \`slice-size\`) or a criteria/<slug> path.")
+HAS_FILELINE=0
+HAS_NOFINDINGS=0
+grep -qE "$FILELINE_RE" <<<"$COMMAND" && HAS_FILELINE=1
+grep -qF "$NOFINDINGS_RE" <<<"$COMMAND" && HAS_NOFINDINGS=1
+
+if [[ "$HAS_FILELINE" -eq 0 && "$HAS_NOFINDINGS" -eq 0 ]]; then
+  ERRORS+=("Post shows no engagement with the diff.")
+  ERRORS+=("Required: either at least one file:line citation in a finding,")
+  ERRORS+=("OR the explicit line: _No bug-class findings — diff reviewed line by line._")
+  ERRORS+=("A review that only counts test files or audits the body is not a review.")
 fi
 
 if [[ "${#ERRORS[@]}" -gt 0 ]]; then

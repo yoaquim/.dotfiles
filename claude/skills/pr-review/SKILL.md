@@ -1,8 +1,8 @@
 ---
 name: pr-review
-description: Review a GitHub PR or the current branch against Yoaquim's curated review criteria. Cites which criteria fired per finding and posts to the PR when given a PR number.
-version: 1.0.0
-argument-hint: "[--fg] [<PR-number>]  (PR# auto-backgrounds as '<project>-review-N' unless --fg; omit PR# for current branch in foreground)"
+description: Review a GitHub PR or current branch primarily for bugs, security issues, logic errors, edge cases, race conditions, and error-handling gaps. Cites specific code (file:line) per finding. House-rules criteria run as additive extras.
+version: 2.0.0
+argument-hint: "[--fg] [<PR-number>]"
 allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Read, Glob, Grep
 hooks:
   PreToolUse:
@@ -15,20 +15,16 @@ hooks:
 
 # PR Review
 
-Review a GitHub PR (by number) or the current branch diff against `criteria/` files, then post the result if a PR number was provided.
+**Primary job: find bugs.** Security issues, logic errors, off-by-ones, race conditions, error-handling gaps, edge cases, broken invariants. Cite `file:line` for every finding. Tag severity AND confidence.
 
-## 0. Dispatch as background agent (default)
+Files in `criteria/` are **additive extras**, not the review. They may fire or not. They never replace the bug pass.
 
-This skill **defaults to backgrounding itself** as a named agent so reviews show up in `claude agents`. Foreground execution is opt-in via `--fg`.
+## 0. Dispatch (default background)
 
 Parse `$ARGUMENTS`:
-- If `--fg` is present anywhere in the arguments → strip it and proceed to step 1 in the current session.
-- If a PR number is present (a bare integer like `18`) and `--fg` is **not** present → dispatch a background and STOP. Do not perform the review in this session.
-- If no PR number and no `--fg` → there's no name to derive (branch reviews use the working-directory context). Proceed to step 1 in the current session and skip the dispatch.
-
-### Background dispatch
-
-Derive the project name from the current git repo and run exactly this (mirrors `/dispatch`'s `spawn.sh`):
+- `--fg` present → strip it; proceed to step 1 in current session.
+- PR number present, no `--fg` → dispatch background and STOP.
+- No PR number, no `--fg` → foreground branch review.
 
 ```bash
 PROJECT=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null)
@@ -43,67 +39,72 @@ SESSION_OUTPUT=$(claude --bg \
 SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
 ```
 
-Substitute `<PR>` with the PR number. Then report to the user, plainly:
+Report: `Dispatched as $PROJECT-review-<PR> (session <SESSION_ID>). Open claude agents to watch.` If `SESSION_ID` empty, surface `SESSION_OUTPUT` and stop. Do not fall back to foreground.
 
-> Dispatched `/pr-review <PR>` as background agent **$PROJECT-review-<PR>** (session `<SESSION_ID>`). Open `claude agents` to watch or attach.
+## 1. Read the diff end-to-end
 
-If `SESSION_ID` is empty, surface `SESSION_OUTPUT` to the user and stop — do not silently fall back to running in foreground.
+`gh pr diff <n>` (or `git diff main...HEAD`). Read every changed line. If >3k lines, spawn one Explore subagent per logical module and synthesize.
 
-Then STOP. The child session will execute the review with `--fg` set; this session has nothing more to do.
+## 2. Find bugs (primary pass)
 
-## 1. Resolve scope
+For every changed file, ask:
 
-- **Arg is a PR number** (e.g. `/pr-review --fg 18`) → `gh pr view <n>` and `gh pr diff <n>` from the current repo. If `-R owner/repo` is needed, infer from the working directory or ask once.
-- **No arg** → `git diff main...HEAD` (or `master`, whichever is the default branch). No auto-post — output stays in chat.
+- **Correctness**: Off-by-ones. Fence-post errors. Wrong operator (`<` vs `<=`, `&&` vs `||`). Inverted conditions. Mutation of caller's state.
+- **Null/undefined**: Properties accessed on values that can be null/undefined. Optional chaining masking real bugs. Empty array/string assumptions.
+- **Async/race**: Stale closures over mutable refs. Promise chains without `catch`. State writes after unmount. Concurrent reads of state being mutated. AbortController usage. Out-of-order delivery.
+- **Error handling**: Silent `catch` that swallows real errors. Missing error paths in network/IO code. Errors thrown across realm/process boundaries.
+- **Security**: Injection (SQL, command, prompt, XSS, template). Secrets in logs/responses. Auth checks missing or bypassed. Path traversal. Deserialization of untrusted input. Prototype pollution.
+- **Resource/lifecycle**: Leaks (event listeners, timers, file handles, subscriptions). Cleanup missing on unmount/teardown. Unbounded growth (caches, logs, arrays).
+- **Tests**: Asserting the wrong thing (smoke-test passes regardless of bug). Mocks that hide the bug being claimed fixed. Snapshots without semantic checks.
 
-## 2. Load criteria
+Every concrete bug → finding with `file:line`. If uncertain whether something is a bug, tag `**Confidence:** Low` rather than dropping it. Better to over-flag with explicit uncertainty than silently miss.
 
-Read every file in `criteria/`. Each file is one criterion:
-- **What it says** — the rule.
-- **Why** — the reason / incident.
-- **How to spot** — concrete signals in a diff.
+## 3. Apply criteria (additive extras)
 
-Apply *all* loaded criteria to the diff. If a criterion plainly doesn't apply (e.g. `doc-audit` on a PR with no body claims), say so explicitly in the chat output and omit it from the `Criteria applied` header line.
-
-## 3. Walk the checklist
-
-Follow `checklist.md` in order. Don't reorder, don't skip. If a step doesn't apply, write "n/a — <one-line reason>" and continue.
+For each file in `criteria/`: read it, check the diff against its rule. If it applies, add citing findings. If it doesn't apply, omit it from the `Criteria applied` header. **Criteria never replace step 2.**
 
 ## 4. Compose the output
 
-Use `header.md` as the literal prefix (substitute `{criteria}` with the comma-separated list of criteria that actually produced findings or were affirmatively checked).
+Use `header.md` as the literal prefix. Substitute `{criteria}` with `general` plus any criteria slugs that fired (e.g. `general, doc-audit`). `general` is always listed since step 2 always runs.
 
-Each finding follows this block:
+Each finding:
 
 ```
-### <Verb-first title — what to do, not what's wrong>
+### <Verb-first title — what to fix, not what's wrong>
 
 **Severity:** Blocker | Concern | Nit
-**Criterion:** `<criterion-slug>`
-**Where:** `<file:line>` (or file path if line isn't meaningful)
+**Confidence:** High | Med | Low
+**Criterion:** general | <criterion-slug>
+**Where:** `<file:line>`
 **Issue:** <one paragraph, plain English, no jargon>
-**Suggested fix:** <concrete action — what to change>
+**Suggested fix:** <concrete action>
 
 ```diff
-- current shape
-+ proposed shape
+- current
++ proposed
 ```
 ```
 
-Sort findings: Blockers first, then Concerns, then Nits. Within each tier, group by criterion.
+If step 2 turned up zero bug-class findings, say so explicitly:
 
-If there are zero findings, still emit the header and a single `## Findings` section with `_No findings — all loaded criteria passed._`
+```
+_No bug-class findings — diff reviewed line by line._
+```
+
+The post-validation hook requires either a `file:line` citation in the body or this explicit no-findings line.
+
+Sort findings: Blockers → Concerns → Nits. Within tier, group by criterion (`general` first).
 
 ## 5. Deliver
 
-- **Always** write the full review in chat first.
-- **If a PR number was given**: after the user has seen the chat output, post via `gh pr review <n> --comment -b "$(cat <<'EOF' … EOF)"`. The post-validation hook will block if the header or citations are missing — don't bypass it; fix and retry.
-- **No PR number**: stop after chat output.
+- Write the full review in chat first.
+- If a PR number was given, post via `gh pr review <n> --comment -b "$(cat <<'EOF' … EOF)"`. The hook will block on missing header or missing engagement signal — fix the body and retry; do not bypass.
+- No PR number → stop after chat.
 
-## Adding a new criterion later
+## Adding a criterion later
 
-1. Drop a new file in `criteria/<slug>.md` following the existing shape (What / Why / How to spot).
-2. No edits to `SKILL.md` needed — step 2 globs `criteria/`.
-3. If the criterion is mechanically enforceable on the *posted* output, extend `hooks/check-post.sh` (sibling to this file) with the new check.
+1. Drop a new file at `criteria/<slug>.md` (What / Why / How to spot / When NOT / Severity).
+2. No edits needed — step 3 globs `criteria/`.
+3. If mechanically enforceable on the *posted* output, extend `hooks/check-post.sh`.
 
-Keep criteria files tight: one rule, one example, one sentence on when *not* to apply. Sprawl makes the skill slow and noisy.
+Criteria are gates, not the review. Keep each file tight.
