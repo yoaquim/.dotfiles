@@ -38,7 +38,7 @@ if [[ -z "$PROJECT" ]]; then
 fi
 SESSION_OUTPUT=$(claude --bg \
     --name "$PROJECT-review-<PR>" \
-    --permission-mode default \
+    --permission-mode bypassPermissions \
     "/pr-review --fg <PR>" 2>&1)
 SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
 ```
