@@ -40,17 +40,41 @@ MARKER_DIR="$HOME/.dispatch/state"
 mkdir -p "$MARKER_DIR"
 MARKER="$MARKER_DIR/reviewer-pr-${PR}.session"
 
+# Treat anything NOT in this terminal-state list as alive (covers
+# "working", "needs_input", "blocked", "starting", future states, etc.).
+# Empirically observed states include: working | blocked | done.
+TERMINAL_STATES_RE='^(done|failed|errored|completed|killed)$'
+
 is_alive() {
   local session_id="$1"
   [[ -z "$session_id" ]] && return 1
   local state_file="$HOME/.claude/jobs/$session_id/state.json"
   [[ -f "$state_file" ]] || return 1
-  jq -e '.state == "working" or .state == "needs_input"' "$state_file" >/dev/null 2>&1
+  local state
+  state=$(jq -r '.state // ""' "$state_file" 2>/dev/null)
+  [[ -z "$state" ]] && return 1
+  [[ "$state" =~ $TERMINAL_STATES_RE ]] && return 1
+  return 0
 }
 
-# Skip if existing session is still working.
+marker_age_seconds() {
+  local mtime
+  mtime=$(stat -f %m "$MARKER" 2>/dev/null || stat -c %Y "$MARKER" 2>/dev/null || echo 0)
+  echo $(( $(date +%s) - mtime ))
+}
+
+# Skip when:
+#   1. Marker was written < 90s ago — the session is still booting; state.json
+#      may not exist yet. Without this, fast runner loops respawn during the
+#      gap between `claude --bg` returning and state.json being written.
+#   2. Marker points to a session whose state.json reports a non-terminal state.
 if [[ -f "$MARKER" ]]; then
   EXISTING=$(cat "$MARKER" 2>/dev/null || echo "")
+  AGE=$(marker_age_seconds)
+  if (( AGE < 90 )); then
+    echo "skip: marker fresh (${AGE}s ago, session $EXISTING)"
+    exit 0
+  fi
   if is_alive "$EXISTING"; then
     echo "skip: reviewer alive for PR $PR (session $EXISTING)"
     exit 0
