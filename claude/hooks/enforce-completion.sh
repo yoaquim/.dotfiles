@@ -3,10 +3,19 @@
 #
 # Blocks the agent from ending until:
 #   1. A PR exists for the current branch (forces /pr).
-#   2. One bot-review pass on that PR is clean (forces address-then-exit).
+#   2. The PR title + body conform to /pr conventions.
+#   3. The runner's status file reports a terminal state.
 #
-# Skips entirely when not inside a dispatch session (no status file) or when
-# the runner has explicitly marked the work `status: failed`.
+# Terminal statuses (allow exit):
+#   - completed             — APPROVED + CI green, or PR merged
+#   - needs_review          — loop cap / timeout reached
+#   - closed-without-merge  — PR was closed without merging
+#   - failed                — runner gave up on the work itself
+#
+# Anything else (in_progress, addressing_reviews, etc.) → exit 2, runner
+# re-engages and continues the unified review loop in runner.md.
+#
+# Skips entirely when not inside a dispatch session (no status file).
 #
 # Exit 0  → allow stop.
 # Exit 2  → block stop; stderr is fed back to the agent as a new instruction.
@@ -31,14 +40,37 @@ STATUS_FILE="$DISPATCH_ROOT/.dispatch/status/$NAME.md"
 # Not a dispatch runner — let normal Stop happen.
 [[ -f "$STATUS_FILE" ]] || exit 0
 
-# Failed runs are allowed to exit (runner.md already pushes the branch).
-if grep -qE '^\s*-\s*\*\*status\*\*:\s*failed' "$STATUS_FILE"; then
+# Helper: extract current status value from the status file.
+# Status file format: `- **status**: <value>`. Returns lowercase value, trimmed.
+read_status() {
+  awk -F':' '
+    tolower($0) ~ /^[[:space:]]*-[[:space:]]*\*\*status\*\*[[:space:]]*:/ {
+      # Everything after the first colon
+      sub(/^[^:]*:/, "", $0)
+      # Trim
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
+      print tolower($0)
+      exit
+    }
+  ' "$STATUS_FILE"
+}
+
+is_terminal() {
+  case "$1" in
+    completed|needs_review|closed-without-merge|failed) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+STATUS=$(read_status)
+
+# Terminal → allow exit immediately. The runner has finalized its work.
+if is_terminal "$STATUS"; then
   exit 0
 fi
 
 STATE_DIR="$DISPATCH_ROOT/.dispatch/state"
 mkdir -p "$STATE_DIR"
-REVIEW_PASS_MARKER="$STATE_DIR/$NAME.review-pass"
 ATTEMPT_FILE="$STATE_DIR/$NAME.attempts"
 
 # --- Escape valve: cap stop attempts to avoid pathological loops ---
@@ -47,10 +79,14 @@ ATTEMPTS=$((ATTEMPTS + 1))
 echo "$ATTEMPTS" > "$ATTEMPT_FILE"
 
 if [[ $ATTEMPTS -gt 8 ]]; then
-  if ! grep -qE '^\s*-\s*\*\*status\*\*:\s*needs_review' "$STATUS_FILE"; then
-    sed -i.bak -E 's/^(\s*-\s*\*\*status\*\*:\s*).*/\1needs_review/' "$STATUS_FILE" \
-      && rm -f "${STATUS_FILE}.bak"
-  fi
+  # Rewrite the status line via awk (macOS sed lacks /I case-insensitive flag).
+  awk '
+    !done && tolower($0) ~ /^[[:space:]]*-[[:space:]]*\*\*status\*\*[[:space:]]*:/ {
+      sub(/:.*/, ": needs_review")
+      done = 1
+    }
+    { print }
+  ' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
   echo "enforce-completion: >8 stop attempts; allowing stop with status=needs_review" >&2
   exit 0
 fi
@@ -61,23 +97,24 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "<unknown>")
 PR_NUMBER=$(gh pr view --json number -q '.number' 2>/dev/null || true)
 if [[ -z "$PR_NUMBER" ]]; then
   cat >&2 <<EOF
-You cannot end this session yet. Complete the ship sequence:
+You cannot end this session yet. Status is "$STATUS" (non-terminal) and no PR exists yet.
+
+Complete the ship sequence:
 
 1. Run a final self-review of the diff. Fix anything obvious.
 2. Run \`/pr\` to create the pull request for branch \`$BRANCH\`.
-3. After the PR is open, wait ~60 seconds for bot reviewers
-   (Codex, CodeRabbit, github-actions) to weigh in.
-4. Run \`~/.claude/scripts/check-pr-reviews.sh <pr-number>\` and address
-   any unresolved bot comments or failing bot checks.
+3. After the PR is open, spawn the reviewer and enter the unified review loop
+   per runner.md "Completion". The runner is responsible for writing a terminal
+   status when the loop ends.
 
-Then try to end again. This Stop hook will re-evaluate.
+Then try to end again. This hook will re-evaluate.
 EOF
   exit 2
 fi
 
 # --- Gate 1.5: PR content must conform to /pr conventions ---
-# Authoritative gate: re-validate the actual created PR (the PreToolUse hook
-# is best-effort on title; heredoc bodies bypass its body check).
+# Re-validate the actual created PR (the PreToolUse hook is best-effort on
+# title; heredoc bodies bypass its body check).
 PR_CONTENT=$(gh pr view "$PR_NUMBER" --json title,body 2>/dev/null || echo '{}')
 PR_TITLE=$(jq -r '.title // ""' <<<"$PR_CONTENT" 2>/dev/null || echo "")
 PR_BODY=$(jq -r '.body // ""' <<<"$PR_CONTENT" 2>/dev/null || echo "")
@@ -121,40 +158,23 @@ if (( ${#CONTENT_ERRORS[@]} > 0 )); then
   exit 2
 fi
 
-# --- Gate 2: one clean review pass must be recorded ---
-if [[ -f "$REVIEW_PASS_MARKER" ]]; then
-  exit 0
-fi
-
-REVIEW_JSON=$(bash "$HOME/.claude/scripts/check-pr-reviews.sh" "$PR_NUMBER" 2>/dev/null || echo '{}')
-CLEAN=$(jq -r '.clean // false' <<<"$REVIEW_JSON" 2>/dev/null || echo false)
-PENDING=$(jq -r '.pending_checks // 0' <<<"$REVIEW_JSON" 2>/dev/null || echo 0)
-UNRESOLVED=$(jq -r '.unresolved_comments // 0' <<<"$REVIEW_JSON" 2>/dev/null || echo 0)
-FAILING=$(jq -c '.failing_checks // []' <<<"$REVIEW_JSON" 2>/dev/null || echo '[]')
-
-if [[ "$CLEAN" == "true" ]]; then
-  touch "$REVIEW_PASS_MARKER"
-  exit 0
-fi
+# --- Gate 2: status must be terminal ---
+# Get fresh state to include in the message.
+STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR_NUMBER" 2>/dev/null || echo '{}')
 
 {
-  echo "You cannot end this session yet. PR #$PR_NUMBER is open but bot reviewers are not satisfied."
+  echo "You cannot end this session yet. Status is \"$STATUS\" (non-terminal)."
   echo
-  echo "check-pr-reviews.sh result:"
-  echo "  $REVIEW_JSON"
+  echo "PR #$PR_NUMBER state:"
+  echo "  $STATE_JSON"
   echo
-  if [[ "$PENDING" -gt 0 ]]; then
-    echo "- $PENDING bot check(s) still running. Wait ~60s, then try to end again so this hook re-evaluates."
-  fi
-  if [[ "$UNRESOLVED" -gt 0 ]]; then
-    echo "- $UNRESOLVED unresolved bot comment(s). Fetch with:"
-    echo "    gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments"
-    echo "  Address them, commit, push."
-  fi
-  if [[ "$FAILING" != "[]" ]]; then
-    echo "- Failing bot checks: $FAILING. Fix the underlying issues, commit, push."
-  fi
+  echo "Re-enter the unified review loop in runner.md \"Completion\":"
+  echo "  - Run: ~/.claude/scripts/check-pr-state.sh $PR_NUMBER"
+  echo "  - Address unresolved threads → commit → push → ~/.claude/skills/dispatch/resolve-thread.sh <id>"
+  echo "  - Re-spawn reviewer: claude --bg --permission-mode bypassPermissions \"/pr-review $PR_NUMBER\""
+  echo "  - Sleep 60s if idle, then re-check"
   echo
-  echo "After acting, try to end again. The hook re-runs the check each turn."
+  echo "Write a terminal status (completed | needs_review | closed-without-merge | failed)"
+  echo "in the status file when the loop ends. The hook re-runs the check each turn."
 } >&2
 exit 2

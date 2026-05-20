@@ -82,15 +82,52 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
 1. Full test suite passing
 2. `git push -u origin <branch>`
 3. `/pr` to review and create PR. Required — `gh pr create` is hook-blocked unless it conforms to the same rules, so there is no manual fallback.
-4. **Review loop** — resolve machine review comments (Codex, CodeRabbit):
-   - Wait 60s after push for reviews to arrive
-   - Run `~/.claude/scripts/check-pr-reviews.sh <pr-number>`
-   - If `clean: true` → done
-   - If `pending_checks > 0` → wait 60s, re-check (max 5min)
-   - If `unresolved_comments > 0` or `failing_checks` → fetch comments via `gh api repos/{owner}/{repo}/pulls/{number}/comments`, fix issues, commit, push, re-check
-   - Max 5 fix iterations. After 5 → status `needs_review`, stop.
-   - **Ignore human reviews entirely** — only act on bot comments.
-5. Status → `completed`, list all commits, brief Notes summary
+4. **Compose reviewer session name**:
+
+   ```bash
+   PROJECT=$(gh repo view --json name -q '.name')
+   BRANCH=$(git rev-parse --abbrev-ref HEAD)
+   TICKET=$(echo "$BRANCH" | grep -ioE '[a-z]+-[0-9]+' | head -1 | tr 'A-Z' 'a-z')
+   if [[ -n "$TICKET" ]]; then
+     REVIEW_NAME="${PROJECT}-review-${TICKET}-pr-${PR}"
+   else
+     REVIEW_NAME="${PROJECT}-review-pr-${PR}"
+   fi
+   ```
+
+5. **Unified review loop** — runner side of the ping-pong. Address unresolved threads as they appear; let `/pr-review` handle the reviewing.
+
+   Constraints: max 480 iterations (≈8hr at 60s/iter), max 20 fix iterations. Status file is the resumption point — on every iteration, update status with `iteration: N` and `loop_started: <ISO>` so a re-entered session can pick up.
+
+   **Reviewer spawning is delegated to `spawn-reviewer.sh`** — it's idempotent (checks an existing session's liveness and skips if alive). Call it every iteration; it does the right thing. `/pr-review` itself has its own watch loop that re-reviews on each new commit, so the runner doesn't need a per-commit spawn — one alive session covers the whole PR.
+
+   Each iteration:
+   1. `~/.claude/skills/dispatch/spawn-reviewer.sh "$PR" --name "$REVIEW_NAME"` (idempotent; spawns only if no alive reviewer for this PR)
+   2. `STATE=$(~/.claude/scripts/check-pr-state.sh "$PR")`
+   3. Parse `.pr_state`, `.review_decision`, `.ci_green`, `.unresolved_threads`
+   4. **Terminal checks** (in order):
+      - `pr_state == MERGED` → status `completed`, exit
+      - `pr_state == CLOSED` → status `closed-without-merge`, exit
+      - `review_decision == APPROVED` AND `ci_green == true` → status `completed`, exit
+      - 8hr wall time elapsed → status `needs_review`, exit
+      - 20 fix iterations exhausted → status `needs_review`, exit
+   5. **Work check** — if `unresolved_threads` is non-empty:
+      - Group threads by file when sensible; otherwise address one at a time
+      - For each: read the thread body + path + line, fix in-place, commit (imperative, atomic)
+      - `git push` — `/pr-review`'s watch loop will detect the new SHA and re-review automatically; the runner does NOT spawn the reviewer here
+      - For each thread the commit addresses: `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>`
+      - Increment fix-iteration counter in status
+   6. **Always sleep 60s at end of iteration**, then loop again.
+
+      Don't skip the sleep "because new work is coming" — the reviewer needs time to read the new commit and post. Skipping causes the loop to re-poll the same stale state and re-trigger work that's already in flight.
+
+   The ping-pong is between two complementary loops:
+   - **Runner** (this loop): addresses unresolved threads, pushes commits, watches PR state for terminal conditions.
+   - **`/pr-review`** (its own watch loop, spawned by `spawn-reviewer.sh`): re-reviews on every new commit, posts APPROVE when clean.
+
+   Both share GitHub state as the contract. Works the same whether external bot reviewers (CodeRabbit, Codex) are present or not; their threads show up in `unresolved_threads` alongside `/pr-review`'s.
+
+6. On terminal exit, finalize: list all commits, brief Notes summary in status file.
 
 ## Failure
 
