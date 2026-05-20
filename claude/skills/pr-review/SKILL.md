@@ -170,7 +170,9 @@ The hook (`hooks/check-post.sh`) reads the payload file and blocks on: missing h
 
 ## 6. Watch loop (default; skipped when `--once`)
 
-After delivering, stay alive and re-review on every new commit until terminal. Skip when: `--once` passed, branch mode (no PR), or initial review was `APPROVE`.
+After delivering, stay alive and re-review on every new commit until the PR is merged, closed, or 8hr cap hits. Skip only when: `--once` passed, or branch mode (no PR).
+
+**Critical:** don't exit on your own APPROVE or on `reviewDecision == APPROVED`. APPROVED-and-waiting-for-merge means keep watching — new commits may still arrive (the runner pushing more work, the author pushing manually). Exit only on terminal PR state.
 
 Record the reviewed SHA, then poll every 60s (8hr cap):
 
@@ -181,18 +183,16 @@ START=$(date +%s)
 while (( $(date +%s) - START < 28800 )); do
   sleep 60
   STATE=$(~/.claude/scripts/check-pr-state.sh "$PR")
-  [[ "$(jq -r .pr_state <<<"$STATE")" != "OPEN" ]] && break       # merged/closed
-  [[ "$(jq -r '.review_decision // ""' <<<"$STATE")" == "APPROVED" ]] && break
+  [[ "$(jq -r .pr_state <<<"$STATE")" != "OPEN" ]] && break   # merged or closed → done
   SHA=$(jq -r .head_sha <<<"$STATE")
   if [[ -n "$SHA" && "$SHA" != "$LAST_SHA" ]]; then
     # New commit → redo steps 1–5 on the fresh diff. Update LAST_SHA after posting.
     LAST_SHA="$SHA"
-    # If the post was APPROVE → break (exits the loop).
   fi
 done
 ```
 
-"Redo steps 1–5" = re-run `gh pr diff <pr>`, re-apply `bug-checklist.md`, compose, deliver. Fresh review of the new state, not a diff vs. last review.
+"Redo steps 1–5" = re-run `gh pr diff <pr>`, re-apply `bug-checklist.md`, compose, deliver. Fresh review of the new state.
 
 ## Extending
 
