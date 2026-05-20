@@ -82,7 +82,7 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
 1. Full test suite passing
 2. `git push -u origin <branch>`
 3. `/pr` to review and create PR. Required — `gh pr create` is hook-blocked unless it conforms to the same rules, so there is no manual fallback.
-4. **Compose reviewer session name**:
+4. **Spawn `/pr-review` ONCE** — it has its own watch loop and Stop hook; no respawning.
 
    ```bash
    PROJECT=$(gh repo view --json name -q '.name')
@@ -93,39 +93,25 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
    else
      REVIEW_NAME="review-${PROJECT}-pr-${PR}"
    fi
+   claude --bg --permission-mode bypassPermissions --name "$REVIEW_NAME" "/pr-review --fg $PR" > /dev/null 2>&1
    ```
 
-5. **Unified review loop** — runner side of the ping-pong. Address unresolved threads as they appear; let `/pr-review` handle the reviewing.
+5. **Runner review loop**: address unresolved threads, push commits, watch PR state until terminal.
 
-   Constraints: max 480 iterations (≈8hr at 60s/iter), max 20 fix iterations. Status file is the resumption point — on every iteration, update status with `iteration: N` and `loop_started: <ISO>` so a re-entered session can pick up.
-
-   **Reviewer spawning is delegated to `spawn-reviewer.sh`** — it's idempotent (checks an existing session's liveness and skips if alive). Call it every iteration; it does the right thing. `/pr-review` itself has its own watch loop that re-reviews on each new commit, so the runner doesn't need a per-commit spawn — one alive session covers the whole PR.
+   Constraints: 8hr cap, 20 fix iterations.
 
    Each iteration:
-   1. `~/.claude/skills/dispatch/spawn-reviewer.sh "$PR" --name "$REVIEW_NAME"` (idempotent; spawns only if no alive reviewer for this PR)
-   2. `STATE=$(~/.claude/scripts/check-pr-state.sh "$PR")`
-   3. Parse `.pr_state`, `.review_decision`, `.ci_green`, `.unresolved_threads`
-   4. **Terminal checks** (in order):
+   1. `STATE=$(~/.claude/scripts/check-pr-state.sh "$PR")`
+   2. **Terminal**:
       - `pr_state == MERGED` → status `completed`, exit
       - `pr_state == CLOSED` → status `closed-without-merge`, exit
-      - `review_decision == APPROVED` AND `ci_green == true` → status `completed`, exit
-      - 8hr wall time elapsed → status `needs_review`, exit
-      - 20 fix iterations exhausted → status `needs_review`, exit
-   5. **Work check** — if `unresolved_threads` is non-empty:
-      - Group threads by file when sensible; otherwise address one at a time
-      - For each: read the thread body + path + line, fix in-place, commit (imperative, atomic)
-      - `git push` — `/pr-review`'s watch loop will detect the new SHA and re-review automatically; the runner does NOT spawn the reviewer here
-      - For each thread the commit addresses: `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>`
-      - Increment fix-iteration counter in status
-   6. **Always sleep 60s at end of iteration**, then loop again.
-
-      Don't skip the sleep "because new work is coming" — the reviewer needs time to read the new commit and post. Skipping causes the loop to re-poll the same stale state and re-trigger work that's already in flight.
-
-   The ping-pong is between two complementary loops:
-   - **Runner** (this loop): addresses unresolved threads, pushes commits, watches PR state for terminal conditions.
-   - **`/pr-review`** (its own watch loop, spawned by `spawn-reviewer.sh`): re-reviews on every new commit, posts APPROVE when clean.
-
-   Both share GitHub state as the contract. Works the same whether external bot reviewers (CodeRabbit, Codex) are present or not; their threads show up in `unresolved_threads` alongside `/pr-review`'s.
+      - `review_decision == APPROVED` AND `ci_green` → status `completed`, exit
+      - 8hr cap → status `needs_review`, exit
+      - 20 fix iterations → status `needs_review`, exit
+   3. **Work** — if `unresolved_threads` non-empty:
+      - Fix in place, commit, `git push` (the reviewer's watch loop sees the new SHA and re-reviews)
+      - `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>` for each addressed
+   4. `sleep 60`, loop.
 
 6. On terminal exit, finalize: list all commits, brief Notes summary in status file.
 

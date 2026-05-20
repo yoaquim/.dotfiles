@@ -11,6 +11,11 @@ hooks:
         - type: command
           command: "$HOME/.claude/skills/pr-review/hooks/check-post.sh"
           timeout: 10
+  Stop:
+    - hooks:
+        - type: command
+          command: "$HOME/.claude/skills/pr-review/hooks/enforce-watch.sh"
+          timeout: 10
 ---
 
 # PR Review
@@ -168,31 +173,24 @@ Event semantics:
 
 The hook (`hooks/check-post.sh`) reads the payload file and blocks on: missing header in body, or zero engagement (empty `comments[]` AND no `_No bug-class findings_` line in body). Fix the body/comments and retry — do not bypass.
 
-## 6. Watch loop (default; skipped when `--once`)
+## 6. Watch loop (default; `--once` skips)
 
-After delivering, stay alive and re-review on every new commit until the PR is merged, closed, or 8hr cap hits. Skip only when: `--once` passed, or branch mode (no PR).
-
-**Critical:** don't exit on your own APPROVE or on `reviewDecision == APPROVED`. APPROVED-and-waiting-for-merge means keep watching — new commits may still arrive (the runner pushing more work, the author pushing manually). Exit only on terminal PR state.
-
-Record the reviewed SHA, then poll every 60s (8hr cap):
+After delivering, never voluntarily exit. The Stop hook (`enforce-watch.sh`) blocks Stop until PR is MERGED/CLOSED or 8hr cap. Loop just keeps the session productive:
 
 ```bash
-LAST_SHA=$(jq -r '.head_sha' <<<"$(~/.claude/scripts/check-pr-state.sh "$PR")")
-START=$(date +%s)
-
-while (( $(date +%s) - START < 28800 )); do
+LAST_SHA=$(jq -r .head_sha <<<"$(~/.claude/scripts/check-pr-state.sh "$PR")")
+while true; do
   sleep 60
   STATE=$(~/.claude/scripts/check-pr-state.sh "$PR")
-  [[ "$(jq -r .pr_state <<<"$STATE")" != "OPEN" ]] && break   # merged or closed → done
   SHA=$(jq -r .head_sha <<<"$STATE")
   if [[ -n "$SHA" && "$SHA" != "$LAST_SHA" ]]; then
-    # New commit → redo steps 1–5 on the fresh diff. Update LAST_SHA after posting.
     LAST_SHA="$SHA"
+    # New commit → redo steps 1–5 on the fresh diff, then continue looping.
   fi
 done
 ```
 
-"Redo steps 1–5" = re-run `gh pr diff <pr>`, re-apply `bug-checklist.md`, compose, deliver. Fresh review of the new state.
+Terminal exit is the Stop hook's job, not the loop's. If `pr_state != OPEN` or 8hr has passed, the hook lets Stop through on the next iteration's natural Stop attempt.
 
 ## Extending
 
