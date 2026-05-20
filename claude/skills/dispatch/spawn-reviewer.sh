@@ -88,7 +88,7 @@ fi
 # Compose default name if caller didn't supply one.
 if [[ -z "$NAME" ]]; then
   PROJECT=$(gh repo view --json name -q '.name' 2>/dev/null || echo "pr")
-  NAME="${PROJECT}-review-pr-${PR}"
+  NAME="review-${PROJECT}-pr-${PR}"
 fi
 
 SPAWN_OUTPUT=$(claude --bg \

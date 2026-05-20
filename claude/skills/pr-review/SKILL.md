@@ -47,9 +47,9 @@ TICKET=$(jq -r '"\(.headRefName // "") \(.title // "")"' <<<"$PR_META" \
   | grep -ioE '[a-z]+-[0-9]+' | head -1 | tr 'A-Z' 'a-z')
 
 if [[ -n "$TICKET" ]]; then
-  SESSION_NAME="${PROJECT}-review-${TICKET}-pr-${PR}"
+  SESSION_NAME="review-${PROJECT}-${TICKET}-pr-${PR}"
 else
-  SESSION_NAME="${PROJECT}-review-pr-${PR}"
+  SESSION_NAME="review-${PROJECT}-pr-${PR}"
 fi
 ```
 
