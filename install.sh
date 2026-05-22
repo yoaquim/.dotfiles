@@ -619,6 +619,7 @@ install_brew_casks() {
         "codex-app"
         "covalent"
         "cyberduck"
+        "1password-cli"
         # "docker" # skipping Docker for now, due to bug in package install
         "folx"
         "google-chrome"

@@ -171,7 +171,7 @@ STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR_NUMBER" 2>/dev/
   echo "Re-enter the unified review loop in runner.md \"Completion\":"
   echo "  - Run: ~/.claude/scripts/check-pr-state.sh $PR_NUMBER"
   echo "  - Address unresolved threads → commit → push → ~/.claude/skills/dispatch/resolve-thread.sh <id>"
-  echo "  - Re-spawn reviewer: claude --bg --permission-mode bypassPermissions \"/pr-review $PR_NUMBER\""
+  echo "  - The already-running /pr-review session watches HEAD SHA and re-reviews on push. Do NOT spawn another."
   echo "  - Sleep 60s if idle, then re-check"
   echo
   echo "Write a terminal status (completed | needs_review | closed-without-merge | failed)"
