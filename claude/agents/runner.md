@@ -18,6 +18,12 @@ hooks:
         - type: command
           command: "$HOME/.claude/hooks/enforce-completion.sh"
           timeout: 30
+  PreToolUse:
+    - matcher: "Edit|Write|MultiEdit"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/check-comment-slop.sh"
+          timeout: 10
 ---
 
 # Runner Agent
@@ -127,6 +133,7 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
 
 - TDD mandatory — test first, no exceptions
 - One commit per task, atomic. No co-authorship trailers.
+- **No comments by default** — see `~/.claude/practices/no-comments.md`. Never reference tickets, Linear, or task context in code. A `PreToolUse` hook blocks the worst slop.
 - Stay in scope
 - Follow practices from `~/.claude/practices/` and `<repo>/.practices/` (local overrides global by filename)
 - Use discovery findings from prompt — don't re-explore from scratch
