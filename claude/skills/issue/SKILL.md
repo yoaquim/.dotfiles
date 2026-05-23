@@ -65,10 +65,11 @@ Validate via `~/.claude/scripts/validate-title.sh "Title"`. Don't call `save_iss
 Rules:
 - **Concise noun phrase**, 2-7 words, **Title Case**
 - **No verb prefixes** ("Add", "Fix", "Update", "Implement")
+- **No ticket ID prefix** ("PER-83", "ABC-123") — Linear adds the identifier automatically
 - **Area prefix with colon** when it adds clarity
 
 Good: `Credential Expiry Tracker`, `Dashboard Nil Commission`, `MSAL SSO: Token Renewal Fallback`
-Bad: `Add credential tracking feature`, `Fix the bug with notes`
+Bad: `Add credential tracking feature`, `Fix the bug with notes`, `PER-83: Credential Tracker`
 
 ### Description
 

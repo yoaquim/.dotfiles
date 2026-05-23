@@ -97,7 +97,7 @@ Two outputs to compose:
 **(b) Inline comment per finding** — one resolvable thread on the cited `file:line`. Format each comment as:
 
 ```
-### <Verb-first title — what to fix>
+### <Noun-phrase title in Title Case>
 
 **Severity:** Blocker | Concern | Nit
 **Confidence:** High | Med | Low
@@ -110,6 +110,15 @@ Two outputs to compose:
 + proposed
 ```
 ```
+
+**Title rules** (same spirit as `/issue`):
+- Concise noun phrase, 2-7 words, Title Case
+- No verb prefixes ("Add", "Fix", "Update", "Implement", "Refactor")
+- No ticket ID prefix ("PER-83", "ABC-123") — the PR already carries it
+- Area prefix with colon when it adds clarity
+
+Good: `Null Check: user.email`, `Race Condition: Stale Cache Read`, `Missing Await: fetchUser`
+Bad: `Fix null check on user.email`, `PER-83: Null Check`, `Update error handling`
 
 (No `**Where:**` line — `path` and `line` are structural on the comment itself.)
 
