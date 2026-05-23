@@ -5,75 +5,86 @@ INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 [ -z "$CWD" ] && CWD="."
 
-PRACTICES_DIR="$HOME/.claude/practices"
-INDEX="$PRACTICES_DIR/INDEX.md"
-
-[ ! -f "$INDEX" ] && exit 0
+GLOBAL_DIR="$HOME/.claude/practices"
+GLOBAL_INDEX="$GLOBAL_DIR/INDEX.md"
+LOCAL_DIR="$CWD/.practices"
+LOCAL_INDEX="$LOCAL_DIR/INDEX.md"
 
 INJECTED=""
 FALLBACK=""
+SEEN_FILES=""
 
-# Parse the markdown table: skip header and separator lines, read rows
-while IFS='|' read -r _ practice file _ detect _; do
-  # Trim whitespace
-  practice=$(echo "$practice" | xargs)
-  file=$(echo "$file" | xargs | tr -d '`')
-  detect=$(echo "$detect" | xargs)
+process_index() {
+  local index_file="$1"
+  local base_dir="$2"
+  local source_label="$3"
 
-  [ -z "$file" ] && continue
-  [ ! -f "$PRACTICES_DIR/$file" ] && continue
+  [ ! -f "$index_file" ] && return 0
 
-  matched=false
+  while IFS='|' read -r _ practice file _ detect _; do
+    practice=$(echo "$practice" | xargs)
+    file=$(echo "$file" | xargs | tr -d '`')
+    detect=$(echo "$detect" | xargs)
 
-  if [ "$detect" = "always" ]; then
-    matched=true
+    [ -z "$file" ] && continue
+    [ ! -f "$base_dir/$file" ] && continue
 
-  elif [ -z "$detect" ]; then
-    # No detect rule — add to fallback list
-    FALLBACK="${FALLBACK}\n- ${practice} (${file})"
-    continue
+    # Local is processed first; skip if filename already seen (local overrides global).
+    case " $SEEN_FILES " in
+      *" $file "*) continue ;;
+    esac
+    SEEN_FILES="$SEEN_FILES $file"
 
-  else
-    # Handle comma-separated rules (any match wins)
-    IFS=',' read -ra RULES <<< "$detect"
-    for rule in "${RULES[@]}"; do
-      rule=$(echo "$rule" | xargs)
+    matched=false
 
-      if [[ "$rule" == *:* ]]; then
-        # file:string — check file exists and contains string
-        CHECK_FILE="${rule%%:*}"
-        CHECK_STRING="${rule#*:}"
-        if [ -f "$CWD/$CHECK_FILE" ] && grep -q "$CHECK_STRING" "$CWD/$CHECK_FILE" 2>/dev/null; then
-          matched=true
-          break
+    if [ "$detect" = "always" ]; then
+      matched=true
+
+    elif [ -z "$detect" ]; then
+      FALLBACK="${FALLBACK}\n- ${practice} (${source_label}:${file})"
+      continue
+
+    else
+      IFS=',' read -ra RULES <<< "$detect"
+      for rule in "${RULES[@]}"; do
+        rule=$(echo "$rule" | xargs)
+
+        if [[ "$rule" == *:* ]]; then
+          CHECK_FILE="${rule%%:*}"
+          CHECK_STRING="${rule#*:}"
+          if [ -f "$CWD/$CHECK_FILE" ] && grep -q "$CHECK_STRING" "$CWD/$CHECK_FILE" 2>/dev/null; then
+            matched=true
+            break
+          fi
+
+        elif [[ "$rule" == *\** ]]; then
+          if compgen -G "$CWD/$rule" > /dev/null 2>&1; then
+            matched=true
+            break
+          fi
+
+        else
+          if [ -f "$CWD/$rule" ]; then
+            matched=true
+            break
+          fi
         fi
+      done
+    fi
 
-      elif [[ "$rule" == *\** ]]; then
-        # glob pattern
-        if compgen -G "$CWD/$rule" > /dev/null 2>&1; then
-          matched=true
-          break
-        fi
+    if [ "$matched" = true ]; then
+      INJECTED="$INJECTED
+--- [${source_label}] ${practice} (${file}) ---
+$(cat "$base_dir/$file")"
+    fi
 
-      else
-        # plain filename
-        if [ -f "$CWD/$rule" ]; then
-          matched=true
-          break
-        fi
-      fi
-    done
-  fi
+  done < <(grep '^|' "$index_file" | tail -n +3)
+}
 
-  if [ "$matched" = true ]; then
-    INJECTED="$INJECTED
----
-$(cat "$PRACTICES_DIR/$file")"
-  fi
+# Local first so it wins on filename clash with global.
+process_index "$LOCAL_INDEX" "$LOCAL_DIR" "local"
+process_index "$GLOBAL_INDEX" "$GLOBAL_DIR" "global"
 
-done < <(grep '^|' "$INDEX" | tail -n +3)
-
-# Build output
 CONTENT=""
 
 if [ -n "$INJECTED" ]; then

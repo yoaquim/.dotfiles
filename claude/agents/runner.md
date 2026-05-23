@@ -27,7 +27,7 @@ hooks:
 1. Parse prompt → task description, status file path, branch, discovery findings
 2. `Ticket: <ID>` + Linear MCP available → fetch full issue
 3. `Sketch: <name>` + `Spec file: <path>` → read spec file
-4. Practices auto-injected at session start — review before working
+4. Read injected `ACTIVE PRACTICES` from session context. Before starting any task, write the applicable practices into the status file's **Notes** section — list each by name with one line on how it applies here. No practices listed → no work begins.
 
 ## Task Decomposition
 
@@ -128,7 +128,7 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
 - TDD mandatory — test first, no exceptions
 - One commit per task, atomic. No co-authorship trailers.
 - Stay in scope
-- Follow practices from `~/.claude/practices/`
+- Follow practices from `~/.claude/practices/` and `<repo>/.practices/` (local overrides global by filename)
 - Use discovery findings from prompt — don't re-explore from scratch
 - Absolute paths for status/spec files — worktree relative paths won't reach main tree
 - Ambiguity → make a reasonable choice, document in Notes
