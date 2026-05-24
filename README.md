@@ -203,11 +203,9 @@ The `install.sh` script provides several installation modes:
     ├── 🔨 hammerspoon/             # Hammerspoon automation
     │   ├── 📄 init.lua             # Hotkey and automation config
     │   └── 📄 README.md            # Hammerspoon user guide
-    ├── 🌐 rclone/                  # rclone cloud storage configuration
-    │   ├── 📄 rclone.conf          # Remote config (no secrets)
-    │   ├── 📄 mount-cave.sh        # Mount script
-    │   ├── 📄 com.rclone.cave.plist # LaunchAgent for auto-mount
-    │   └── 📄 README.md            # rclone setup guide
+    ├── 🦆 mountainduck/            # Mountain Duck S3 bookmarks
+    │   ├── 📄 cave.duck            # Cave (S3) bookmark — secret in Keychain
+    │   └── 📄 README.md            # Mountain Duck setup guide
     ├── 🔐 ssh/                     # SSH configuration
     │   └── 📄 config               # SSH config file
     ├── 📁 git/                      # Git local configuration
@@ -262,7 +260,8 @@ After installation, configurations are linked to standard locations:
 | `config/nvim/polish.lua` | `~/.config/nvim/lua/polish.lua` | Neovim customizations |
 | `config/nvim/user.lua` | `~/.config/nvim/lua/plugins/user.lua` | Neovim plugins |
 | `config/hammerspoon/` | `~/.hammerspoon/` | Hammerspoon automation |
-| `config/rclone/` | `~/.config/rclone/` | rclone cloud storage |
+| `config/mountainduck/cave.duck` | `~/Library/Group Containers/G69SCX94XU.duck/.../Bookmarks/cave.duck` | Mountain Duck bookmark |
+| `~/Library/CloudStorage/MountainDuck-Cave` | `~/Cave` | Convenience symlink to Cave mount |
 | `config/ssh/config` | `~/.ssh/config` | SSH configuration |
 | `claude/skills/` | `~/.claude/skills/` | Claude Code skills (via `claude/setup.sh`) |
 | `claude/agents/` | `~/.claude/agents/` | Claude Code agents (via `claude/setup.sh`) |
@@ -691,7 +690,7 @@ tmux list-sessions | grep -v attached | cut -d: -f1 | xargs -t -n1 tmux kill-ses
 - **[Tmux Powerline Guide](config/tmux-powerline/README.md)** - Status line setup
 - **[AstroNvim Guide](config/nvim/README.md)** - Neovim configuration
 - **[Hammerspoon Guide](config/hammerspoon/README.md)** - macOS automation setup
-- **[rclone Cave Guide](config/rclone/README.md)** - WebDAV cloud storage mount
+- **[Mountain Duck Cave Guide](config/mountainduck/README.md)** - S3 cloud storage mount
 
 ### 🔗 External Resources
 - **[Homebrew Documentation](https://brew.sh/)** - Package manager

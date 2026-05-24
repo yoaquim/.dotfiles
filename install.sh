@@ -363,7 +363,6 @@ link_symlinks() {
     create_symlink "${SCRIPT_DIR}/config/gitconfig" "$HOME/.gitconfig"
     mkdir -p "$HOME/.config/git"
     create_symlink "${SCRIPT_DIR}/config/git/ignore" "$HOME/.config/git/ignore"
-    create_symlink "${SCRIPT_DIR}/config/rclone" "$HOME/.config/rclone"
 
     # Link SSH configuration
     mkdir -p "$HOME/.ssh"
@@ -472,78 +471,6 @@ setup_hammerspoon() {
 }
 
 # ───────────────────────────────────────────────────
-# rclone Configuration and LaunchAgent Setup
-# ───────────────────────────────────────────────────
-
-setup_rclone() {
-    print_info "Setting up rclone configuration and LaunchAgent"
-
-    # Create Cave mount point directory
-    local mount_point="$HOME/Cave"
-    if [[ ! -d "${mount_point}" ]]; then
-        mkdir -p "${mount_point}"
-        print_success "Created Cave mount point at ${mount_point}"
-    fi
-
-    # Create cache directory for rclone logs
-    mkdir -p "$HOME/.cache/rclone"
-
-    # Link LaunchAgent
-    local launch_agent_dir="$HOME/Library/LaunchAgents"
-    mkdir -p "${launch_agent_dir}"
-    create_symlink "${SCRIPT_DIR}/config/rclone/com.rclone.cave.plist" "${launch_agent_dir}/com.rclone.cave.plist"
-
-    # Check if WebDAV credentials are configured in bash_profile_local
-    local bash_local="${SCRIPT_DIR}/config/bash/bash_profile_local"
-    if [[ -f "${bash_local}" ]] && grep -q "CAVE_WEBDAV_USER" "${bash_local}" 2>/dev/null; then
-        print_success "WebDAV credentials found in bash_profile_local"
-    else
-        print_warning "WebDAV credentials not configured yet"
-        echo
-        echo "  Add these to ~/.config/bash/bash_profile_local:"
-        echo "    export CAVE_WEBDAV_USER=\"your-username\""
-        echo "    export CAVE_WEBDAV_PASS=\"your-password\""
-        echo
-        echo "  Then reload: source ~/.bash_profile"
-        echo
-    fi
-
-    # Check if rclone and macfuse are installed
-    if ! command -v rclone &> /dev/null; then
-        print_warning "rclone not found - will be installed by Homebrew"
-    fi
-
-    if ! brew list --cask macfuse &> /dev/null 2>&1; then
-        print_warning "macfuse not found - will be installed by Homebrew"
-    fi
-
-    # Auto-load LaunchAgent if credentials are configured
-    local plist_path="$HOME/Library/LaunchAgents/com.rclone.cave.plist"
-    if [[ -f "${bash_local}" ]] && grep -q "CAVE_WEBDAV_USER" "${bash_local}" 2>/dev/null; then
-        # Check if already loaded
-        if launchctl list | grep -q "com.rclone.cave"; then
-            print_success "Cave LaunchAgent already loaded"
-        else
-            print_info "Loading Cave LaunchAgent (will auto-start on future logins)"
-            if launchctl load "${plist_path}" 2>/dev/null; then
-                print_success "Cave LaunchAgent loaded - mounting in background"
-                print_info "Use 'cave' command to open in Finder or check mount status"
-            else
-                print_warning "Failed to load LaunchAgent - you may need to load it manually:"
-                print_info "  launchctl load ~/Library/LaunchAgents/com.rclone.cave.plist"
-            fi
-        fi
-    else
-        print_info "Cave LaunchAgent will auto-load after credentials are configured"
-        print_info "After adding credentials to bash_profile_local, run:"
-        print_info "  launchctl load ~/Library/LaunchAgents/com.rclone.cave.plist"
-    fi
-
-    print_success "rclone configuration setup complete"
-    print_info "See ${SCRIPT_DIR}/config/rclone/README.md for full documentation"
-}
-
-# ───────────────────────────────────────────────────
 # Mountain Duck Configuration
 # ───────────────────────────────────────────────────
 
@@ -560,6 +487,15 @@ setup_mountainduck() {
     fi
 
     create_symlink "${SCRIPT_DIR}/config/mountainduck/cave.duck" "${bookmarks_dir}/cave.duck"
+
+    # Convenience symlink: ~/Cave → Mountain Duck mount point.
+    # Created after first connect when the mount appears under ~/Library/CloudStorage/.
+    local md_mount="$HOME/Library/CloudStorage/MountainDuck-Cave"
+    if [[ -d "${md_mount}" ]]; then
+        create_symlink "${md_mount}" "$HOME/Cave"
+    else
+        print_info "Mountain Duck mount not yet active; ~/Cave symlink will be created on next run after first connect."
+    fi
 
     print_success "Mountain Duck bookmarks linked"
     print_info "Open Mountain Duck → right-click Cave → Connect"
@@ -595,7 +531,6 @@ install_brew_list() {
         "node"
         "pandoc"
         "pipx"
-        "rclone"
         "tldr"
         "tmux"
         "vim"
@@ -652,7 +587,6 @@ install_brew_casks() {
         "hiddenbar"
         "kitty"
         "lulu"
-        "macfuse"
         "mountain-duck"
         "mullvad-vpn"
         "notion"
@@ -823,6 +757,7 @@ uninstall_symlinks() {
         "$HOME/.config/nvim/lua/plugins/user.lua"
         "$HOME/.hammerspoon"
         "$HOME/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Bookmarks/cave.duck"
+        "$HOME/Cave"
     )
     
     for symlink in "${symlinks[@]}"; do
@@ -910,7 +845,6 @@ full_install() {
     setup_tmux_plugins || print_warning "Tmux plugin setup failed - continuing"
     setup_base16 || print_warning "Base16 setup failed - continuing"
     setup_hammerspoon
-    setup_rclone
     setup_mountainduck
     setup_git_ssh
     
@@ -941,7 +875,6 @@ reinstall() {
     setup_tmux_plugins || print_warning "Tmux plugin setup failed - continuing"
     setup_base16 || print_warning "Base16 setup failed - continuing"
     setup_hammerspoon
-    setup_rclone
     setup_mountainduck
 
     # Reinstall Claude Code if not present

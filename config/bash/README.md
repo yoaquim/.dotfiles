@@ -103,7 +103,7 @@
 | `cd.` | `cd ~/.dotfiles` | Go to dotfiles |
 | `cdv` | `cd ~/.vim` | Go to vim config |
 | `cdd` | `cd ~/Desktop/` | Go to desktop |
-| `cdc` | `cd ~/Cave/` | Go to Cave (rclone mount) |
+| `cdc` | `cd ~/Cave/` | Go to Cave (Mountain Duck mount) |
 | `cdp` | `cd ~/Projects/` | Go to projects |
 | `cds` | `cd ~/Scratches/` | Go to scratches |
 
@@ -183,9 +183,9 @@ toggle_hidden           # Show/hide dotfiles in Finder
 ```
 
 #### `cave`
-Open the Cave rclone mount in Finder (or show status if not mounted):
+Open the Cave Mountain Duck mount in Finder:
 ```bash
-cave                    # Opens ~/Cave in Finder if mounted
+cave                    # Opens ~/Cave in Finder
 ```
 
 ---
