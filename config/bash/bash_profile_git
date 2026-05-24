@@ -7,7 +7,10 @@
 # ───────────────────────────────────────────────────
 
 # git bash completion (hombrew, mac only)
-if [ -f /opt/homebrew/etc/bash_completion ]; then
+# BASH_COMPLETION_VERSINFO is set on first load; the -z guard makes
+# re-sourcing this profile a no-op for bash-completion, which avoids
+# readonly-variable warnings from Cobra completions (e.g. wrangler).
+if [ -f /opt/homebrew/etc/bash_completion ] && [ -z "$BASH_COMPLETION_VERSINFO" ]; then
     . /opt/homebrew/etc/bash_completion
 fi
 
