@@ -515,7 +515,7 @@ install_brew_list() {
         "act"
         "awscli"
         "bash"
-        "bash-completion"
+        "bash-completion@2"
         "codex"
         "coreutils"
         "direnv"

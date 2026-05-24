@@ -6,12 +6,17 @@
 # aliases
 # ───────────────────────────────────────────────────
 
-# git bash completion (hombrew, mac only)
-# BASH_COMPLETION_VERSINFO is set on first load; the -z guard makes
-# re-sourcing this profile a no-op for bash-completion, which avoids
+# bash-completion (homebrew, mac only)
+# Prefer v2 (lazy-loaded per command, faster startup, no eager Cobra sourcing).
+# Falls back to v1 if @2 isn't installed. VERSINFO (v2) / BASH_COMPLETION (v1)
+# are set on first load, so the guard makes re-sourcing a no-op and avoids
 # readonly-variable warnings from Cobra completions (e.g. wrangler).
-if [ -f /opt/homebrew/etc/bash_completion ] && [ -z "$BASH_COMPLETION_VERSINFO" ]; then
-    . /opt/homebrew/etc/bash_completion
+if [ -z "$BASH_COMPLETION_VERSINFO" ] && [ -z "$BASH_COMPLETION" ]; then
+    if [ -r /opt/homebrew/etc/profile.d/bash_completion.sh ]; then
+        . /opt/homebrew/etc/profile.d/bash_completion.sh
+    elif [ -f /opt/homebrew/etc/bash_completion ]; then
+        . /opt/homebrew/etc/bash_completion
+    fi
 fi
 
 # git coloring
