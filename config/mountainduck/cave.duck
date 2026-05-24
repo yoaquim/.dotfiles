@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Protocol</key>
+	<string>s3</string>
+	<key>Provider</key>
+	<string>s3</string>
+	<key>UUID</key>
+	<string>7A1C8C9E-5F2A-4D11-9E3A-C4A8F0B7D111</string>
+	<key>Nickname</key>
+	<string>Cave</string>
+	<key>Hostname</key>
+	<string>s3.amazonaws.com</string>
+	<key>Port</key>
+	<string>443</string>
+	<key>Username</key>
+	<string>AKIA6A25PILYQ2KR3C4X</string>
+	<key>Path</key>
+	<string>/terra-cave-us-east-1</string>
+	<key>Region</key>
+	<string>us-east-1</string>
+</dict>
+</plist>

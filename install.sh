@@ -544,6 +544,31 @@ setup_rclone() {
 }
 
 # ───────────────────────────────────────────────────
+# Mountain Duck Configuration
+# ───────────────────────────────────────────────────
+
+setup_mountainduck() {
+    print_info "Setting up Mountain Duck bookmarks"
+
+    local bookmarks_dir="$HOME/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Bookmarks"
+
+    if [[ ! -d "${bookmarks_dir}" ]]; then
+        print_warning "Mountain Duck bookmarks directory not found — install Mountain Duck first:"
+        print_info "  brew install --cask mountain-duck"
+        print_info "Re-run this script after Mountain Duck has launched once."
+        return 0
+    fi
+
+    create_symlink "${SCRIPT_DIR}/config/mountainduck/cave.duck" "${bookmarks_dir}/cave.duck"
+
+    print_success "Mountain Duck bookmarks linked"
+    print_info "Open Mountain Duck → right-click Cave → Connect"
+    print_info "Paste secret on first connect; retrieve with:"
+    print_info "  cd ~/Projects/betabit/infrastructure/live/management/workloads/cave"
+    print_info "  AWS_PROFILE=management tofu output -raw mountainduck_secret_access_key"
+}
+
+# ───────────────────────────────────────────────────
 # Homebrew Package Installation
 # ───────────────────────────────────────────────────
 
@@ -628,6 +653,7 @@ install_brew_casks() {
         "kitty"
         "lulu"
         "macfuse"
+        "mountain-duck"
         "mullvad-vpn"
         "notion"
         "obs"
@@ -796,6 +822,7 @@ uninstall_symlinks() {
         "$HOME/.config/nvim/lua/polish.lua"
         "$HOME/.config/nvim/lua/plugins/user.lua"
         "$HOME/.hammerspoon"
+        "$HOME/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Bookmarks/cave.duck"
     )
     
     for symlink in "${symlinks[@]}"; do
@@ -884,6 +911,7 @@ full_install() {
     setup_base16 || print_warning "Base16 setup failed - continuing"
     setup_hammerspoon
     setup_rclone
+    setup_mountainduck
     setup_git_ssh
     
     # Complete basic setup
@@ -914,7 +942,8 @@ reinstall() {
     setup_base16 || print_warning "Base16 setup failed - continuing"
     setup_hammerspoon
     setup_rclone
-    
+    setup_mountainduck
+
     # Reinstall Claude Code if not present
     if ! command -v claude &> /dev/null; then
         install_claude_code
