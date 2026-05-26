@@ -3,6 +3,8 @@ config/bash/bash_profile_local
 config/git/config.local
 
 claude/hooks/nono-hook.sh
+claude/agents/local-*
+claude/hooks/local-*
 claude/skills/local-*
 
 .DS_Store
