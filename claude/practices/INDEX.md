@@ -6,6 +6,7 @@ Coding practices and preferences. Used by `inject-practices.sh` to auto-detect a
 |----------|------|----------|--------|
 | TDD | `tdd.md` | **MANDATORY** for all implementation tasks | always |
 | No Comments | `no-comments.md` | **MANDATORY** — default to zero comments | always |
+| Receiving Review | `receiving-review.md` | **MANDATORY** — evaluate review feedback technically | always |
 | Django | `django.md` | Django projects: views, models, templates, forms | manage.py |
 | Tailwind | `tailwind.md` | UI/CSS work, frontend styling | tailwind.config.* |
 | React | `react.md` | React projects: components, hooks, state, data fetching | package.json:react |

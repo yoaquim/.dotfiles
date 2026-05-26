@@ -29,14 +29,14 @@ Review diff, fix issues, push, create PR. `--draft` for draft PRs.
 - `git log main..HEAD --oneline` + `git diff main...HEAD`
 - If ticket ID found + Linear MCP available → fetch ticket details
 
-## 3. Review the Diff
+## 3. Smell-check
 
-Check for:
-- **Bugs**: logic errors, off-by-ones, nil/null, unhandled errors
-- **Security**: injection, auth bypass, secrets, OWASP top 10
-- **Quality**: dead code, duplication, naming, missing error handling
+Quick pass for obvious problems only:
+- Secrets / credentials in the diff
+- Commented-out code, leftover debug prints / `console.log`
+- Obvious typos that break runtime
 
-Issues found → fix, commit, re-review. Max 5 iterations — then report and proceed.
+Anything deeper is `/pr-review`'s job — don't duplicate it here. Fix and recommit if needed, then proceed.
 
 ## 4. Create PR
 

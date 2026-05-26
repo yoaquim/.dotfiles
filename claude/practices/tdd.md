@@ -5,11 +5,15 @@ Write tests FIRST, then implement code to pass them. Mandatory for all implement
 ## Workflow (Red-Green-Refactor)
 
 1. **RED**: Write a failing test for the expected behavior
-2. **Run**: Confirm test fails (validates test is meaningful)
+2. **Run**: Confirm test fails — *and that it fails for the expected reason* (missing behavior), not a typo, import error, or malformed assertion. A test that fails for the wrong reason isn't evidence of anything.
 3. **GREEN**: Write minimal code to make it pass
-4. **Run**: Confirm test passes
+4. **Run**: Confirm test passes — because the behavior is correct, not because the assertion is trivially satisfied
 5. **REFACTOR**: Clean up while keeping tests green
 6. **Repeat**
+
+## On Violation
+
+Wrote production code without a failing test first? **Delete it. All of it.** Don't keep it as scratch, in a comment, or in a side file — it biases the test you write next. Restart from RED.
 
 ## Test Types
 

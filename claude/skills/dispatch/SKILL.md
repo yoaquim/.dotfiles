@@ -222,6 +222,19 @@ If `state:dead` → warn: "Runner exited without completing. Check `.dispatch/lo
 
 ---
 
+## Review feedback loop
+
+When a runner's PR receives `/pr-review` feedback (inline comments + `reviewDecision: CHANGES_REQUESTED`):
+
+1. Runner detects unresolved threads via `gh pr view <pr> --json reviews,reviewThreads`.
+2. Apply `receiving-review` practice gates to each thread (already injected at SessionStart via `inject-practices.sh`).
+3. Fix → commit → push. Don't resolve threads manually — the next `/pr-review` pass will approve and the reviewer's resolve closes them.
+4. `/pr-review` watch loop detects the new commit and re-reviews automatically.
+
+Cycle ends when `/pr-review` posts `APPROVE` (`reviewDecision: APPROVED`) and the runner's Stop hook lets it exit.
+
+---
+
 ## Help (no arguments)
 
 ```
