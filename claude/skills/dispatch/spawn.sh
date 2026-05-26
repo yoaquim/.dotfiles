@@ -84,7 +84,7 @@ echo "worktree:$WORKTREE"
 PROJECT_NAME="$(basename "$TARGET_REPO")"
 SESSION_OUTPUT=$(cd "$WORKTREE" && claude --bg \
     --agent runner \
-    --name "$PROJECT_NAME-dispatch-$NAME" \
+    --name "dispatch-$PROJECT_NAME-$NAME" \
     --permission-mode bypassPermissions \
     --append-system-prompt-file "$PROMPT_FILE" \
     "Execute the task described in the system prompt." 2>&1)
