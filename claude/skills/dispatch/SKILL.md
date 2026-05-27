@@ -70,6 +70,16 @@ Branch: <branch>
 
 ## Context
 <user answers from step 4>
+
+## Stop Conditions
+
+You run unattended — you can't ask. If any of these hit, do NOT push through:
+
+- Spec/ticket is fundamentally ambiguous and discovery didn't resolve it
+- Same test failing 3+ times with different fixes (the architecture is probably wrong)
+- Required dependency / resource is missing or inaccessible
+
+On stop: commit WIP with `WIP: <one-line reason>`, update the status file with `status: blocked` and a paragraph explaining what you need, then exit. Faking progress wastes the operator's debugging time.
 ```
 
 Branch: Linear issue's branch name if set, else `dispatch/<name>`.
@@ -152,6 +162,16 @@ Branch: sketch-<name>
 
 ## Discovery
 <structured findings from step 3>
+
+## Stop Conditions
+
+You run unattended — you can't ask. If any of these hit, do NOT push through:
+
+- Sketch is fundamentally ambiguous and discovery didn't resolve it
+- Same test failing 3+ times with different fixes (the architecture is probably wrong)
+- Required dependency / resource is missing or inaccessible
+
+On stop: commit WIP with `WIP: <one-line reason>`, update the status file with `status: blocked` and a paragraph explaining what you need, then exit. Faking progress wastes the operator's debugging time.
 ```
 
 ### 5. Status File
