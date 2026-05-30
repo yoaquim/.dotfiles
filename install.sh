@@ -500,8 +500,8 @@ setup_mountainduck() {
     print_success "Mountain Duck bookmarks linked"
     print_info "Open Mountain Duck → right-click Cave → Connect"
     print_info "Paste secret on first connect; retrieve with:"
-    print_info "  cd ~/Projects/betabit/infrastructure/live/management/workloads/cave"
-    print_info "  AWS_PROFILE=management tofu output -raw mountainduck_secret_access_key"
+    print_info "  cd ~/Projects/betabit/infrastructure/live/personal/workloads/cave"
+    print_info "  AWS_PROFILE=personal tofu output -raw mountainduck_secret_access_key"
 }
 
 # ───────────────────────────────────────────────────
