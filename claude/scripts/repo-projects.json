@@ -71,6 +71,11 @@
       "team": "Me",
       "projects": ["Parcha"],
       "description": "Browser-hosted live-coding DAW with MCP-first architecture (Preact + CodeMirror + Strudel). Solo project."
+    },
+    "mesa": {
+      "team": "Mesa",
+      "projects": ["Mesa"],
+      "description": "QR pay-at-table split-pay for PR restaurants (ATH Móvil + Clover). Hono on Cloudflare Workers + Durable Objects + D1/Drizzle + RR v7. Solo project. NOTE: lives in the dedicated mesa-pr workspace — use the linear-mesa MCP for Linear calls, not the default workspace."
     }
   }
 }

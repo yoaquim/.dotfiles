@@ -80,13 +80,31 @@ fi
 echo "worktree:$WORKTREE"
 
 # --- Spawn ---
+# Prepend a hard worktree-isolation guard so the runner never edits or commits in
+# the shared main checkout. The runner is given absolute paths into the main repo
+# (from discovery); without this it can edit/commit there instead of its worktree.
+STATUS_FILE="$TARGET_REPO/.dispatch/status/$NAME.md"
+RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
+{
+    printf '## WORKTREE ISOLATION — read first, non-negotiable\n\n'
+    printf 'Your working directory is this git worktree:\n  %s\n(branch `%s`). Do ALL work inside it.\n\n' "$WORKTREE" "$BRANCH"
+    printf -- '- Every file edit happens inside `%s`.\n' "$WORKTREE"
+    printf -- '- Run every git command (status/add/commit/push) from this worktree; commits belong on branch `%s`.\n' "$BRANCH"
+    printf -- '- NEVER edit files, `cd`, or run git in the main checkout at `%s` — it is shared across runners and must not be modified.\n' "$TARGET_REPO"
+    printf -- '- If the task or discovery cites an absolute path under `%s` (e.g. `%s/packages/...`), treat it as the SAME relative path inside your worktree (`%s/packages/...`) and edit it THERE.\n' "$TARGET_REPO" "$TARGET_REPO" "$WORKTREE"
+    printf -- '- The ONLY path you may write outside the worktree is your status file: `%s`.\n' "$STATUS_FILE"
+    printf -- '- Before every commit run `git rev-parse --show-toplevel` and confirm it prints `%s`; if it prints anything else, STOP and cd into the worktree first.\n\n' "$WORKTREE"
+    printf -- '---\n\n'
+    cat "$PROMPT_FILE"
+} > "$RUNTIME_PROMPT"
+
 # Pass prompt via file to avoid shell argument length limits
 PROJECT_NAME="$(basename "$TARGET_REPO")"
 SESSION_OUTPUT=$(cd "$WORKTREE" && claude --bg \
     --agent runner \
     --name "dispatch-$PROJECT_NAME-$NAME" \
     --permission-mode bypassPermissions \
-    --append-system-prompt-file "$PROMPT_FILE" \
+    --append-system-prompt-file "$RUNTIME_PROMPT" \
     "Execute the task described in the system prompt." 2>&1)
 
 # Extract session ID from --bg output (format: "backgrounded · <8-hex-chars>")
