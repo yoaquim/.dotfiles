@@ -11,6 +11,7 @@ Coding practices and preferences. Used by `inject-practices.sh` to auto-detect a
 | Django | `django.md` | Django projects: views, models, templates, forms | manage.py |
 | Tailwind | `tailwind.md` | UI/CSS work, frontend styling | tailwind.config.* |
 | React | `react.md` | React projects: components, hooks, state, data fetching | package.json:react |
+| npm Pinning | `npm-pinning.md` | **MANDATORY** for npm projects — lockfile, integrity hashes, immutable installs | package.json |
 | Docker | `docker.md` | Dockerized projects, Dockerfiles, compose services | Dockerfile,compose.yml |
 
 ## Detect Rules

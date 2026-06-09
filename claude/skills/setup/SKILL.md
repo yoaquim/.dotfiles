@@ -95,7 +95,18 @@ Fill in `.claude/hooks/` scripts (5-15 lines each). Use Docker commands if proje
 
 ## Step 8: Install Dependencies (if needed)
 
-Ask before running: `npm install` / `pip install -r requirements.txt` / `go mod tidy` / `cargo build`.
+Ask before running.
+
+**npm/Node projects (`package.json` present)** — scaffold supply-chain pinning first (see `~/.claude/practices/npm-pinning.md`):
+
+1. Create `.npmrc` if absent, with:
+   ```
+   save-exact=true
+   ```
+   (New deps pin to exact versions, not `^ranges`. Do **NOT** add `ignore-scripts=true` — it breaks native deps like esbuild, prisma, sharp, bcrypt.)
+2. Install with the **immutable, hash-verifying** command when a lockfile exists: `npm ci` / `pnpm install --frozen-lockfile` / `yarn install --immutable`. No lockfile yet → `npm install` once to generate it, then commit `package-lock.json`.
+
+**Other ecosystems:** `pip install -r requirements.txt` / `go mod tidy` / `cargo build`.
 
 ## Step 9: Report
 
@@ -110,7 +121,8 @@ Hooks: <created / already existed>
   verify.sh:   <configured / skipped>
   setup.sh:    <configured / skipped>
   teardown.sh: <configured / skipped>
-Deps: <installed / skipped / not applicable>
+Deps: <installed via npm ci / skipped / not applicable>
+.npmrc: <created / already existed / not applicable>
 
 Next:
   /sketch <name>        — sketch out a feature
