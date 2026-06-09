@@ -93,6 +93,7 @@ RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
     printf -- '- NEVER edit files, `cd`, or run git in the main checkout at `%s` — it is shared across runners and must not be modified.\n' "$TARGET_REPO"
     printf -- '- If the task or discovery cites an absolute path under `%s` (e.g. `%s/packages/...`), treat it as the SAME relative path inside your worktree (`%s/packages/...`) and edit it THERE.\n' "$TARGET_REPO" "$TARGET_REPO" "$WORKTREE"
     printf -- '- The ONLY path you may write outside the worktree is your status file: `%s`.\n' "$STATUS_FILE"
+    printf -- '- Do NOT create Linear issues/tickets (no `save_issue`, no `/issue`). If you discover follow-up work, document it in your status file + PR description as a proposed follow-up; the operator files it via `/issue`. Reference it as "proposed follow-up", never a created ticket id.\n'
     printf -- '- Before every commit run `git rev-parse --show-toplevel` and confirm it prints `%s`; if it prints anything else, STOP and cd into the worktree first.\n\n' "$WORKTREE"
     printf -- '---\n\n'
     cat "$PROMPT_FILE"
