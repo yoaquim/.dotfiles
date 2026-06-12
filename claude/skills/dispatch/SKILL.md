@@ -2,7 +2,7 @@
 name: dispatch
 description: Dispatch work to autonomous runners in isolated worktrees. Accepts Linear tickets or sketch specs. Use when assigning work to background Claude runners, checking runner status, or attaching to runner worktrees.
 argument-hint: <ticket-id|sketch-name|search-query|status|attach> [name]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear__*
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__claude_ai_Linear__*, mcp__linear-personal__*, mcp__linear-simpliruta__*
 ---
 
 # Dispatch
@@ -30,7 +30,7 @@ Scripts live at `~/.claude/skills/dispatch/`. Use them — don't construct raw b
 
 ### 1. Fetch
 
-`mcp__linear__get_issue` with the ticket ID. Fail if not found.
+Fetch via the Linear MCP `get_issue` tool. Pick the server matching the repo's Linear workspace (see notes in `~/.claude/scripts/repo-projects.json`); default to the primary workspace server. Fail if not found.
 
 ### 2. Name
 
@@ -204,7 +204,7 @@ Same as ticket flow steps 7-8.
 
 ## Find (`/dispatch <search-terms>`)
 
-1. `mcp__linear__list_issues` with `query: <search-terms>`, limit 15.
+1. Linear MCP `list_issues` (same server selection as the ticket flow) with `query: <search-terms>`, limit 15.
 2. Present top matches via `AskUserQuestion`: "Which ticket?" → up to 4 options (identifier + title), mention remaining count if more.
 3. Selected → proceed to main flow.
 
@@ -252,6 +252,12 @@ When a runner's PR receives `/pr-review` feedback (inline comments + `reviewDeci
 4. `/pr-review` watch loop detects the new commit and re-reviews automatically.
 
 Cycle ends when `/pr-review` posts `APPROVE` (`reviewDecision: APPROVED`) and the runner's Stop hook lets it exit.
+
+---
+
+## Remote monitoring
+
+Runners are headless `claude --bg` jobs — they are monitored from this (orchestrator) session, not attached to directly. To drive this session from a phone without SSH+tmux, enable Remote Control here (`/remote-control`, or launch with `claude --remote-control`) and open claude.ai/code or the Claude mobile app. From there `/dispatch status`, re-dispatches, and follow-up questions all work; `/dispatch attach` still opens tmux windows on the host for when SSH is available.
 
 ---
 

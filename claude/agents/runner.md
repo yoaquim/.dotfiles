@@ -91,6 +91,7 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
 4. **Spawn `/pr-review` ONCE** — it has its own watch loop and Stop hook; no respawning.
 
    ```bash
+   PR=$(gh pr view --json number -q '.number')
    PROJECT=$(gh repo view --json name -q '.name')
    BRANCH=$(git rev-parse --abbrev-ref HEAD)
    TICKET=$(echo "$BRANCH" | grep -ioE '[a-z]+-[0-9]+' | head -1 | tr 'A-Z' 'a-z')

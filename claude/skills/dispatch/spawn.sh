@@ -51,6 +51,10 @@ LOG_DIR="$TARGET_REPO/.dispatch/logs"
 
 mkdir -p "$LOG_DIR" "$TARGET_REPO/.dispatch/status"
 
+# Reset the Stop-hook attempt counter from any prior run of this name —
+# a stale count >8 would let a re-dispatched runner exit immediately.
+rm -f "$TARGET_REPO/.dispatch/state/$NAME.attempts"
+
 # --- Worktree ---
 if [[ -d "$WORKTREE/.git" || -f "$WORKTREE/.git" ]]; then
     echo "worktree_status:reused"

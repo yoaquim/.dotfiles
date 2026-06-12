@@ -2,10 +2,10 @@
 name: spec
 description: Formalize conversations into Linear feature specs with implementation sub-issues. Use after discussing a problem and solution to capture it as a structured Linear ticket with sub-issues ready for /dispatch.
 version: 2.0.0
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*/resolve-project.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__claude_ai_Linear__*
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*/resolve-project.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__claude_ai_Linear__*, mcp__linear-personal__*, mcp__linear-simpliruta__*
 hooks:
   PostToolUse:
-    - matcher: "mcp__claude_ai_Linear__save_issue"
+    - matcher: "mcp__.*__save_issue"
       hooks:
         - type: command
           command: "$HOME/.claude/hooks/validate-issue.sh"

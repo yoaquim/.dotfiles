@@ -4,10 +4,10 @@ description: Create a single Linear issue — correctly titled, pointed, milesto
 version: 1.0.0
 argument-hint: "[subject]"
 arguments: subject
-allowed-tools: Read, Glob, Grep, Bash(git*), Bash(date*), Bash(open*), Bash(*/resolve-project.sh*), Bash(*/resolve-label.sh*), Bash(*/validate-title.sh*), AskUserQuestion, mcp__claude_ai_Linear__list_projects, mcp__claude_ai_Linear__list_milestones, mcp__claude_ai_Linear__list_issue_labels, mcp__claude_ai_Linear__list_issue_statuses, mcp__claude_ai_Linear__list_teams, mcp__claude_ai_Linear__list_issues, mcp__claude_ai_Linear__save_issue, mcp__claude_ai_Linear__get_project, mcp__claude_ai_Linear__get_issue
+allowed-tools: Read, Glob, Grep, Bash(git*), Bash(date*), Bash(open*), Bash(*/resolve-project.sh*), Bash(*/resolve-label.sh*), Bash(*/validate-title.sh*), AskUserQuestion, mcp__claude_ai_Linear__list_projects, mcp__claude_ai_Linear__list_milestones, mcp__claude_ai_Linear__list_issue_labels, mcp__claude_ai_Linear__list_issue_statuses, mcp__claude_ai_Linear__list_teams, mcp__claude_ai_Linear__list_issues, mcp__claude_ai_Linear__save_issue, mcp__claude_ai_Linear__get_project, mcp__claude_ai_Linear__get_issue, mcp__linear-personal__*, mcp__linear-simpliruta__*
 hooks:
   PostToolUse:
-    - matcher: "mcp__claude_ai_Linear__save_issue"
+    - matcher: "mcp__.*__save_issue"
       hooks:
         - type: command
           command: "$HOME/.claude/hooks/validate-issue.sh"
@@ -30,7 +30,7 @@ Extract from conversation + arguments: **what**, **why**, **type** (bug/feature/
 
 ### Step 1: `resolve-project.sh` (required)
 
-Run `~/.claude/scripts/resolve-project.sh` before any Linear API calls.
+Run `~/.claude/scripts/resolve-project.sh` before any Linear API calls. If the repo's entry in `repo-projects.json` names a specific Linear MCP server (e.g. a dedicated workspace), use that server for all Linear calls; otherwise use the primary workspace server.
 
 - Single project (`needs_confirmation: false`) → use directly
 - Multiple projects (`needs_confirmation: true`) → ask which one
