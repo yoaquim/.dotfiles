@@ -220,15 +220,18 @@ The `install.sh` script provides several installation modes:
     │   ├── 📄 resolve-project.sh   # Git repo → Linear team/project
     │   ├── 📄 resolve-label.sh     # Subject text → issue label
     │   ├── 📄 validate-title.sh    # Title style validation
-    │   ├── 📄 check-pr-reviews.sh  # Machine review status (Codex/CodeRabbit)
+    │   ├── 📄 validate-pr-body.sh  # PR description validation
+    │   ├── 📄 check-pr-state.sh    # PR review/CI state for runner loop
     │   └── 📄 repo-projects.json   # Repo → Linear project mapping
     ├── 📁 hooks/                   # Event-driven automation
     │   ├── 📄 inject-practices.sh  # Auto-inject practices at runner startup
     │   ├── 📄 lint-spec.sh         # Scope check on sketch/spec writes
     │   ├── 📄 validate-issue.sh    # Style check after Linear issue creation
     │   ├── 📄 validate-commit.sh   # Commit message style check
-    │   ├── 📄 validate-pr.sh       # PR title style check
-    │   └── 📄 notify-done.sh       # macOS notification when runner finishes
+    │   ├── 📄 validate-pr.sh       # Block non-conforming gh pr create
+    │   ├── 📄 check-comment-slop.sh # Block AI-slop code comments
+    │   ├── 📄 enforce-completion.sh # Runner Stop gate (PR + terminal status)
+    │   └── 📄 notify-done.sh       # macOS notification when a session ends
     ├── 📁 practices/               # Development practice guides
     │   ├── 📄 INDEX.md             # Practice index with detect rules
     │   ├── 📄 tdd.md               # TDD (always active)
@@ -405,6 +408,8 @@ Symlinks skills, agents, hooks, scripts, practices, and settings into `~/.claude
 | `/issue` | Single well-formed Linear issue |
 | `/dispatch <id\|name>` | Spawn runner from Linear ticket or sketch |
 | `/pr` | Review, fix, create PR |
+| `/pr-review` | Bug-focused PR review with watch loop |
+| `/debug` | Systematic root-cause debugging |
 | `/gh-stack` | Stacked branches and PRs |
 
 ### Workflows
@@ -426,13 +431,19 @@ Symlinks skills, agents, hooks, scripts, practices, and settings into `~/.claude
 | `inject-practices.sh` | Runner SessionStart | Auto-detect and inject practices |
 | `lint-spec.sh` | Write/Edit on sketches | Scope check (>8 steps, >10 files) |
 | `validate-issue.sh` | Linear `save_issue` | Issue title/description style |
-| `validate-commit.sh` | `git commit` | Commit message style |
-| `validate-pr.sh` | `gh pr create` | PR title style |
+| `validate-commit.sh` | Bash (`git commit`) | Commit message style |
+| `validate-pr.sh` | Bash (`gh pr create`) | Block non-conforming PR creation |
+| `check-comment-slop.sh` | Runner Edit/Write | Block AI-slop code comments |
+| `enforce-completion.sh` | Runner Stop | Gate exit on PR + terminal status |
 | `notify-done.sh` | Stop | macOS notification when session ends |
 
 ### Agent
 
-One unified **runner** agent handles all dispatched work. On completion: pushes, creates PR via `/pr`, iterates on Codex/CodeRabbit comments until machine reviews are green.
+One unified **runner** agent handles all dispatched work. On completion: pushes, creates PR via `/pr`, spawns a `/pr-review` session, then loops — addressing review threads and pushing fixes until the PR is approved with green CI (or a cap is hit).
+
+### Remote Control (drive from your phone)
+
+Runners are headless background jobs; the interactive session that ran `/dispatch` is the control surface. Enable Remote Control on it (`/remote-control` mid-session, `claude --remote-control` at launch, or toggle "Enable Remote Control for all sessions" in `/config`) and open **claude.ai/code** or the Claude mobile app to check `/dispatch status`, answer questions, and kick off new work — no SSH required. SSH + tmux remains the fallback for `/dispatch attach` and raw terminal access.
 
 ### Practices
 

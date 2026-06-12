@@ -5,11 +5,13 @@
 set -euo pipefail
 
 INPUT=$(cat)
-STOP_REASON=$(echo "$INPUT" | jq -r '.stop_hook_active // false')
+CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
+DIR=$(basename "$CWD" 2>/dev/null || true)
+MSG="Session finished${DIR:+ — $DIR}"
 
 # macOS notification
 if command -v osascript &>/dev/null; then
-  osascript -e 'display notification "Runner session finished" with title "Claude Code"' 2>/dev/null || true
+  osascript -e "display notification \"$MSG\" with title \"Claude Code\"" 2>/dev/null || true
 fi
 
 # Terminal bell
