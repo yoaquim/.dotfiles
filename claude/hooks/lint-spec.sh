@@ -22,11 +22,11 @@ esac
 
 [ ! -f "$FILE" ] && exit 0
 
-# Count steps (numbered lines in ## Steps section)
-STEPS=$(sed -n '/^## Steps/,/^## /p' "$FILE" | grep -c '^[0-9]')
+# Count steps (numbered lines in ## Steps or ## Approach sections — /sketch writes ## Approach)
+STEPS=$(sed -n -e '/^## Steps/,/^## /p' -e '/^## Approach/,/^## /p' "$FILE" | grep -c '^[0-9]' || true)
 
 # Count files (list items in ## Files section)
-FILES=$(sed -n '/^## Files/,/^## /p' "$FILE" | grep -c '^ *- ')
+FILES=$(sed -n '/^## Files/,/^## /p' "$FILE" | grep -c '^ *- ' || true)
 
 WARNINGS=""
 
