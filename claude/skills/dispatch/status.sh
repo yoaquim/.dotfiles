@@ -41,15 +41,21 @@ check_alive() {
     [[ -z "$session_id" || "$session_id" == "pending" ]] && return 1
 
     # Supported interface: a live session appears in `claude agents --json`.
-    # The stored session_id is the short id printed by `claude --bg`, which
-    # surfaces as the entry's `.id`; `.sessionId` (when present) is the full id.
-    # Match either field by prefix to be robust across CLI versions.
+    # The stored session_id is the short id printed by `claude --bg`. Across CLI
+    # versions / session kinds the id surfaces as `.id` or `.sessionId`, and the
+    # lifecycle field is `.state` (background: working|blocked|done|failed|
+    # stopped) or `.status` (interactive: idle|busy). Match the id on either
+    # field, and treat the session as alive only if its state/status is not a
+    # known terminal value — so a finished-but-still-listed runner reads dead and
+    # a legitimate re-dispatch isn't blocked.
     local agents
     if agents=$(get_agents) && [[ -n "$agents" ]]; then
         if jq -e --arg id "$session_id" '
-            [.[] | select(((.id // "") | startswith($id)) or ((.sessionId // "") | startswith($id)))
-                 | select((.status // "") | IN("completed", "failed", "stopped") | not)
-            ] | length > 0
+            ["completed","done","failed","stopped","exited","cancelled","canceled"] as $terminal
+            | [ .[]
+                | select(((.id // "") | startswith($id)) or ((.sessionId // "") | startswith($id)))
+                | select(((.state // .status // "") | ascii_downcase) as $s | ($terminal | index($s) | not))
+              ] | length > 0
         ' <<<"$agents" >/dev/null 2>&1; then
             return 0
         fi
