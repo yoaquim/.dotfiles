@@ -40,12 +40,14 @@ check_alive() {
     local session_id="$1"
     [[ -z "$session_id" || "$session_id" == "pending" ]] && return 1
 
-    # Supported interface: a live session appears in `claude agents --json`
-    # (session_id is the short prefix of the full sessionId).
+    # Supported interface: a live session appears in `claude agents --json`.
+    # The stored session_id is the short id printed by `claude --bg`, which
+    # surfaces as the entry's `.id`; `.sessionId` (when present) is the full id.
+    # Match either field by prefix to be robust across CLI versions.
     local agents
     if agents=$(get_agents) && [[ -n "$agents" ]]; then
         if jq -e --arg id "$session_id" '
-            [.[] | select((.sessionId // "") | startswith($id))
+            [.[] | select(((.id // "") | startswith($id)) or ((.sessionId // "") | startswith($id)))
                  | select((.status // "") | IN("completed", "failed", "stopped") | not)
             ] | length > 0
         ' <<<"$agents" >/dev/null 2>&1; then
