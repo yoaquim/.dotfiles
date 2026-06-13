@@ -38,8 +38,8 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(git commit*)",
             "command": "\"$HOME\"/.claude/hooks/validate-commit.sh",
+            "if": "Bash(git commit*)",
             "timeout": 10
           }
         ]
@@ -88,6 +88,5 @@
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true,
-  "model": "claude-fable-5[1m]"
+  "voiceEnabled": true
 }
