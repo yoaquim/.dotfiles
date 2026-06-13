@@ -2,7 +2,7 @@
 name: dispatch
 description: Dispatch work to autonomous runners in isolated worktrees. Accepts Linear tickets or sketch specs. Use when assigning work to background Claude runners, checking runner status, or attaching to runner worktrees.
 argument-hint: <ticket-id|sketch-name|search-query|status|attach> [name]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__claude_ai_Linear__*, mcp__linear-personal__*, mcp__linear-simpliruta__*
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*
 ---
 
 # Dispatch
@@ -16,7 +16,7 @@ Scripts live at `~/.claude/skills/dispatch/`. Use them — don't construct raw b
 /dispatch <sketch-name>            — read sketch spec, discover, spawn runner
 /dispatch <search-terms>           — search Linear, pick ticket, then dispatch
 /dispatch status [name]            — check runner progress
-/dispatch attach <name>            — tmux window in runner's worktree
+/dispatch attach <name> [--remote] — tmux window in runner's worktree
 ```
 
 ---
@@ -232,13 +232,13 @@ If `state:dead` → warn: "Runner exited without completing. Check `.dispatch/lo
 
 ---
 
-## `attach <name>`
+## `attach <name> [--remote]`
 
 1. `bash ~/.claude/skills/dispatch/status.sh <project-root> <name>` → parse `state:` and `worktree:`. Script searches sibling repos, so attach works from any repo.
 2. No status file → fail: "No runner for '<name>'."
 3. `state:alive` → warn: "Runner still active. Changes may conflict. Proceed?" → "Yes" / "No"
-4. `bash ~/.claude/skills/dispatch/attach.sh <name> <worktree-path> <session-id>`
-5. Confirm: "Opened tmux window 'dispatch-<name>' in <worktree-path>."
+4. `bash ~/.claude/skills/dispatch/attach.sh <name> <worktree-path> <session-id> [--remote]` — pass `--remote` through if given.
+5. Confirm: "Opened tmux window 'dispatch-<name>' in <worktree-path>." With `--remote`, add: "Remote control requested — the runner appears in claude.ai/code / the Claude app."
 
 ---
 
@@ -257,7 +257,10 @@ Cycle ends when `/pr-review` posts `APPROVE` (`reviewDecision: APPROVED`) and th
 
 ## Remote monitoring
 
-Runners are headless `claude --bg` jobs — they are monitored from this (orchestrator) session, not attached to directly. To drive this session from a phone without SSH+tmux, enable Remote Control here (`/remote-control`, or launch with `claude --remote-control`) and open claude.ai/code or the Claude mobile app. From there `/dispatch status`, re-dispatches, and follow-up questions all work; `/dispatch attach` still opens tmux windows on the host for when SSH is available.
+Two layers, both phone-reachable via claude.ai/code / the Claude app:
+
+- **Orchestrator** — enable Remote Control on this session (`/remote-control`, or `claude --remote-control` at launch). From the phone: `/dispatch status`, new dispatches, follow-ups.
+- **Runners** — headless `--bg` jobs are not remote-controllable directly, but `/dispatch attach <name> --remote` opens the tmux-attached session and requests `/remote-control` inside it, so the individual runner shows up in the app too. The tmux window keeps the attach process (and thus the remote session) alive after you disconnect.
 
 ---
 
@@ -271,7 +274,8 @@ Commands:
   /dispatch <sketch-name>          Read sketch spec, discover, spawn runner
   /dispatch <search-terms>         Search Linear, pick ticket, dispatch
   /dispatch status [name]          Check runner progress
-  /dispatch attach <name>          tmux window in runner's worktree
+  /dispatch attach <name> [--remote]  tmux window in runner's worktree
+                                      (--remote: expose runner to claude.ai/code)
 
 Workflows:
   Linear:  /dispatch ENG-142       — fetch, discover, spawn

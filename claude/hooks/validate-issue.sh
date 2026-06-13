@@ -1,6 +1,6 @@
 #!/bin/bash
 # PostToolUse Hook: Validate a Linear issue after creation.
-# Fires after mcp__claude_ai_Linear__save_issue.
+# Fires after any Linear MCP save_issue call (matcher: mcp__.*__save_issue).
 # Flags violations as warnings — does not block.
 
 set -euo pipefail

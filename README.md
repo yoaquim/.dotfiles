@@ -443,7 +443,9 @@ One unified **runner** agent handles all dispatched work. On completion: pushes,
 
 ### Remote Control (drive from your phone)
 
-Runners are headless background jobs; the interactive session that ran `/dispatch` is the control surface. Enable Remote Control on it (`/remote-control` mid-session, `claude --remote-control` at launch, or toggle "Enable Remote Control for all sessions" in `/config`) and open **claude.ai/code** or the Claude mobile app to check `/dispatch status`, answer questions, and kick off new work — no SSH required. SSH + tmux remains the fallback for `/dispatch attach` and raw terminal access.
+Runners are headless background jobs; the interactive session that ran `/dispatch` is the control surface. Enable Remote Control on it (`/remote-control` mid-session, `claude --remote-control` at launch, or toggle "Enable Remote Control for all sessions" in `/config`) and open **claude.ai/code** or the Claude mobile app to check `/dispatch status`, answer questions, and kick off new work — no SSH required.
+
+To hook into an individual runner from the phone, use `/dispatch attach <name> --remote`: it opens the usual tmux window running `claude attach <session-id>` and requests `/remote-control` inside it, so that runner appears as its own session in the app. The tmux window keeps the remote session alive. SSH + tmux remains the fallback for raw terminal access.
 
 ### Practices
 
