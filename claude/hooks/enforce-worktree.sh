@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-# PreToolUse hook for the runner agent: keep the runner inside its worktree.
+# PreToolUse hook for the runner agent: block runner writes into the SHARED
+# main checkout. This is the isolation guarantee — concurrent runners (and the
+# operator) share one main checkout, so a runner must never modify it.
+#
+# Scope (deliberate): only the shared main checkout is protected. Writes to the
+# runner's own worktree, its status file, and anything OUTSIDE the checkout
+# (/tmp scratch, tool/build caches, $HOME caches) are allowed — runners run real
+# test suites and toolchains that need them. This is not a full filesystem
+# sandbox; it is specifically "don't corrupt the shared checkout."
 #
 # Dispatch runners work in <repo>/.claude/worktrees/<name> but receive absolute
 # paths into the main checkout from discovery. The spawn prompt instructs them
