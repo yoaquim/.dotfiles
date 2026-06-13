@@ -3,7 +3,7 @@
 ## Models & queries
 
 - Business logic in models or POROs (`app/services/`, `app/queries/`) — controllers stay thin
-- Kill N+1s at write time: `includes`/`preload` where associations are iterated; prefer `strict_loading` on hot paths
+- Eager-load to kill N+1s as you write the query: `includes`/`preload` where associations are iterated; prefer `strict_loading` on hot paths
 - Scopes for reusable query fragments; no raw SQL strings in controllers/views
 - Validations in the model AND a database constraint for anything that must hold (null, unique, FK)
 

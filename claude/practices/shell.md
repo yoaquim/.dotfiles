@@ -1,6 +1,6 @@
 # Shell
 
-Bash scripts that survive contact with reality. shellcheck-clean at `--severity=warning` is the bar (a PostToolUse hook runs it on every edit).
+Bash scripts that survive contact with reality. shellcheck-clean at `--severity=info` is the bar (a PostToolUse hook runs it on every edit and feeds findings back non-blocking).
 
 ## Structure
 

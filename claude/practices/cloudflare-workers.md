@@ -4,7 +4,7 @@ Runtime is workerd, not Node — assume nothing from Node core is available unle
 
 ## Bindings & config
 
-- All bindings (D1, KV, R2, DO, queues, secrets) declared in `wrangler.toml`/`wrangler.jsonc` and accessed via `env` — never global state
+- All bindings (D1, KV, R2, DO, queues) declared in `wrangler.toml`/`wrangler.jsonc` and accessed via `env` — never global state
 - Secrets via `wrangler secret put`, never in config or code
 - Type the `Env` interface; keep it in one place
 

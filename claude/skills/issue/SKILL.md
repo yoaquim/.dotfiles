@@ -30,7 +30,7 @@ Extract from conversation + arguments: **what**, **why**, **type** (bug/feature/
 
 ### Step 1: `resolve-project.sh` (required)
 
-Run `~/.claude/scripts/resolve-project.sh` before any Linear API calls. If the repo's entry in `repo-projects.json` names a specific Linear MCP server (e.g. a dedicated workspace), use that server for all Linear calls; otherwise use the primary workspace server.
+Run `~/.claude/scripts/resolve-project.sh` before any Linear API calls. Linear MCP servers are scoped per project, so use whichever Linear MCP server is available in the current session for all Linear calls. If more than one is connected, pick the one whose workspace matches the resolved team/project.
 
 - Single project (`needs_confirmation: false`) → use directly
 - Multiple projects (`needs_confirmation: true`) → ask which one

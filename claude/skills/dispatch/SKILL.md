@@ -31,7 +31,7 @@ Attaching to a runner is native now: `claude agents` (TUI) or `claude attach <se
 
 ### 1. Fetch
 
-Fetch via the Linear MCP `get_issue` tool. Pick the server matching the repo's Linear workspace (see notes in `~/.claude/scripts/repo-projects.json`); default to the primary workspace server. Fail if not found.
+Fetch via the Linear MCP `get_issue` tool. Linear MCP servers are scoped per project — use whichever is available in the current session; if more than one, pick the workspace matching the repo. Fail if not found.
 
 ### 2. Name
 

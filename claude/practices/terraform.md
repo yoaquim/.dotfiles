@@ -23,4 +23,5 @@
 ## Hygiene
 
 - `terraform fmt -recursive` and `terraform validate` before any commit
+- Terragrunt: `terragrunt hclfmt` to format `terragrunt.hcl`, and `terragrunt validate` (or `run-all validate`) — `terraform fmt`/`validate` don't touch HCL config
 - Module changes need a consumer plan to prove no unintended diff
