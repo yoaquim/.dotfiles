@@ -1,8 +1,8 @@
 ---
 name: dispatch
-description: Dispatch work to autonomous runners in isolated worktrees. Accepts Linear tickets or sketch specs. Use when assigning work to background Claude runners, checking runner status, or attaching to runner worktrees.
-argument-hint: <ticket-id|sketch-name|search-query|status|attach> [name]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/attach.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*
+description: Dispatch work to autonomous runners in isolated worktrees. Accepts Linear tickets or sketch specs. Use when assigning work to background Claude runners or checking runner status.
+argument-hint: <ticket-id|sketch-name|search-query|status> [name]
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*
 ---
 
 # Dispatch
@@ -16,14 +16,15 @@ Scripts live at `~/.claude/skills/dispatch/`. Use them — don't construct raw b
 /dispatch <sketch-name>            — read sketch spec, discover, spawn runner
 /dispatch <search-terms>           — search Linear, pick ticket, then dispatch
 /dispatch status [name]            — check runner progress
-/dispatch attach <name> [--remote] — tmux window in runner's worktree
 ```
+
+Attaching to a runner is native now: `claude agents` (TUI) or `claude attach <session-id>` — the session ID is in the status file.
 
 ---
 
 ## Argument Detection
 
-1. `status` or `attach` → subcommand
+1. `status` → subcommand
 2. Ticket ID pattern (letters + hyphen + digits, e.g. `ENG-142`) → Linear ticket flow
 3. Matches `.dispatch/sketches/<arg>.md` → sketch flow
 4. Otherwise → Linear search query
@@ -37,7 +38,7 @@ Fetch via the Linear MCP `get_issue` tool. Pick the server matching the repo's L
 Lowercase the ticket identifier (`ENG-142` → `eng-142`).
 
 Check prior runs: `bash ~/.claude/skills/dispatch/status.sh <project-root> <name>`. Parse `state:`:
-- `alive` → stop: "Runner still active. Use `/dispatch status <name>` or `/dispatch attach <name>`."
+- `alive` → stop: "Runner still active. Use `/dispatch status <name>` or `claude attach <session-id>`."
 - `completed` or `failed` → ask: "Previously dispatched (status: <status>). Re-dispatch?" → "Yes" / "No"
 - No status file → proceed
 
@@ -127,7 +128,7 @@ session_id:<id>
 
 Parse spawn.sh output. Update `session_id` in the status file.
 
-Report: ticket ID, title, session ID, branch, worktree path, next commands (`/dispatch status <name>`, `/dispatch attach <name>`, `claude attach <session-id>`, `claude logs <session-id>`).
+Report: ticket ID, title, session ID, branch, worktree path, next commands (`/dispatch status <name>`, `claude attach <session-id>`, `claude logs <session-id>`).
 
 ---
 
@@ -232,16 +233,6 @@ If `state:dead` → warn: "Runner exited without completing. Check `.dispatch/lo
 
 ---
 
-## `attach <name> [--remote]`
-
-1. `bash ~/.claude/skills/dispatch/status.sh <project-root> <name>` → parse `state:` and `worktree:`. Script searches sibling repos, so attach works from any repo.
-2. No status file → fail: "No runner for '<name>'."
-3. `state:alive` → warn: "Runner still active. Changes may conflict. Proceed?" → "Yes" / "No"
-4. `bash ~/.claude/skills/dispatch/attach.sh <name> <worktree-path> <session-id> [--remote]` — pass `--remote` through if given.
-5. Confirm: "Opened tmux window 'dispatch-<name>' in <worktree-path>." With `--remote`, add: "Remote control requested — the runner appears in claude.ai/code / the Claude app."
-
----
-
 ## Review feedback loop
 
 When a runner's PR receives `/pr-review` feedback (inline comments + `reviewDecision: CHANGES_REQUESTED`):
@@ -255,15 +246,6 @@ Cycle ends when `/pr-review` posts `APPROVE` (`reviewDecision: APPROVED`) and th
 
 ---
 
-## Remote monitoring
-
-Two layers, both phone-reachable via claude.ai/code / the Claude app:
-
-- **Orchestrator** — enable Remote Control on this session (`/remote-control`, or `claude --remote-control` at launch). From the phone: `/dispatch status`, new dispatches, follow-ups.
-- **Runners** — headless `--bg` jobs are not remote-controllable directly, but `/dispatch attach <name> --remote` opens the tmux-attached session and requests `/remote-control` inside it, so the individual runner shows up in the app too. The tmux window keeps the attach process (and thus the remote session) alive after you disconnect.
-
----
-
 ## Help (no arguments)
 
 ```
@@ -274,8 +256,10 @@ Commands:
   /dispatch <sketch-name>          Read sketch spec, discover, spawn runner
   /dispatch <search-terms>         Search Linear, pick ticket, dispatch
   /dispatch status [name]          Check runner progress
-  /dispatch attach <name> [--remote]  tmux window in runner's worktree
-                                      (--remote: expose runner to claude.ai/code)
+
+Attach/inspect runners natively:
+  claude agents                    TUI of all background sessions
+  claude attach <session-id>       Attach to a runner (id in status file)
 
 Workflows:
   Linear:  /dispatch ENG-142       — fetch, discover, spawn
