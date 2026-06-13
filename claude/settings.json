@@ -3,6 +3,38 @@
     "commit": "",
     "pr": ""
   },
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(fd:*)",
+      "Bash(tree:*)",
+      "Bash(which:*)",
+      "Bash(file:*)",
+      "Bash(jq:*)",
+      "Bash(diff:*)",
+      "Bash(shellcheck:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote:*)",
+      "Bash(git worktree list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
@@ -10,8 +42,19 @@
         "hooks": [
           {
             "type": "command",
+            "if": "Bash(git commit*)",
             "command": "\"$HOME\"/.claude/hooks/validate-commit.sh",
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/hooks/lint-shell.sh",
+            "timeout": 15
           }
         ]
       }

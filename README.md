@@ -231,14 +231,14 @@ The `install.sh` script provides several installation modes:
     │   ├── 📄 validate-pr.sh       # Block non-conforming gh pr create
     │   ├── 📄 check-comment-slop.sh # Block AI-slop code comments
     │   ├── 📄 enforce-completion.sh # Runner Stop gate (PR + terminal status)
+    │   ├── 📄 enforce-worktree.sh  # Block runner writes outside its worktree
+    │   ├── 📄 lint-shell.sh        # shellcheck on edited shell scripts
     │   └── 📄 notify-done.sh       # macOS notification when a session ends
     ├── 📁 practices/               # Development practice guides
     │   ├── 📄 INDEX.md             # Practice index with detect rules
     │   ├── 📄 tdd.md               # TDD (always active)
-    │   ├── 📄 django.md            # Django
-    │   ├── 📄 docker.md            # Docker
-    │   ├── 📄 react.md             # React
-    │   └── 📄 tailwind.md          # Tailwind
+    │   └── 📄 ...                  # Per-stack: django, rails, react, tailwind,
+    │                               #   docker, terraform, cloudflare-workers, shell
     └── 📁 skills/                  # Custom Claude Code skills
         ├── 📁 setup/               # /setup — init project
         ├── 📁 sketch/              # /sketch — lightweight local spec
@@ -434,7 +434,9 @@ Symlinks skills, agents, hooks, scripts, practices, and settings into `~/.claude
 | `validate-commit.sh` | Bash (`git commit`) | Commit message style |
 | `validate-pr.sh` | Bash (`gh pr create`) | Block non-conforming PR creation |
 | `check-comment-slop.sh` | Runner Edit/Write | Block AI-slop code comments |
+| `enforce-worktree.sh` | Runner Edit/Write | Block writes outside the runner's worktree |
 | `enforce-completion.sh` | Runner Stop | Gate exit on PR + terminal status |
+| `lint-shell.sh` | Edit/Write on shell files | shellcheck findings fed back to the agent |
 | `notify-done.sh` | Stop | macOS notification when session ends |
 
 ### Agent
@@ -443,7 +445,7 @@ One unified **runner** agent handles all dispatched work. On completion: pushes,
 
 ### Practices
 
-Auto-detected at runner startup via `inject-practices.sh`. TDD is always active; Django, Docker, React, Tailwind activate based on project files.
+Auto-detected at runner startup via `inject-practices.sh`. TDD, no-comments, verification, and receiving-review are always active; stack practices (Django, Rails, React, Tailwind, Docker, npm pinning, Terraform, Cloudflare Workers, Shell) activate based on project files — see `claude/practices/INDEX.md` for detect rules.
 
 ### Customization
 

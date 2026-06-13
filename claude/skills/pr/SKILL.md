@@ -9,6 +9,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
+          if: "Bash(gh pr create*)"
           command: "$HOME/.claude/hooks/validate-pr.sh"
           timeout: 10
 ---
