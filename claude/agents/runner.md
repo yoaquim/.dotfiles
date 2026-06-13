@@ -24,6 +24,9 @@ hooks:
         - type: command
           command: "$HOME/.claude/hooks/check-comment-slop.sh"
           timeout: 10
+        - type: command
+          command: "$HOME/.claude/hooks/enforce-worktree.sh"
+          timeout: 10
 ---
 
 # Runner Agent
