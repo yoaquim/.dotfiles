@@ -12,7 +12,6 @@
       "Bash(wc:*)",
       "Bash(grep:*)",
       "Bash(rg:*)",
-      "Bash(tree:*)",
       "Bash(which:*)",
       "Bash(file:*)",
       "Bash(jq:*)",
