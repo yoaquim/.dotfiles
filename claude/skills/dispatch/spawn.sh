@@ -104,9 +104,16 @@ RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
     cat "$PROMPT_FILE"
 } > "$RUNTIME_PROMPT"
 
-# Pass prompt via file to avoid shell argument length limits
+# Pass prompt via file to avoid shell argument length limits.
+# The CLAUDE_DISPATCH_* vars give the worktree-isolation hook an IMMUTABLE
+# runner identity — it enforces against these, not the session cwd, so a runner
+# that cd's into the main checkout still can't write there.
 PROJECT_NAME="$(basename "$TARGET_REPO")"
-SESSION_OUTPUT=$(cd "$WORKTREE" && claude --bg \
+SESSION_OUTPUT=$(cd "$WORKTREE" && \
+    CLAUDE_DISPATCH_WORKTREE="$WORKTREE" \
+    CLAUDE_DISPATCH_ROOT="$TARGET_REPO" \
+    CLAUDE_DISPATCH_STATUS_FILE="$STATUS_FILE" \
+    claude --bg \
     --agent runner \
     --name "dispatch-$PROJECT_NAME-$NAME" \
     --permission-mode bypassPermissions \
