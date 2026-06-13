@@ -39,7 +39,7 @@ if [ "$FILES" -gt 10 ]; then
 fi
 
 if [ -n "$WARNINGS" ]; then
-  MSG=$(printf "Spec scope warning for $(basename "$FILE"):${WARNINGS}\nRunners perform best with narrow, focused specs.")
+  MSG=$(printf 'Spec scope warning for %s:%b\nRunners perform best with narrow, focused specs.' "$(basename "$FILE")" "$WARNINGS")
   jq -n --arg ctx "$MSG" '{
     "hookSpecificOutput": {
       "hookEventName": "PostToolUse",

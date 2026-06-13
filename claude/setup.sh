@@ -32,7 +32,7 @@ fi
 
 # Verify ~/.claude exists
 if [[ ! -d "$HOME/.claude" ]]; then
-    error "~/.claude doesn't exist. Run Claude Code once first."
+    error "\$HOME/.claude doesn't exist. Run Claude Code once first."
     exit 1
 fi
 

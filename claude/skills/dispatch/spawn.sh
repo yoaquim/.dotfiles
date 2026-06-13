@@ -89,6 +89,7 @@ echo "worktree:$WORKTREE"
 # (from discovery); without this it can edit/commit there instead of its worktree.
 STATUS_FILE="$TARGET_REPO/.dispatch/status/$NAME.md"
 RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
+# shellcheck disable=SC2016  # backticked code spans in prose, not expansions
 {
     printf '## WORKTREE ISOLATION — read first, non-negotiable\n\n'
     printf 'Your working directory is this git worktree:\n  %s\n(branch `%s`). Do ALL work inside it.\n\n' "$WORKTREE" "$BRANCH"
