@@ -3,35 +3,19 @@
     "commit": "",
     "pr": ""
   },
-  "permissions": {
-    "allow": [
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(wc:*)",
-      "Bash(grep:*)",
-      "Bash(rg:*)",
-      "Bash(which:*)",
-      "Bash(file:*)",
-      "Bash(jq:*)",
-      "Bash(diff:*)",
-      "Bash(shellcheck:*)",
-      "Bash(git status:*)",
-      "Bash(git branch --show-current)",
-      "Bash(git branch --list:*)",
-      "Bash(git remote -v)",
-      "Bash(git remote get-url:*)",
-      "Bash(git worktree list:*)",
-      "Bash(gh pr view:*)",
-      "Bash(gh pr list:*)",
-      "Bash(gh pr checks:*)",
-      "Bash(gh repo view:*)",
-      "Bash(gh run list:*)",
-      "Bash(gh run view:*)"
-    ]
-  },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/hooks/allow-reads.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Bash",
