@@ -50,6 +50,7 @@ CI_GREEN=$(jq -r '
 ' <<<"$PR_VIEW")
 
 # 2. Unresolved review threads via GraphQL
+# shellcheck disable=SC2016  # $vars are GraphQL variables, not shell
 THREADS_JSON=$(gh api graphql \
   -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" \
   -f query='

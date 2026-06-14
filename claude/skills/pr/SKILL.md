@@ -6,9 +6,10 @@ argument-hint: "[--draft]"
 allowed-tools: Bash(git*), Bash(gh*), Read, Edit, Write, AskUserQuestion
 hooks:
   PreToolUse:
-    - matcher: "Bash(gh pr create*)"
+    - matcher: "Bash"
       hooks:
         - type: command
+          if: "Bash(gh pr create*)"
           command: "$HOME/.claude/hooks/validate-pr.sh"
           timeout: 10
 ---

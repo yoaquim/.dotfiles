@@ -4,10 +4,10 @@ description: Create a single Linear issue — correctly titled, pointed, milesto
 version: 1.0.0
 argument-hint: "[subject]"
 arguments: subject
-allowed-tools: Read, Glob, Grep, Bash(git*), Bash(date*), Bash(open*), Bash(*/resolve-project.sh*), Bash(*/resolve-label.sh*), Bash(*/validate-title.sh*), AskUserQuestion, mcp__claude_ai_Linear__list_projects, mcp__claude_ai_Linear__list_milestones, mcp__claude_ai_Linear__list_issue_labels, mcp__claude_ai_Linear__list_issue_statuses, mcp__claude_ai_Linear__list_teams, mcp__claude_ai_Linear__list_issues, mcp__claude_ai_Linear__save_issue, mcp__claude_ai_Linear__get_project, mcp__claude_ai_Linear__get_issue
+allowed-tools: Read, Glob, Grep, Bash(git*), Bash(date*), Bash(open*), Bash(*/resolve-project.sh*), Bash(*/resolve-label.sh*), Bash(*/validate-title.sh*), AskUserQuestion, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*
 hooks:
   PostToolUse:
-    - matcher: "mcp__claude_ai_Linear__save_issue"
+    - matcher: "mcp__.*__save_issue"
       hooks:
         - type: command
           command: "$HOME/.claude/hooks/validate-issue.sh"
@@ -30,7 +30,7 @@ Extract from conversation + arguments: **what**, **why**, **type** (bug/feature/
 
 ### Step 1: `resolve-project.sh` (required)
 
-Run `~/.claude/scripts/resolve-project.sh` before any Linear API calls.
+Run `~/.claude/scripts/resolve-project.sh` before any Linear API calls. Linear MCP servers are scoped per project, so use whichever Linear MCP server is available in the current session for all Linear calls. If more than one is connected, pick the one whose workspace matches the resolved team/project.
 
 - Single project (`needs_confirmation: false`) → use directly
 - Multiple projects (`needs_confirmation: true`) → ask which one
@@ -46,7 +46,7 @@ Determine **milestone**, **labels**, **priority**, **estimate** from:
 
 ### Step 3: Milestone
 
-Fetch via `mcp__claude_ai_Linear__list_milestones`. Assign if one fits, otherwise leave unmilestoned. Don't ask — the user can correct in Linear.
+Fetch via the Linear MCP `list_milestones` tool. Assign if one fits, otherwise leave unmilestoned. Don't ask — the user can correct in Linear.
 
 ### Step 4: Label
 
@@ -86,6 +86,6 @@ Senior engineer to senior engineer. Personality fine, slop not.
 
 ## 4. Create
 
-No confirmation. `mcp__claude_ai_Linear__save_issue`, then `open "$ISSUE_URL"`.
+No confirmation. Linear MCP `save_issue`, then `open "$ISSUE_URL"`.
 
 Report issue ID + URL. A `PostToolUse` hook (`validate-issue.sh`) auto-checks style on every `save_issue` call.

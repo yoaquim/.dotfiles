@@ -51,6 +51,10 @@ LOG_DIR="$TARGET_REPO/.dispatch/logs"
 
 mkdir -p "$LOG_DIR" "$TARGET_REPO/.dispatch/status"
 
+# Reset the Stop-hook attempt counter from any prior run of this name —
+# a stale count >8 would let a re-dispatched runner exit immediately.
+rm -f "$TARGET_REPO/.dispatch/state/$NAME.attempts"
+
 # --- Worktree ---
 if [[ -d "$WORKTREE/.git" || -f "$WORKTREE/.git" ]]; then
     echo "worktree_status:reused"
@@ -85,6 +89,7 @@ echo "worktree:$WORKTREE"
 # (from discovery); without this it can edit/commit there instead of its worktree.
 STATUS_FILE="$TARGET_REPO/.dispatch/status/$NAME.md"
 RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
+# shellcheck disable=SC2016  # backticked code spans in prose, not expansions
 {
     printf '## WORKTREE ISOLATION — read first, non-negotiable\n\n'
     printf 'Your working directory is this git worktree:\n  %s\n(branch `%s`). Do ALL work inside it.\n\n' "$WORKTREE" "$BRANCH"
@@ -99,9 +104,16 @@ RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
     cat "$PROMPT_FILE"
 } > "$RUNTIME_PROMPT"
 
-# Pass prompt via file to avoid shell argument length limits
+# Pass prompt via file to avoid shell argument length limits.
+# The CLAUDE_DISPATCH_* vars give the worktree-isolation hook an IMMUTABLE
+# runner identity — it enforces against these, not the session cwd, so a runner
+# that cd's into the main checkout still can't write there.
 PROJECT_NAME="$(basename "$TARGET_REPO")"
-SESSION_OUTPUT=$(cd "$WORKTREE" && claude --bg \
+SESSION_OUTPUT=$(cd "$WORKTREE" && \
+    CLAUDE_DISPATCH_WORKTREE="$WORKTREE" \
+    CLAUDE_DISPATCH_ROOT="$TARGET_REPO" \
+    CLAUDE_DISPATCH_STATUS_FILE="$STATUS_FILE" \
+    claude --bg \
     --agent runner \
     --name "dispatch-$PROJECT_NAME-$NAME" \
     --permission-mode bypassPermissions \

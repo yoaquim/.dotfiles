@@ -18,6 +18,7 @@ INPUT=$(cat)
 COMMAND=$(jq -r '.tool_input.command // ""' <<<"$INPUT" 2>/dev/null || echo "")
 [[ -z "$COMMAND" ]] && exit 0
 
+# shellcheck disable=SC2016  # backticked code span in prose
 HEADER='# 👾 Reviewed by Claude via the `/pr-review` skill 👾'
 NOFINDINGS_RE='_No bug-class findings'
 FILELINE_RE='[A-Za-z_][A-Za-z0-9_./-]*\.(ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cc|cpp|h|hpp|cs|sh|sql|css|scss|html|md|json|ya?ml|toml|tf|hcl)(:[0-9]+(-[0-9]+)?)?'

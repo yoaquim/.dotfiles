@@ -13,6 +13,10 @@ Coding practices and preferences. Used by `inject-practices.sh` to auto-detect a
 | React | `react.md` | React projects: components, hooks, state, data fetching | package.json:react |
 | npm Pinning | `npm-pinning.md` | **MANDATORY** for npm projects — lockfile, integrity hashes, immutable installs | package.json |
 | Docker | `docker.md` | Dockerized projects, Dockerfiles, compose services | Dockerfile,compose.yml |
+| Rails | `rails.md` | Rails apps: models, controllers, migrations, jobs | Gemfile:rails |
+| Cloudflare Workers | `cloudflare-workers.md` | Workers, Hono, D1/Drizzle, Durable Objects | wrangler.toml,wrangler.jsonc |
+| Terraform | `terraform.md` | Terraform/Terragrunt IaC | *.tf,terragrunt.hcl |
+| Shell | `shell.md` | Bash scripting: hooks, automation, CLIs | *.sh,scripts/*.sh,bin/*.sh,hooks/*.sh |
 
 ## Detect Rules
 

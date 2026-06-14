@@ -24,26 +24,57 @@ get_field() {
     sed -n "s/^- \*\*${field}\*\*: //p" "$file" 2>/dev/null
 }
 
+# Fetch the agents list once per script run — the summary view calls
+# check_alive in a loop and `claude agents --json` is not free.
+AGENTS_JSON=""
+AGENTS_FETCHED=0
+get_agents() {
+    if [[ $AGENTS_FETCHED -eq 0 ]]; then
+        AGENTS_JSON=$(claude agents --json 2>/dev/null || true)
+        AGENTS_FETCHED=1
+    fi
+    printf '%s' "$AGENTS_JSON"
+}
+
 check_alive() {
     local session_id="$1"
     [[ -z "$session_id" || "$session_id" == "pending" ]] && return 1
-    local state_file="$HOME/.claude/jobs/$session_id/state.json"
-    if [[ -f "$state_file" ]]; then
-        jq -e '.state == "working" or .state == "needs_input"' "$state_file" >/dev/null 2>&1
-    else
-        return 1
+
+    # Supported interface: a live session appears in `claude agents --json`.
+    # The stored session_id is the short id printed by `claude --bg`. Across CLI
+    # versions / session kinds the id surfaces as `.id` or `.sessionId`, and the
+    # lifecycle field is `.state` (background: working|blocked|done|failed|
+    # stopped) or `.status` (interactive: idle|busy). Match the id on either
+    # field, and treat the session as alive only if its state/status is not a
+    # known terminal value — so a finished-but-still-listed runner reads dead and
+    # a legitimate re-dispatch isn't blocked.
+    local agents
+    if agents=$(get_agents) && [[ -n "$agents" ]]; then
+        if jq -e --arg id "$session_id" '
+            ["completed","done","failed","stopped","exited","cancelled","canceled"] as $terminal
+            | [ .[]
+                | select(((.id // "") | startswith($id)) or ((.sessionId // "") | startswith($id)))
+                | select(((.state // .status // "") | ascii_downcase) as $s | ($terminal | index($s) | not))
+              ] | length > 0
+        ' <<<"$agents" >/dev/null 2>&1; then
+            return 0
+        fi
     fi
+
+    # Legacy fallback: job state file.
+    local state_file="$HOME/.claude/jobs/$session_id/state.json"
+    [[ -f "$state_file" ]] && jq -e '.state == "working" or .state == "needs_input"' "$state_file" >/dev/null 2>&1
 }
 
 count_progress() {
     local file="$1"
-    local done total
-    done=$(grep -c '^\- \[x\]' "$file" 2>/dev/null) || done=0
+    local checked total
+    checked=$(grep -c '^\- \[x\]' "$file" 2>/dev/null) || checked=0
     total=$(grep -c '^\- \[' "$file" 2>/dev/null) || total=0
     if [[ $total -eq 0 ]]; then
         echo "—"
     else
-        echo "$done/$total"
+        echo "$checked/$total"
     fi
 }
 
