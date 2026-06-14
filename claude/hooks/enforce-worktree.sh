@@ -23,13 +23,14 @@
 # Sessions launched without those vars fall back to cwd-derived detection (best
 # effort: it cannot see a runner that has cd'd away from its worktree).
 #
-# The Bash check covers three vectors: the main checkout's absolute path (what
-# discovery hands the runner), the CLAUDE_DISPATCH_ROOT env var that expands to
-# it, and a cwd that has been moved into the shared checkout (so relative writes
-# are caught). It still cannot see a path the runner *computes* without naming
-# the root (e.g. deriving it from the worktree var, or `../`-escaping from the
-# worktree without cd), which the spawn prompt forbids. Defense-in-depth on that
-# prompt, not an adversarial sandbox.
+# The Bash check covers: the main checkout's absolute path (raw and canonical
+# spellings, so /tmp vs /private/tmp or a symlinked checkout doesn't slip past),
+# the CLAUDE_DISPATCH_ROOT env var that expands to it, and a cwd that has been
+# moved into the shared checkout (catching relative writes). It still cannot see
+# a path the runner *computes* without naming the root — deriving it from the
+# worktree var, `../`-escaping from the worktree without cd, or going through an
+# unrelated symlink whose target is the checkout — which the spawn prompt forbids.
+# Defense-in-depth on that prompt, not an adversarial sandbox.
 #
 # Exit 0 → allow. Exit 2 → block; stderr is fed back to the agent.
 
@@ -135,21 +136,31 @@ case "$TOOL" in
       esac
     fi
     # Remove references to THIS worktree and the status file so only main-checkout
-    # references remain. Boundary-aware (the path must end at /, whitespace, a
-    # quote, a separator, or end-of-string) so a sibling worktree like .../eng-10
-    # is NOT erased by a .../eng-1 prefix match. Paths are regex-escaped; sed uses
-    # # as the delimiter (worktree paths never contain #).
-    # Escape every char that isn't a plain path char (avoids BSD sed bracket-order
-    # pitfalls). # is left unescaped — it's the sed delimiter and not regex-special.
+    # references remain. We mask BOTH the raw paths and their canonical (symlink-
+    # resolved) spellings, then block if EITHER the raw or canonical main-checkout
+    # path survives — so an alias like /tmp vs /private/tmp, or a symlinked
+    # checkout, can't smuggle a write past a literal-only match.
+    # Boundary-aware (the path must end at /, whitespace, a quote, a separator, or
+    # end-of-string) so a sibling worktree like .../eng-10 is NOT erased by a
+    # .../eng-1 prefix match. Paths are regex-escaped; sed uses # as the delimiter
+    # (worktree paths never contain #). The negated class avoids BSD sed bracket
+    # pitfalls; # is left unescaped (it is the delimiter, not regex-special).
+    C_WT=$(canon "$WORKTREE")
+    C_ROOT=$(canon "$DISPATCH_ROOT")
+    C_SF=$(canon "$STATUS_FILE")
     re_escape() { sed 's#[^a-zA-Z0-9/_-]#\\&#g' <<<"$1"; }
-    WT_RE=$(re_escape "$WORKTREE")
-    SF_RE=$(re_escape "$STATUS_FILE")
-    MASKED=$(printf '%s' "$CMD" | sed -E "s#${WT_RE}(/|[[:space:]]|[\"':;,&|]|\$)#\1#g; s#${SF_RE}(/|[[:space:]]|[\"':;,&|]|\$)#\1#g")
-    # Block both the literal main-checkout path AND a reference to the
-    # CLAUDE_DISPATCH_ROOT env var (which the shell expands to that path) —
-    # otherwise `git -C "$CLAUDE_DISPATCH_ROOT" ...` would slip past the literal
-    # check. CLAUDE_DISPATCH_WORKTREE / _STATUS_FILE refs stay allowed.
-    if [[ "$MASKED" == *"$DISPATCH_ROOT"* || "$CMD" == *CLAUDE_DISPATCH_ROOT* ]]; then
+    BOUND='(/|[[:space:]]|["'"'"':;,&|]|$)'
+    SED_PROG=""
+    for p in "$WORKTREE" "$C_WT" "$STATUS_FILE" "$C_SF"; do
+      [[ -z "$p" ]] && continue
+      SED_PROG+="s#$(re_escape "$p")${BOUND}#\\1#g;"
+    done
+    MASKED=$(printf '%s' "$CMD" | sed -E "$SED_PROG")
+    # Block the literal/canonical main-checkout path OR a reference to the
+    # CLAUDE_DISPATCH_ROOT env var (the shell expands it to that path) — otherwise
+    # `git -C "$CLAUDE_DISPATCH_ROOT" ...` slips past the literal check.
+    # CLAUDE_DISPATCH_WORKTREE / _STATUS_FILE refs stay allowed.
+    if [[ "$MASKED" == *"$DISPATCH_ROOT"* || "$MASKED" == *"$C_ROOT"* || "$CMD" == *CLAUDE_DISPATCH_ROOT* ]]; then
       block_msg "this command references the shared main checkout at '$DISPATCH_ROOT'."
       exit 2
     fi
