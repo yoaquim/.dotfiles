@@ -32,11 +32,13 @@ STRIPPED=$(printf '%s' "$CMD" | sed -E '
   s/[0-9]*&?>>?[[:space:]]*\/dev\/(null|stdout|stderr)//g;    # >/dev/null, 2>>/dev/null, &>/dev/null
 ')
 
-# Disqualify on a file-writing redirect, command substitution, chaining,
+# Disqualify on a file-writing redirect, command/process substitution, chaining,
 # backgrounding, or a newline. Only the `|` pipe separator survives to splitting.
-# shellcheck disable=SC2016  # the '$(' pattern is a literal to match, not an expansion
+# `<(` is input process substitution (runs a subprocess); `>(` and `>` are caught
+# by the `>` arm.
+# shellcheck disable=SC2016  # the '$(' / '<(' patterns are literals to match, not expansions
 case "$STRIPPED" in
-  *'>'*|*'&'*|*';'*|*'`'*|*'$('*|*$'\n'*) exit 0 ;;
+  *'>'*|*'&'*|*';'*|*'`'*|*'$('*|*'<('*|*$'\n'*) exit 0 ;;
 esac
 
 SAFE='ls|cat|head|tail|wc|grep|rg|which|file|jq|diff|shellcheck'
@@ -53,6 +55,11 @@ for seg in "${SEGS[@]}"; do
     seg="${BASH_REMATCH[1]}"
   done
   word=${seg%%[[:space:]]*}
+  # rg can execute a preprocessor command via --pre / --pre-glob — never allow it.
+  # (`--pretty` etc. must NOT match, so require a =, space, or end after --pre.)
+  if [[ "$word" == "rg" && "$seg" =~ (^|[[:space:]])--pre(-glob)?(=|[[:space:]]|$) ]]; then
+    ok=0; break
+  fi
   if [[ "$word" =~ ^($SAFE)$ ]]; then
     continue
   fi
