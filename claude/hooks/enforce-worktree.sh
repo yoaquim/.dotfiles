@@ -23,12 +23,13 @@
 # Sessions launched without those vars fall back to cwd-derived detection (best
 # effort: it cannot see a runner that has cd'd away from its worktree).
 #
-# The Bash check is best-effort: it catches references to the main checkout's
-# absolute path (what discovery hands the runner) and to the CLAUDE_DISPATCH_ROOT
-# env var that expands to it. It cannot see a path the runner *computes* at
-# runtime (relative traversal like `cd ../../..`, or deriving root from the
-# worktree var), which the spawn prompt forbids. Defense-in-depth on that prompt,
-# not an adversarial sandbox.
+# The Bash check covers three vectors: the main checkout's absolute path (what
+# discovery hands the runner), the CLAUDE_DISPATCH_ROOT env var that expands to
+# it, and a cwd that has been moved into the shared checkout (so relative writes
+# are caught). It still cannot see a path the runner *computes* without naming
+# the root (e.g. deriving it from the worktree var, or `../`-escaping from the
+# worktree without cd), which the spawn prompt forbids. Defense-in-depth on that
+# prompt, not an adversarial sandbox.
 #
 # Exit 0 → allow. Exit 2 → block; stderr is fed back to the agent.
 
@@ -107,6 +108,21 @@ case "$TOOL" in
   Bash)
     CMD=$(jq -r '.tool_input.command // ""' <<<"$INPUT")
     [[ -z "$CMD" ]] && exit 0
+    # cwd inside the shared checkout (runner cd'd out of its worktree) → block.
+    # A relative write like `sed -i README.md` from there hits the main checkout
+    # and would not appear in the text scan below.
+    if [[ -n "$CWD" ]]; then
+      C_CWD=$(canon "$CWD")
+      C_WT=$(canon "$WORKTREE")
+      C_ROOT=$(canon "$DISPATCH_ROOT")
+      case "$C_CWD" in
+        "$C_WT"|"$C_WT"/*) : ;;                       # inside the worktree → fine
+        "$C_ROOT"|"$C_ROOT"/*)                        # inside main checkout, outside worktree
+          block_msg "your shell cwd ($C_CWD) is inside the shared main checkout. cd back into your worktree before running commands."
+          exit 2
+          ;;
+      esac
+    fi
     # Mask legitimate references (the worktree and the status file) so only
     # main-checkout references remain. The worktree path contains DISPATCH_ROOT
     # as a prefix, so masking it first prevents false positives.

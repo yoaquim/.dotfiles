@@ -12,11 +12,11 @@
 # Safe-by-default: emit "allow" only when every pipeline segment is positively
 # recognized as read-only. Anything else stays silent → normal permission prompt.
 #
-# Recognized read-only commands:
-#   - flagless-safe utilities: ls cat head tail wc grep rg which file jq diff shellcheck
-#   - git status / diff / log / show   (excluded if --output, which writes a file)
-# Pipelines of these are fine. Command chaining, substitution, backgrounding, and
-# any file-writing redirect disqualify (fall through to a prompt).
+# Recognized read-only commands: ls cat head tail wc grep rg which file jq diff
+# and shellcheck itself. Pipelines of these are fine. git is NOT included (its
+# repo-local config can execute helpers). Command chaining, substitution,
+# backgrounding, env-assignment prefixes, and any file-writing redirect
+# disqualify (fall through to a prompt).
 
 set -uo pipefail
 trap 'exit 0' ERR
@@ -65,12 +65,10 @@ for seg in "${SEGS[@]}"; do
   if [[ "$word" =~ ^($SAFE)$ ]]; then
     continue
   fi
-  # Read-only git subcommands (optionally via --no-pager), excluding --output
-  # (writes a file). `-c`/env config that could set diff.external is NOT allowed
-  # here — only a bare `git` or `git --no-pager` prefix matches.
-  if [[ "$seg" =~ ^git([[:space:]]+--no-pager)?[[:space:]]+(status|diff|log|show)([[:space:]]|$) && "$seg" != *--output* ]]; then
-    continue
-  fi
+  # NOTE: git is deliberately NOT auto-allowed. Even `git status`/`diff`/`log`
+  # execute repo-local config helpers (core.fsmonitor, diff.external, .gitattributes
+  # textconv) that a cloned repo can set with no env/-c and no setup command — an
+  # arbitrary-exec vector. git commands fall through to the normal prompt.
   ok=0; break
 done
 
