@@ -50,10 +50,12 @@ for seg in "${SEGS[@]}"; do
   seg="${seg#"${seg%%[![:space:]]*}"}"
   seg="${seg%"${seg##*[![:space:]]}"}"
   [[ -z "$seg" ]] && { ok=0; break; }
-  # Strip leading VAR=val env assignments.
-  while [[ "$seg" =~ ^[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+(.*)$ ]]; do
-    seg="${BASH_REMATCH[1]}"
-  done
+  # An env-assignment prefix can hijack execution of an otherwise-safe command —
+  # LD_PRELOAD=evil.so cat, PATH=/tmp/evil grep, GIT_EXTERNAL_DIFF=... git diff,
+  # GIT_PAGER=..., etc. Never auto-allow an env-prefixed command.
+  if [[ "$seg" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+    ok=0; break
+  fi
   word=${seg%%[[:space:]]*}
   # rg can execute a preprocessor command via --pre / --pre-glob — never allow it.
   # (`--pretty` etc. must NOT match, so require a =, space, or end after --pre.)
@@ -63,8 +65,10 @@ for seg in "${SEGS[@]}"; do
   if [[ "$word" =~ ^($SAFE)$ ]]; then
     continue
   fi
-  # Read-only git subcommands — but not with --output (writes a file).
-  if [[ "$seg" =~ ^git[[:space:]]+(status|diff|log|show)([[:space:]]|$) && "$seg" != *--output* ]]; then
+  # Read-only git subcommands (optionally via --no-pager), excluding --output
+  # (writes a file). `-c`/env config that could set diff.external is NOT allowed
+  # here — only a bare `git` or `git --no-pager` prefix matches.
+  if [[ "$seg" =~ ^git([[:space:]]+--no-pager)?[[:space:]]+(status|diff|log|show)([[:space:]]|$) && "$seg" != *--output* ]]; then
     continue
   fi
   ok=0; break
