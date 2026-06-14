@@ -24,9 +24,11 @@
 # effort: it cannot see a runner that has cd'd away from its worktree).
 #
 # The Bash check is best-effort: it catches references to the main checkout's
-# absolute path (what discovery hands the runner). It cannot see writes reached
-# purely by relative traversal (e.g. `cd ../../.. && sed -i x`), which the spawn
-# prompt forbids. Treat it as defense-in-depth layered on that prompt.
+# absolute path (what discovery hands the runner) and to the CLAUDE_DISPATCH_ROOT
+# env var that expands to it. It cannot see a path the runner *computes* at
+# runtime (relative traversal like `cd ../../..`, or deriving root from the
+# worktree var), which the spawn prompt forbids. Defense-in-depth on that prompt,
+# not an adversarial sandbox.
 #
 # Exit 0 → allow. Exit 2 → block; stderr is fed back to the agent.
 
@@ -110,7 +112,11 @@ case "$TOOL" in
     # as a prefix, so masking it first prevents false positives.
     MASKED=${CMD//"$WORKTREE"/}
     MASKED=${MASKED//"$STATUS_FILE"/}
-    if [[ "$MASKED" == *"$DISPATCH_ROOT"* ]]; then
+    # Block both the literal main-checkout path AND a reference to the
+    # CLAUDE_DISPATCH_ROOT env var (which the shell expands to that path) —
+    # otherwise `git -C "$CLAUDE_DISPATCH_ROOT" ...` would slip past the literal
+    # check. CLAUDE_DISPATCH_WORKTREE / _STATUS_FILE refs stay allowed.
+    if [[ "$MASKED" == *"$DISPATCH_ROOT"* || "$CMD" == *CLAUDE_DISPATCH_ROOT* ]]; then
       block_msg "this command references the shared main checkout at '$DISPATCH_ROOT'."
       exit 2
     fi
