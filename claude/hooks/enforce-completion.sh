@@ -29,6 +29,14 @@ trap 'exit 0' ERR
 # Drain stdin (Stop hook input is JSON we don't need).
 cat >/dev/null 2>&1 || true
 
+# Pin to the runner's worktree via the immutable identity spawn.sh injects, so a
+# cwd that has drifted into the shared checkout can't make this look like a
+# non-dispatch session and skip the completion gates. All git/gh checks below
+# then run against the worktree regardless of where the runner's cwd ended up.
+if [[ -n "${CLAUDE_DISPATCH_WORKTREE:-}" ]]; then
+  cd "$CLAUDE_DISPATCH_WORKTREE" 2>/dev/null || true
+fi
+
 # --- Identify dispatch session ---
 COMMON_GIT_DIR=$(git rev-parse --git-common-dir 2>/dev/null) || exit 0
 COMMON_GIT_DIR=$(cd "$COMMON_GIT_DIR" 2>/dev/null && pwd) || exit 0
