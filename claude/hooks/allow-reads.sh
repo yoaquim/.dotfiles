@@ -58,9 +58,10 @@ for seg in "${SEGS[@]}"; do
     ok=0; break
   fi
   word=${seg%%[[:space:]]*}
-  # rg can execute a preprocessor command via --pre / --pre-glob — never allow it.
-  # (`--pretty` etc. must NOT match, so require a =, space, or end after --pre.)
-  if [[ "$word" == "rg" && "$seg" =~ (^|[[:space:]])--pre(-glob)?(=|[[:space:]]|$) ]]; then
+  # rg can execute a command via --pre / --pre-glob (preprocessor) or
+  # --hostname-bin (hostname helper). Never auto-allow those. Trailing (=|space|
+  # end) so lookalikes such as --pretty do NOT match.
+  if [[ "$word" == "rg" && "$seg" =~ (^|[[:space:]])(--pre(-glob)?|--hostname-bin)(=|[[:space:]]|$) ]]; then
     ok=0; break
   fi
   if [[ "$word" =~ ^($SAFE)$ ]]; then
