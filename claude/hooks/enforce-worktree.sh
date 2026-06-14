@@ -108,6 +108,17 @@ case "$TOOL" in
   Bash)
     CMD=$(jq -r '.tool_input.command // ""' <<<"$INPUT")
     [[ -z "$CMD" ]] && exit 0
+    # Always allow a pure `cd` (it writes nothing) so a runner whose cwd has
+    # drifted into the main checkout can recover by cd'ing back to its worktree —
+    # the next command runs under the new cwd and is re-checked. Reject if it
+    # chains another command or uses substitution.
+    # shellcheck disable=SC2016  # '$(' / '<(' are literals to match, not expansions
+    if [[ "$CMD" =~ ^[[:space:]]*cd([[:space:]]|$) ]]; then
+      case "$CMD" in
+        *'&&'*|*'||'*|*';'*|*'|'*|*'&'*|*'$('*|*'`'*|*'<('*|*$'\n'*) : ;;
+        *) exit 0 ;;
+      esac
+    fi
     # cwd inside the shared checkout (runner cd'd out of its worktree) → block.
     # A relative write like `sed -i README.md` from there hits the main checkout
     # and would not appear in the text scan below.
@@ -123,11 +134,17 @@ case "$TOOL" in
           ;;
       esac
     fi
-    # Mask legitimate references (the worktree and the status file) so only
-    # main-checkout references remain. The worktree path contains DISPATCH_ROOT
-    # as a prefix, so masking it first prevents false positives.
-    MASKED=${CMD//"$WORKTREE"/}
-    MASKED=${MASKED//"$STATUS_FILE"/}
+    # Remove references to THIS worktree and the status file so only main-checkout
+    # references remain. Boundary-aware (the path must end at /, whitespace, a
+    # quote, a separator, or end-of-string) so a sibling worktree like .../eng-10
+    # is NOT erased by a .../eng-1 prefix match. Paths are regex-escaped; sed uses
+    # # as the delimiter (worktree paths never contain #).
+    # Escape every char that isn't a plain path char (avoids BSD sed bracket-order
+    # pitfalls). # is left unescaped — it's the sed delimiter and not regex-special.
+    re_escape() { sed 's#[^a-zA-Z0-9/_-]#\\&#g' <<<"$1"; }
+    WT_RE=$(re_escape "$WORKTREE")
+    SF_RE=$(re_escape "$STATUS_FILE")
+    MASKED=$(printf '%s' "$CMD" | sed -E "s#${WT_RE}(/|[[:space:]]|[\"':;,&|]|\$)#\1#g; s#${SF_RE}(/|[[:space:]]|[\"':;,&|]|\$)#\1#g")
     # Block both the literal main-checkout path AND a reference to the
     # CLAUDE_DISPATCH_ROOT env var (which the shell expands to that path) —
     # otherwise `git -C "$CLAUDE_DISPATCH_ROOT" ...` would slip past the literal
