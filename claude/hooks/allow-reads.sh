@@ -29,7 +29,7 @@ CMD=$(jq -r '.tool_input.command // ""' <<<"$INPUT")
 # below only fire on real writes / separators.
 STRIPPED=$(printf '%s' "$CMD" | sed -E '
   s/[0-9]*>&[0-9-]+//g;                                       # fd dups: 2>&1, >&2, >&-
-  s/[0-9]*&?>>?[[:space:]]*\/dev\/(null|stdout|stderr)//g;    # >/dev/null, 2>>/dev/null, &>/dev/null
+  s/[0-9]*&?>>?[[:space:]]*\/dev\/(null|stdout|stderr)([[:space:];|]|$)/\2/g;  # >/dev/null, 2>>/dev/null, &>/dev/null — boundary-anchored so >/dev/nullX is not partially stripped
 ')
 
 # Disqualify on a file-writing redirect, command/process substitution, chaining,
