@@ -3,48 +3,7 @@
 # ───────────────────────────────────────────────────
 
 
-# nvm (lazy-loaded)
-# ───────────────────────────────────────────────────
-
-if [ ! -d "$HOME/.nvm" ]; then
-  mkdir -p "$HOME/.nvm"
-fi
-export NVM_DIR="$HOME/.nvm"
-
-# Lazy-load nvm: define placeholder functions that load nvm on first use
-load_nvm() {
-    unset -f nvm node npm npx load_nvm
-    [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
-    [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
-}
-nvm()  { load_nvm; nvm  "$@"; }
-node() { load_nvm; node "$@"; }
-npm()  { load_nvm; npm  "$@"; }
-npx()  { load_nvm; npx  "$@"; }
-
-
-# pyenv (lazy-loaded)
-# ───────────────────────────────────────────────────
-
-if [ ! -d "$HOME/.pyenv" ]; then
-  mkdir -p "$HOME/.pyenv"
-fi
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-
-# Lazy-load pyenv: define placeholder functions that load pyenv on first use
-load_pyenv() {
-    unset -f pyenv python python3 pip pip3 load_pyenv
-    eval "$(pyenv init - bash)"
-}
-pyenv()   { load_pyenv; pyenv   "$@"; }
-python()  { load_pyenv; python  "$@"; }
-python3() { load_pyenv; python3 "$@"; }
-pip()     { load_pyenv; pip     "$@"; }
-pip3()    { load_pyenv; pip3    "$@"; }
-
-
-# direnv 
+# direnv
 # ───────────────────────────────────────────────────
 if command -v direnv &> /dev/null
 then
