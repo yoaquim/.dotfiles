@@ -36,13 +36,13 @@ STRIPPED=$(printf '%s' "$CMD" | sed -E '
   s/[0-9]*&?>>?[[:space:]]*\/dev\/(null|stdout|stderr)([[:space:];|]|$)/\2/g;  # >/dev/null, 2>>/dev/null, &>/dev/null — boundary-anchored so >/dev/nullX is not partially stripped
 ')
 
-# Disqualify on a file-writing redirect, command/process substitution, chaining,
-# backgrounding, or a newline. Only the `|` pipe separator survives to splitting.
-# `<(` is input process substitution (runs a subprocess); `>(` and `>` are caught
-# by the `>` arm.
-# shellcheck disable=SC2016  # the '$(' / '<(' patterns are literals to match, not expansions
+# Disqualify on a redirect (output `>` OR input `<`, incl. `<(`/`<<`), command
+# substitution, chaining, backgrounding, or a newline. `<` matters because
+# `cat </etc/passwd` reads a file the token scan below wouldn't flag as absolute.
+# Only the `|` pipe separator survives to splitting.
+# shellcheck disable=SC2016  # the '$(' pattern is a literal to match, not an expansion
 case "$STRIPPED" in
-  *'>'*|*'&'*|*';'*|*'`'*|*'$('*|*'<('*|*$'\n'*) exit 0 ;;
+  *'>'*|*'<'*|*'&'*|*';'*|*'`'*|*'$('*|*$'\n'*) exit 0 ;;
 esac
 
 # `file` is intentionally excluded — `file -C` compiles/writes a .mgc database.
@@ -96,11 +96,16 @@ if [[ $ok -eq 1 && -n "$CWD" ]]; then
   scan=${CMD//[\"\']/}            # drop quotes so quoted abs paths are seen
   set -f                          # no globbing while word-splitting
   for tok in $scan; do
-    case "$tok" in
+    # Extract an absolute path even when attached to an option, so
+    # `--from-file=/etc/passwd` and `-f/etc/passwd` are checked, not just bare /…
+    cand="$tok"
+    case "$cand" in *=*) cand=${cand#*=} ;; esac   # --from-file=/x -> /x
+    case "$cand" in -*/*) cand="/${cand#*/}" ;; esac  # -f/etc/passwd -> /etc/passwd
+    case "$cand" in
       /*)
         # Accept under the cwd in either its raw or canonical (symlink-resolved)
         # spelling, so /tmp vs /private/tmp doesn't cause a false prompt.
-        case "$tok" in
+        case "$cand" in
           "$CWD"|"$CWD"/*|"$C_CWD"|"$C_CWD"/*) : ;;  # absolute path inside the project → ok
           *) ok=0; break ;;                          # outside the project → prompt
         esac

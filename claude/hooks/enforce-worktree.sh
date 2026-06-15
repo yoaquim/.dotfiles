@@ -65,17 +65,27 @@ fi
 
 [[ -z "$DISPATCH_ROOT" ]] && exit 0
 
-# Resolve symlinks (e.g. /tmp → /private/tmp) so prefix checks compare
-# physical paths. Walks up past not-yet-created components.
+# Resolve symlinks (e.g. /tmp → /private/tmp, AND a final symlinked file whose
+# target is elsewhere) so prefix checks compare physical paths. realpath resolves
+# every component including the last; for a not-yet-created path it fails, so we
+# resolve the deepest EXISTING ancestor and re-attach the missing suffix.
 canon() {
-    local p="$1" suffix=""
+    local p="$1" suffix="" r
     [[ -z "$p" ]] && return
-    while [[ ! -d "$p" && "$p" != "/" ]]; do
+    # Fast path: the whole path exists — resolve it fully (final symlink included).
+    if r=$(realpath "$p" 2>/dev/null); then
+        printf '%s' "$r"; return
+    fi
+    # Missing trailing components: peel them off until an existing ancestor.
+    while [[ ! -e "$p" && "$p" != "/" ]]; do
         suffix="/$(basename "$p")$suffix"
         p=$(dirname "$p")
     done
-    p=$(cd "$p" 2>/dev/null && pwd -P) || { printf '%s' "$1"; return; }
-    printf '%s%s' "$p" "$suffix"
+    if r=$(realpath "$p" 2>/dev/null); then
+        printf '%s%s' "$r" "$suffix"; return
+    fi
+    r=$(cd "$p" 2>/dev/null && pwd -P) || { printf '%s' "$1"; return; }
+    printf '%s%s' "$r" "$suffix"
 }
 
 block_msg() {
@@ -148,6 +158,11 @@ case "$TOOL" in
     C_WT=$(canon "$WORKTREE")
     C_ROOT=$(canon "$DISPATCH_ROOT")
     C_SF=$(canon "$STATUS_FILE")
+    # Strip shell backslash-escapes first: the shell dequotes `/work\/repo` to
+    # `/work/repo`, so without this `touch /main\/repo/x` would smuggle a write
+    # past the literal substring match. Aggressive de-escaping only ever makes
+    # MORE paths match the protected root (fail-safe for a guard).
+    DCMD=$(printf '%s' "$CMD" | sed 's#\\\(.\)#\1#g')
     re_escape() { sed 's#[^a-zA-Z0-9/_-]#\\&#g' <<<"$1"; }
     BOUND='(/|[[:space:]]|["'"'"':;,&|]|$)'
     SED_PROG=""
@@ -155,12 +170,12 @@ case "$TOOL" in
       [[ -z "$p" ]] && continue
       SED_PROG+="s#$(re_escape "$p")${BOUND}#\\1#g;"
     done
-    MASKED=$(printf '%s' "$CMD" | sed -E "$SED_PROG")
+    MASKED=$(printf '%s' "$DCMD" | sed -E "$SED_PROG")
     # Block the literal/canonical main-checkout path OR a reference to the
     # CLAUDE_DISPATCH_ROOT env var (the shell expands it to that path) — otherwise
     # `git -C "$CLAUDE_DISPATCH_ROOT" ...` slips past the literal check.
     # CLAUDE_DISPATCH_WORKTREE / _STATUS_FILE refs stay allowed.
-    if [[ "$MASKED" == *"$DISPATCH_ROOT"* || "$MASKED" == *"$C_ROOT"* || "$CMD" == *CLAUDE_DISPATCH_ROOT* ]]; then
+    if [[ "$MASKED" == *"$DISPATCH_ROOT"* || "$MASKED" == *"$C_ROOT"* || "$DCMD" == *CLAUDE_DISPATCH_ROOT* ]]; then
       block_msg "this command references the shared main checkout at '$DISPATCH_ROOT'."
       exit 2
     fi
