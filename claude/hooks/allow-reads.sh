@@ -93,6 +93,20 @@ if [[ $ok -eq 1 ]]; then
 fi
 if [[ $ok -eq 1 && -n "$CWD" ]]; then
   C_CWD=$(cd "$CWD" 2>/dev/null && pwd -P) || C_CWD="$CWD"
+  # Resolve as much of an operand as exists (from cwd), following symlinks on the
+  # existing prefix, and re-attach the missing tail — so `sshlink/missing` where
+  # sshlink -> /etc resolves to /etc/missing. Empty output = nothing path-like.
+  real_prefix() {
+    local q="$1" sfx="" r
+    while [[ -n "$q" && "$q" != "." && "$q" != "/" ]]; do
+      if r=$(cd "$CWD" 2>/dev/null && realpath -- "$q" 2>/dev/null); then
+        printf '%s%s' "$r" "$sfx"; return 0
+      fi
+      sfx="/$(basename "$q")$sfx"
+      q=$(dirname "$q")
+    done
+    return 1
+  }
   scan=${CMD//[\"\']/}            # drop quotes so quoted abs paths are seen
   set -f                          # no globbing while word-splitting
   for tok in $scan; do
@@ -109,6 +123,20 @@ if [[ $ok -eq 1 && -n "$CWD" ]]; then
           "$CWD"|"$CWD"/*|"$C_CWD"|"$C_CWD"/*) : ;;  # absolute path inside the project → ok
           *) ok=0; break ;;                          # outside the project → prompt
         esac
+        ;;
+    esac
+    # Resolve the operand and check its REAL target: an in-cwd symlink can point
+    # outside the project (`cat leak` where leak -> ~/.ssh/id_rsa, or a symlinked
+    # dir `sshlink/x`). Skip flags; a non-path (pattern/missing) yields no prefix.
+    case "$cand" in
+      -*) ;;
+      *)
+        if rp=$(real_prefix "$cand"); then
+          case "$rp" in
+            "$CWD"|"$CWD"/*|"$C_CWD"|"$C_CWD"/*) : ;;  # resolves inside the project → ok
+            *) ok=0; break ;;                          # resolves outside → prompt
+          esac
+        fi
         ;;
     esac
   done
