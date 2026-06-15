@@ -17,12 +17,16 @@
 # included (its repo-local config can execute helpers); neither is `file` (`-C`
 # writes a .mgc). Command chaining, substitution, backgrounding, env-assignment
 # prefixes, and any file-writing redirect disqualify (fall through to a prompt).
+# Auto-approval is also scoped to the project: home refs (~/$), parent escapes
+# (..), and absolute paths outside the cwd disqualify, so a prompt-injected repo
+# can't silently read secrets (e.g. ~/.ssh/id_rsa) without a prompt.
 
 set -uo pipefail
 trap 'exit 0' ERR
 
 INPUT=$(cat)
 CMD=$(jq -r '.tool_input.command // ""' <<<"$INPUT")
+CWD=$(jq -r '.cwd // ""' <<<"$INPUT")
 [[ -z "$CMD" ]] && exit 0
 
 # Remove harmless redirect forms (fd dups, /dev sinks) so the disqualifier checks
@@ -74,12 +78,44 @@ for seg in "${SEGS[@]}"; do
   ok=0; break
 done
 
+# Path-exfil guard: a read-only command is still dangerous if it reads SECRETS.
+# Auto-approve only when the command stays inside the current project (cwd) — so
+# a prompt-injected repo can't silently `cat ~/.ssh/id_rsa` or `rg TOKEN ~/.config`
+# into the transcript without a prompt. Reject:
+#   - ~ or $ (home reference / variable expansion → unknown or out-of-project target)
+#   - .. (parent-directory escape)
+#   - any absolute path token not under the cwd
+# Relative, in-project reads (the common case) still auto-approve.
+if [[ $ok -eq 1 ]]; then
+  case "$CMD" in
+    *'~'*|*'$'*|*'..'*) ok=0 ;;
+  esac
+fi
+if [[ $ok -eq 1 && -n "$CWD" ]]; then
+  C_CWD=$(cd "$CWD" 2>/dev/null && pwd -P) || C_CWD="$CWD"
+  scan=${CMD//[\"\']/}            # drop quotes so quoted abs paths are seen
+  set -f                          # no globbing while word-splitting
+  for tok in $scan; do
+    case "$tok" in
+      /*)
+        # Accept under the cwd in either its raw or canonical (symlink-resolved)
+        # spelling, so /tmp vs /private/tmp doesn't cause a false prompt.
+        case "$tok" in
+          "$CWD"|"$CWD"/*|"$C_CWD"|"$C_CWD"/*) : ;;  # absolute path inside the project → ok
+          *) ok=0; break ;;                          # outside the project → prompt
+        esac
+        ;;
+    esac
+  done
+  set +f
+fi
+
 if [[ $ok -eq 1 ]]; then
   jq -n '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       permissionDecision: "allow",
-      permissionDecisionReason: "read-only command, no file-writing redirect"
+      permissionDecisionReason: "read-only command scoped to the project, no file-writing redirect"
     }
   }'
 fi
