@@ -109,26 +109,10 @@ block_msg() {
     } >&2
 }
 
-# True if the command contains an UNQUOTED `{` — brace expansion can build a
-# main-checkout path (`touch {/main/,}repo/x`) that the literal substring scan
-# below would miss. Quoted braces aren't expanded by the shell, so ignore them.
-has_unquoted_brace() {
-    local s="$1"
-    local n=${#s} i=0 c sq=0 dq=0
-    while [[ $i -lt $n ]]; do
-        c=${s:i:1}
-        if [[ $sq -eq 0 && "$c" == "\\" ]]; then i=$((i+2)); continue; fi
-        if [[ $sq -eq 0 && "$c" == '"' ]]; then dq=$((1-dq)); i=$((i+1)); continue; fi
-        if [[ $dq -eq 0 && "$c" == "'" ]]; then sq=$((1-sq)); i=$((i+1)); continue; fi
-        if [[ $sq -eq 0 && $dq -eq 0 && "$c" == '{' ]]; then return 0; fi
-        i=$((i+1))
-    done
-    return 1
-}
-
 case "$TOOL" in
-  Edit|Write|MultiEdit)
-    FILE=$(jq -r '.tool_input.file_path // ""' <<<"$INPUT")
+  Edit|Write|MultiEdit|NotebookEdit)
+    # NotebookEdit carries the target in notebook_path, the others in file_path.
+    FILE=$(jq -r '.tool_input.file_path // .tool_input.notebook_path // ""' <<<"$INPUT")
     [[ -z "$FILE" ]] && exit 0
     [[ "$FILE" != /* ]] && FILE="${CWD:-$WORKTREE}/$FILE"
     FILE=$(canon "$FILE")
@@ -158,13 +142,11 @@ case "$TOOL" in
         *) exit 0 ;;
       esac
     fi
-    # Unquoted brace expansion can build a main-checkout path the substring scan
-    # can't see; we can't safely expand it here, so block and have the runner
-    # write the path explicitly.
-    if has_unquoted_brace "$CMD"; then
-      block_msg "this command uses unquoted brace expansion, which can't be checked against the worktree boundary. Write the path(s) out explicitly."
-      exit 2
-    fi
+    # (Brace expansion that builds a main path, e.g. `touch {/main/,}repo/x`, is
+    # an ADVERSARIAL evasion — out of scope per the threat model above — and a
+    # blanket brace block over-rejects legit runner scripts, e.g. `touch {a,b}.txt`
+    # or heredoc/data braces. So we do NOT scan for braces; the literal-path and
+    # cwd checks below still catch the realistic accidental writes.)
     # De-escape shell backslashes once (the shell dequotes `/work\/repo` to
     # `/work/repo`); every path match below uses this normalized form so an
     # escaped separator can't smuggle a write past the literal scan.

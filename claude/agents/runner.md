@@ -27,6 +27,11 @@ hooks:
         - type: command
           command: "$HOME/.claude/hooks/enforce-worktree.sh"
           timeout: 10
+    - matcher: "NotebookEdit"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/enforce-worktree.sh"
+          timeout: 10
     - matcher: "Bash"
       hooks:
         - type: command
