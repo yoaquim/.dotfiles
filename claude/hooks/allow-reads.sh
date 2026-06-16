@@ -69,6 +69,15 @@ for seg in "${SEGS[@]}"; do
   if [[ "$word" == "rg" && "$seg" =~ (^|[[:space:]])(--pre(-glob)?|--hostname-bin)(=|[[:space:]]|$) ]]; then
     ok=0; break
   fi
+  # Recursive descent that FOLLOWS symlinks can read outside the project via a
+  # symlink in a subdirectory (operand-only path checks don't see those). Block
+  # the symlink-following recursive flags; non-following recursion (grep -r, rg's
+  # default) is fine. Short-flag clusters like `-ru` are matched.
+  case "$word" in
+    diff) [[ "$seg" =~ (^|[[:space:]])(-[A-Za-z]*r[A-Za-z]*|--recursive)([[:space:]]|$) ]] && { ok=0; break; } ;;
+    grep) [[ "$seg" =~ (^|[[:space:]])(-[A-Za-z]*R[A-Za-z]*|--dereference-recursive)([[:space:]]|$) ]] && { ok=0; break; } ;;
+    rg)   [[ "$seg" =~ (^|[[:space:]])(-[A-Za-z]*L[A-Za-z]*|--follow)([[:space:]]|$) ]] && { ok=0; break; } ;;
+  esac
   if [[ "$word" =~ ^($SAFE)$ ]]; then
     continue
   fi

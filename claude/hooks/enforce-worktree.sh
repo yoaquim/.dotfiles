@@ -154,6 +154,19 @@ case "$TOOL" in
       block_msg "this command uses unquoted brace expansion, which can't be checked against the worktree boundary. Write the path(s) out explicitly."
       exit 2
     fi
+    # De-escape shell backslashes once (the shell dequotes `/work\/repo` to
+    # `/work/repo`); every path match below uses this normalized form so an
+    # escaped separator can't smuggle a write past the literal scan.
+    DCMD=$(printf '%s' "$CMD" | sed 's#\\\(.\)#\1#g')
+    # Parent traversal (..) can escape the worktree before the literal scan ever
+    # sees the root — e.g. `cd ../../.. && touch README.md`. (A pure cd is allowed
+    # above and re-checked by cwd on the next command; this catches chained/write
+    # forms.) We can't know the runtime cwd a `..` resolves against, so reject any
+    # `..` path component outright.
+    if [[ "$DCMD" =~ (^|[^.])\.\.(/|$|[^.]) ]]; then
+      block_msg "a '..' path component can escape the worktree. Use an explicit path inside your worktree."
+      exit 2
+    fi
     # cwd inside the shared checkout (runner cd'd out of its worktree) → block.
     # A relative write like `sed -i README.md` from there hits the main checkout
     # and would not appear in the text scan below.
@@ -182,11 +195,6 @@ case "$TOOL" in
     C_WT=$(canon "$WORKTREE")
     C_ROOT=$(canon "$DISPATCH_ROOT")
     C_SF=$(canon "$STATUS_FILE")
-    # Strip shell backslash-escapes first: the shell dequotes `/work\/repo` to
-    # `/work/repo`, so without this `touch /main\/repo/x` would smuggle a write
-    # past the literal substring match. Aggressive de-escaping only ever makes
-    # MORE paths match the protected root (fail-safe for a guard).
-    DCMD=$(printf '%s' "$CMD" | sed 's#\\\(.\)#\1#g')
     re_escape() { sed 's#[^a-zA-Z0-9/_-]#\\&#g' <<<"$1"; }
     BOUND='(/|[[:space:]]|["'"'"':;,&|]|$)'
     SED_PROG=""
@@ -206,10 +214,6 @@ case "$TOOL" in
     fi
     if printf '%s' "$DCMD" | grep -qE 'CLAUDE_DISPATCH_STATUS_FILE\}?/'; then
       block_msg "the status file is a file, not a directory — don't append a path to CLAUDE_DISPATCH_STATUS_FILE."
-      exit 2
-    fi
-    if [[ "$DCMD" == *'..'* ]] && printf '%s' "$DCMD" | grep -qE 'CLAUDE_DISPATCH_(WORKTREE|STATUS_FILE|ROOT)'; then
-      block_msg "a '..' traversal off a CLAUDE_DISPATCH_* variable can escape the worktree."
       exit 2
     fi
     # Block the literal/canonical main-checkout path OR a reference to the
