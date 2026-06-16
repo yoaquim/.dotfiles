@@ -131,65 +131,71 @@ case "$TOOL" in
   Bash)
     CMD=$(jq -r '.tool_input.command // ""' <<<"$INPUT")
     [[ -z "$CMD" ]] && exit 0
+    # De-escape shell backslashes once (the shell dequotes `/work\/repo` to
+    # `/work/repo`); every path match below uses this normalized form so an
+    # escaped separator can't smuggle a write past the literal scan.
+    DCMD=$(printf '%s' "$CMD" | sed 's#\\\(.\)#\1#g')
+
+    cd_wt=$(canon "$WORKTREE")
+    # Effective cwd: starts at the call's cwd and advances through leading `cd`s,
+    # so the cwd check below sees where a write actually lands.
+    EFFCWD="${CWD:-$WORKTREE}"
+
+    # Resolve a `cd` target (quotes/env/home expanded) from a base cwd → canonical
+    # destination, or empty.
+    # shellcheck disable=SC2016  # the CLAUDE_DISPATCH/HOME patterns are LITERAL text to expand, not shell expansions
+    resolve_cd() {
+      local t="$1" base="$2"
+      t=${t//[\"\']/}
+      t=${t//'${CLAUDE_DISPATCH_WORKTREE}'/$WORKTREE}
+      t=${t//'$CLAUDE_DISPATCH_WORKTREE'/$WORKTREE}
+      if [[ -n "${HOME:-}" ]]; then t=${t//'~/'/$HOME/}; t=${t//'$HOME'/$HOME}; fi
+      [[ -z "$t" || "$t" == '~' ]] && t="${HOME:-/}"
+      (cd "$base" 2>/dev/null && cd "$t" 2>/dev/null && pwd -P) || true
+    }
+
     # `cd` moves the cwd, from which a later RELATIVE write could reach the shared
-    # checkout without ever naming it (the absolute-path scan wouldn't see it).
-    # So for any command that starts with `cd`, resolve its destination: if it
-    # leaves the worktree, block (covers both `cd ../../../..` as a standalone
-    # call and `cd /parent && touch repo/x` as a chained one). If it stays inside
-    # the worktree, a PURE cd is allowed outright (writes nothing) and a chained
-    # one falls through so the rest of the command is still checked. Recovery
-    # (`cd "$CLAUDE_DISPATCH_WORKTREE"`) lands in the worktree and is allowed even
-    # from a drifted cwd (an absolute cd ignores the old cwd).
-    # shellcheck disable=SC2016  # '$(' / '<(' and the CLAUDE_DISPATCH/HOME patterns are literals, not expansions
-    if [[ "$CMD" =~ ^[[:space:]]*cd([[:space:]]|$) ]]; then
-      cd_tgt=$(printf '%s' "$CMD" | sed -E 's/^[[:space:]]*cd[[:space:]]*//; s/[[:space:]&|;].*//')  # target up to first space/separator
-      cd_tgt=${cd_tgt//[\"\']/}                                        # strip quotes
-      cd_tgt=${cd_tgt//'${CLAUDE_DISPATCH_WORKTREE}'/$WORKTREE}
-      cd_tgt=${cd_tgt//'$CLAUDE_DISPATCH_WORKTREE'/$WORKTREE}
-      if [[ -n "${HOME:-}" ]]; then cd_tgt=${cd_tgt//'~/'/$HOME/}; cd_tgt=${cd_tgt//'$HOME'/$HOME}; fi
-      [[ -z "$cd_tgt" || "$cd_tgt" == '~' ]] && cd_tgt="${HOME:-/}"     # bare cd / cd ~ → home
-      cd_dest=$(cd "${CWD:-$WORKTREE}" 2>/dev/null && cd "$cd_tgt" 2>/dev/null && pwd -P) || cd_dest=""
-      cd_wt=$(canon "$WORKTREE")
+    # checkout without ever naming it. Inspect EVERY `cd` segment (not just a
+    # leading one — `set -e; cd /parent && touch repo/x` must be caught too),
+    # tracking the effective cwd. Block any cd whose destination leaves the
+    # worktree (`cd ../../..`, `cd /parent`, `cd ~`, ...); a cd that stays inside
+    # just advances EFFCWD, so a chained recovery
+    # `cd "$CLAUDE_DISPATCH_WORKTREE" && git status` from a drifted cwd works.
+    while IFS= read -r seg; do
+      seg="${seg#"${seg%%[![:space:]]*}"}"
+      [[ "$seg" =~ ^cd([[:space:]]|$) ]] || continue
+      cd_tgt=$(printf '%s' "$seg" | sed -E 's/^cd[[:space:]]*//; s/[[:space:]].*//')
+      cd_dest=$(resolve_cd "$cd_tgt" "$EFFCWD")
       case "$cd_dest" in
-        "$cd_wt"|"$cd_wt"/*)
-          # destination stays in the worktree
-          case "$CMD" in
-            *'&&'*|*'||'*|*';'*|*'|'*|*'&'*|*'$('*|*'`'*|*'<('*|*$'\n'*) : ;;  # chained — fall through, rest is checked
-            *) exit 0 ;;                                                        # pure cd in worktree — allow
-          esac
-          ;;
+        "$cd_wt"|"$cd_wt"/*) EFFCWD="$cd_dest" ;;
         *)
           block_msg "this 'cd' leaves your worktree (destination resolves to '${cd_dest:-$cd_tgt}'), from which a relative path could reach the shared checkout. Stay in your worktree or use absolute worktree paths."
           exit 2
           ;;
       esac
-    fi
-    # (Brace expansion that builds a main path, e.g. `touch {/main/,}repo/x`, is
-    # an ADVERSARIAL evasion — out of scope per the threat model above — and a
-    # blanket brace block over-rejects legit runner scripts, e.g. `touch {a,b}.txt`
-    # or heredoc/data braces. So we do NOT scan for braces; the literal-path and
-    # cwd checks below still catch the realistic accidental writes.)
-    # De-escape shell backslashes once (the shell dequotes `/work\/repo` to
-    # `/work/repo`); every path match below uses this normalized form so an
-    # escaped separator can't smuggle a write past the literal scan.
-    DCMD=$(printf '%s' "$CMD" | sed 's#\\\(.\)#\1#g')
-    # Parent traversal (..) can escape the worktree before the literal scan ever
-    # sees the root — e.g. `cd ../../.. && touch README.md`. Match `..` only as a
-    # standalone path component: EXACTLY two dots bounded on both sides by /,
-    # whitespace, a quote, or string end. This deliberately does NOT match a
-    # longer run of dots or word-adjacent dots, so Git revspecs (`main..HEAD`,
-    # `main...HEAD`) and Go's recursive package wildcard (`./...`, `go test ./...`)
-    # are allowed.
+    done < <(printf '%s' "$DCMD" | sed -E 's/(&&|\|\||;|\||&)/\n/g')
+
+    # A pure cd (only a cd, nothing else) writes nothing → allow.
+    # shellcheck disable=SC2016  # '$(' / '<(' are literals to match, not expansions
+    case "$DCMD" in
+      *'&&'*|*'||'*|*';'*|*'|'*|*'&'*|*'$('*|*'`'*|*'<('*|*$'\n'*) : ;;
+      *) [[ "$DCMD" =~ ^[[:space:]]*cd([[:space:]]|$) ]] && exit 0 ;;
+    esac
+
+    # Parent traversal (..) in a NON-cd word (e.g. `touch ../x`) can escape the
+    # worktree. Match `..` only as a standalone path component: EXACTLY two dots
+    # bounded on both sides by /, whitespace, a quote, or string end — so Git
+    # revspecs (`main..HEAD`) and Go's wildcard (`go test ./...`) are allowed.
     TRAV='(^|[[:space:]"'\''/])\.\.([[:space:]"'\''/]|$)'
     if [[ "$DCMD" =~ $TRAV ]]; then
       block_msg "a '..' path component can escape the worktree. Use an explicit path inside your worktree."
       exit 2
     fi
-    # cwd inside the shared checkout (runner cd'd out of its worktree) → block.
-    # A relative write like `sed -i README.md` from there hits the main checkout
-    # and would not appear in the text scan below.
-    if [[ -n "$CWD" ]]; then
-      C_CWD=$(canon "$CWD")
+    # Effective cwd inside the shared checkout (cwd drifted in, or a leading cd
+    # landed there) → block: a relative write would hit the main checkout and not
+    # appear in the text scan below.
+    if [[ -n "$EFFCWD" ]]; then
+      C_CWD=$(canon "$EFFCWD")
       C_WT=$(canon "$WORKTREE")
       C_ROOT=$(canon "$DISPATCH_ROOT")
       case "$C_CWD" in
