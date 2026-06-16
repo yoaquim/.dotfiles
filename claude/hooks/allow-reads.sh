@@ -12,11 +12,11 @@
 # Safe-by-default: emit "allow" only when every pipeline segment is positively
 # recognized as read-only. Anything else stays silent → normal permission prompt.
 #
-# Recognized read-only commands: ls, cat, head, tail, wc, grep, rg, which, jq,
-# diff, and the shellcheck binary. Pipelines of these are fine. git is NOT
-# included (its repo-local config can execute helpers); neither is `file` (`-C`
-# writes a .mgc). Command chaining, substitution, backgrounding, env-assignment
-# prefixes, and any file-writing redirect disqualify (fall through to a prompt).
+# Recognized read-only commands: ls, cat, head, tail, wc, grep, rg, which, diff,
+# and the shellcheck binary. Pipelines of these are fine. Excluded: git (repo
+# config can execute helpers), file (`-C` writes a .mgc), jq (`env` reads the
+# process environment). Command chaining, substitution, backgrounding,
+# env-assignment prefixes, and any file-writing redirect disqualify (→ prompt).
 # Auto-approval is also scoped to the project: home refs (~/$), parent escapes
 # (..), and absolute paths outside the cwd disqualify, so a prompt-injected repo
 # can't silently read secrets (e.g. ~/.ssh/id_rsa) without a prompt.
@@ -45,8 +45,9 @@ case "$STRIPPED" in
   *'>'*|*'<'*|*'&'*|*';'*|*'`'*|*'$('*|*$'\n'*) exit 0 ;;
 esac
 
-# `file` is intentionally excluded — `file -C` compiles/writes a .mgc database.
-SAFE='ls|cat|head|tail|wc|grep|rg|which|jq|diff|shellcheck'
+# Excluded on purpose: `file` (`-C` writes a .mgc) and `jq` (its `env`/`$ENV`
+# builtins read process environment — i.e. inherited secrets — with no operand).
+SAFE='ls|cat|head|tail|wc|grep|rg|which|diff|shellcheck'
 
 ok=1
 IFS='|' read -ra SEGS <<<"$STRIPPED"

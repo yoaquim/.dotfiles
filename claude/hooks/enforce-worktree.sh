@@ -195,10 +195,26 @@ case "$TOOL" in
       SED_PROG+="s#$(re_escape "$p")${BOUND}#\\1#g;"
     done
     MASKED=$(printf '%s' "$DCMD" | sed -E "$SED_PROG")
+    # Bare $CLAUDE_DISPATCH_WORKTREE / _STATUS_FILE refs are allowed, but the shell
+    # can DERIVE the shared root from them. Block:
+    #   - parameter manipulation `${CLAUDE_DISPATCH_*<op>}` (e.g. ${…_STATUS_FILE%/.dispatch/…})
+    #   - a `..` traversal anywhere alongside such a reference (e.g. $CLAUDE_DISPATCH_WORKTREE/../x)
+    #   - appending a path onto the status FILE ($CLAUDE_DISPATCH_STATUS_FILE/…)
+    if printf '%s' "$DCMD" | grep -qE '\$\{CLAUDE_DISPATCH_(WORKTREE|STATUS_FILE|ROOT)[^}A-Za-z0-9_]'; then
+      block_msg "parameter expansion on a CLAUDE_DISPATCH_* variable can derive the shared checkout. Use the worktree path directly."
+      exit 2
+    fi
+    if printf '%s' "$DCMD" | grep -qE 'CLAUDE_DISPATCH_STATUS_FILE\}?/'; then
+      block_msg "the status file is a file, not a directory — don't append a path to CLAUDE_DISPATCH_STATUS_FILE."
+      exit 2
+    fi
+    if [[ "$DCMD" == *'..'* ]] && printf '%s' "$DCMD" | grep -qE 'CLAUDE_DISPATCH_(WORKTREE|STATUS_FILE|ROOT)'; then
+      block_msg "a '..' traversal off a CLAUDE_DISPATCH_* variable can escape the worktree."
+      exit 2
+    fi
     # Block the literal/canonical main-checkout path OR a reference to the
     # CLAUDE_DISPATCH_ROOT env var (the shell expands it to that path) — otherwise
     # `git -C "$CLAUDE_DISPATCH_ROOT" ...` slips past the literal check.
-    # CLAUDE_DISPATCH_WORKTREE / _STATUS_FILE refs stay allowed.
     if [[ "$MASKED" == *"$DISPATCH_ROOT"* || "$MASKED" == *"$C_ROOT"* || "$DCMD" == *CLAUDE_DISPATCH_ROOT* ]]; then
       block_msg "this command references the shared main checkout at '$DISPATCH_ROOT'."
       exit 2
