@@ -5,11 +5,19 @@
 set -euo pipefail
 
 INPUT=$(cat)
-STOP_REASON=$(echo "$INPUT" | jq -r '.stop_hook_active // false')
+CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
+DIR=$(basename "$CWD" 2>/dev/null || true)
+MSG="Session finished${DIR:+ — $DIR}"
 
-# macOS notification
+# macOS notification. Pass MSG as an argv value, never interpolated into the
+# AppleScript source — a directory basename containing a double quote would
+# otherwise break the script or inject statements.
 if command -v osascript &>/dev/null; then
-  osascript -e 'display notification "Runner session finished" with title "Claude Code"' 2>/dev/null || true
+  osascript - "$MSG" >/dev/null 2>&1 <<'APPLESCRIPT' || true
+on run argv
+  display notification (item 1 of argv) with title "Claude Code"
+end run
+APPLESCRIPT
 fi
 
 # Terminal bell

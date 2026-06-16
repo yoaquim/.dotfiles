@@ -2,10 +2,10 @@
 name: spec
 description: Formalize conversations into Linear feature specs with implementation sub-issues. Use after discussing a problem and solution to capture it as a structured Linear ticket with sub-issues ready for /dispatch.
 version: 2.0.0
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*/resolve-project.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__claude_ai_Linear__*
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*/resolve-project.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*
 hooks:
   PostToolUse:
-    - matcher: "mcp__claude_ai_Linear__save_issue"
+    - matcher: "mcp__.*__save_issue"
       hooks:
         - type: command
           command: "$HOME/.claude/hooks/validate-issue.sh"
@@ -94,7 +94,7 @@ Principles: **codeless** (no class names/file paths), **decision-forcing**, **su
 
 ### Creating the Spec
 
-Create master issue via `/issue`, then spec doc via `mcp__claude_ai_Linear__save_document` with `issue` set to the master issue identifier.
+Create master issue via `/issue`, then spec doc via the Linear MCP `save_document` tool (same server as the issue) with `issue` set to the master issue identifier.
 
 ## 5. Implementation Plan
 

@@ -15,6 +15,7 @@ if [[ -z "$THREAD_ID" ]]; then
   exit 1
 fi
 
+# shellcheck disable=SC2016  # $id is a GraphQL variable, not shell
 RESULT=$(gh api graphql \
   -F id="$THREAD_ID" \
   -f query='mutation($id: ID!) {

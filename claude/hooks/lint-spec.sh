@@ -22,11 +22,11 @@ esac
 
 [ ! -f "$FILE" ] && exit 0
 
-# Count steps (numbered lines in ## Steps section)
-STEPS=$(sed -n '/^## Steps/,/^## /p' "$FILE" | grep -c '^[0-9]')
+# Count steps (numbered lines in ## Steps or ## Approach sections — /sketch writes ## Approach)
+STEPS=$(sed -n -e '/^## Steps/,/^## /p' -e '/^## Approach/,/^## /p' "$FILE" | grep -c '^[0-9]' || true)
 
 # Count files (list items in ## Files section)
-FILES=$(sed -n '/^## Files/,/^## /p' "$FILE" | grep -c '^ *- ')
+FILES=$(sed -n '/^## Files/,/^## /p' "$FILE" | grep -c '^ *- ' || true)
 
 WARNINGS=""
 
@@ -39,7 +39,7 @@ if [ "$FILES" -gt 10 ]; then
 fi
 
 if [ -n "$WARNINGS" ]; then
-  MSG=$(printf "Spec scope warning for $(basename "$FILE"):${WARNINGS}\nRunners perform best with narrow, focused specs.")
+  MSG=$(printf 'Spec scope warning for %s:%b\nRunners perform best with narrow, focused specs.' "$(basename "$FILE")" "$WARNINGS")
   jq -n --arg ctx "$MSG" '{
     "hookSpecificOutput": {
       "hookEventName": "PostToolUse",

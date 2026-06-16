@@ -24,6 +24,19 @@ hooks:
         - type: command
           command: "$HOME/.claude/hooks/check-comment-slop.sh"
           timeout: 10
+        - type: command
+          command: "$HOME/.claude/hooks/enforce-worktree.sh"
+          timeout: 10
+    - matcher: "NotebookEdit"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/enforce-worktree.sh"
+          timeout: 10
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/enforce-worktree.sh"
+          timeout: 10
 ---
 
 # Runner Agent
@@ -91,6 +104,7 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
 4. **Spawn `/pr-review` ONCE** — it has its own watch loop and Stop hook; no respawning.
 
    ```bash
+   PR=$(gh pr view --json number -q '.number')
    PROJECT=$(gh repo view --json name -q '.name')
    BRANCH=$(git rev-parse --abbrev-ref HEAD)
    TICKET=$(echo "$BRANCH" | grep -ioE '[a-z]+-[0-9]+' | head -1 | tr 'A-Z' 'a-z')

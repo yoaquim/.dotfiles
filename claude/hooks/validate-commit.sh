@@ -38,7 +38,7 @@ if [[ "$FIRST_CHAR" != "$(echo "$FIRST_CHAR" | tr '[:lower:]' '[:upper:]')" ]]; 
 fi
 
 # No trailing period
-if [[ "$MSG" =~ \\.$ ]]; then
+if [[ "$MSG" =~ \.$ ]]; then
   WARNINGS+=("Ends with period")
 fi
 

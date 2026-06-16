@@ -38,7 +38,7 @@ esac
 case "$FILE" in
   *.md|*.mdx|*.txt|*.rst|*.adoc) exit 0 ;;
   *.json|*.yaml|*.yml|*.toml) exit 0 ;;
-  */CLAUDE.md|*/SKILL.md|*/AGENT.md|*/README*) exit 0 ;;
+  */README*) exit 0 ;;
 esac
 
 # Extract candidate comment lines from CONTENT.
