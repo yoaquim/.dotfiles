@@ -63,14 +63,14 @@
       "description": "Windmill platform: ELT pipelines, apps (lakeviewer), helm, infra"
     },
     "nullbreaker": {
-      "team": "Me",
+      "team": "Nullbreaker",
       "projects": ["Nullbreaker"],
-      "description": "Cyberpunk turn-based tactical RPG (Phaser + React client, Colyseus server). Solo project."
+      "description": "Cyberpunk turn-based tactical RPG (Phaser + React client, Colyseus server). Solo project. NOTE: lives in the dedicated Nullbreaker workspace — use the linear-nullbreaker MCP for Linear calls, not the default workspace."
     },
     "parcha": {
-      "team": "Me",
+      "team": "Parcha",
       "projects": ["Parcha"],
-      "description": "Browser-hosted live-coding DAW with MCP-first architecture (Preact + CodeMirror + Strudel). Solo project."
+      "description": "Browser-hosted live-coding DAW with MCP-first architecture (Preact + CodeMirror + Strudel). Solo project. NOTE: lives in the dedicated parchamusic workspace — use the linear-parchamusic MCP for Linear calls, not the default workspace."
     },
     "mesa": {
       "team": "Mesa",

@@ -3,6 +3,17 @@
 # main checkout. This is the isolation guarantee — concurrent runners (and the
 # operator) share one main checkout, so a runner must never modify it.
 #
+# THREAT MODEL (deliberately bounded). This guards against a COOPERATIVE runner
+# accidentally writing the shared checkout — typically by acting on an absolute
+# main-checkout path handed to it by discovery. It is the only such guard in a
+# `bypassPermissions` runner session, where no permission prompt fires. It is
+# defense-in-depth on top of the spawn prompt, NOT an adversarial sandbox: a
+# runner that is actively trying to evade isolation runs under bypassPermissions
+# and has many avenues a command-string hook can't see (a path computed at
+# runtime, an interpreter reading the root from elsewhere, etc.). We close the
+# realistic accidental vectors below; we do not chase every adversarial bypass,
+# because the runner is your own agent, not untrusted input.
+#
 # Scope (deliberate): only the shared main checkout is protected. Writes to the
 # runner's own worktree, its status file, and anything OUTSIDE the checkout
 # (/tmp scratch, tool/build caches, $HOME caches) are allowed — runners run real
