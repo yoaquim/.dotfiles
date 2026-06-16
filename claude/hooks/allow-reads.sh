@@ -125,9 +125,16 @@ if [[ $ok -eq 1 && -n "$CWD" ]]; then
     done
     return 1
   }
-  scan=${CMD//[\"\']/}            # drop quotes so quoted abs paths are seen
-  set -f                          # no globbing while word-splitting
-  for tok in $scan; do
+  # Tokenize respecting quotes/escapes so an operand with spaces (`cat "leak file"`)
+  # is ONE token, not several. By here the disqualifiers have removed $(), backticks,
+  # $vars, ~, unquoted braces and redirects, so what remains is plain words/quotes/
+  # globs that xargs splits the same way the shell will. A parse failure (e.g.
+  # unbalanced quote) → decline.
+  if ! toks=$(printf '%s' "$CMD" | xargs printf '%s\n' 2>/dev/null); then
+    ok=0
+  fi
+  while [[ $ok -eq 1 ]] && IFS= read -r tok; do
+    [[ -z "$tok" ]] && continue
     # A token with glob metacharacters is expanded by the real shell; expand it
     # here against the cwd and validate every match's real target — `cat *` must
     # not silently read a `leak -> ~/.ssh/id_rsa` match. No match → literal → the
@@ -177,8 +184,7 @@ if [[ $ok -eq 1 && -n "$CWD" ]]; then
         fi
         ;;
     esac
-  done
-  set +f
+  done <<< "$toks"
 fi
 
 if [[ $ok -eq 1 ]]; then
