@@ -136,6 +136,33 @@ case "$TOOL" in
     # escaped separator can't smuggle a write past the literal scan.
     DCMD=$(printf '%s' "$CMD" | sed 's#\\\(.\)#\1#g')
 
+    # SCAN is DCMD with heredoc BODIES removed. Heredoc content is data for
+    # another program, not shell syntax: a `..` or a `cd /etc` line inside
+    # `python - <<'PY' … PY` changes no directory and addresses no path, so it
+    # must not trip the traversal / cd-drift scans below. SCAN is used ONLY for
+    # those usability-sensitive scans; the authoritative absolute-root write
+    # block still runs against the full DCMD, so stripping here can never relax
+    # the isolation guarantee (at worst it under-strips and over-blocks).
+    strip_heredocs() {
+      local in_h=0 delim="" out="" line trimmed
+      # Heredoc start: `<<` / `<<-` (not `<<<`), optional quote, a word delimiter.
+      local hre='<<-?[[:space:]]*["'\'']?([A-Za-z_][A-Za-z0-9_]*)'
+      while IFS= read -r line; do
+        if (( in_h )); then
+          trimmed="${line#"${line%%[![:space:]]*}"}"   # lstrip (covers <<- tabs)
+          [[ "$line" == "$delim" || "$trimmed" == "$delim" ]] && in_h=0
+          continue                                     # drop body + terminator
+        fi
+        if [[ "$line" != *'<<<'* && "$line" =~ $hre ]]; then
+          delim="${BASH_REMATCH[1]}"
+          in_h=1
+        fi
+        out+="$line"$'\n'                              # keep the start line itself
+      done <<< "$1"
+      printf '%s' "$out"
+    }
+    SCAN=$(strip_heredocs "$DCMD")
+
     cd_wt=$(canon "$WORKTREE")
     # Effective cwd: starts at the call's cwd and advances through leading `cd`s,
     # so the cwd check below sees where a write actually lands.
@@ -154,32 +181,34 @@ case "$TOOL" in
       (cd "$base" 2>/dev/null && cd "$t" 2>/dev/null && pwd -P) || true
     }
 
-    # `cd` moves the cwd, from which a later RELATIVE write could reach the shared
-    # checkout without ever naming it. Inspect EVERY `cd` segment (not just a
-    # leading one — `set -e; cd /parent && touch repo/x` must be caught too),
-    # tracking the effective cwd. Block any cd whose destination leaves the
-    # worktree (`cd ../../..`, `cd /parent`, `cd ~`, ...); a cd that stays inside
-    # just advances EFFCWD, so a chained recovery
+    # `cd`/`pushd` move the cwd, from which a later RELATIVE write could reach the
+    # shared checkout without ever naming it. Inspect EVERY such segment (not just
+    # a leading one — `set -e; cd /parent && touch repo/x` must be caught too),
+    # tracking the effective cwd. `pushd <dir>` changes the cwd exactly like `cd`,
+    # so it is handled identically; arg-less `pushd` (stack rotate) resolves to no
+    # destination and is treated as leaving. Block any move whose destination
+    # leaves the worktree (`cd ../../..`, `pushd /parent`, `cd ~`, ...); a move
+    # that stays inside just advances EFFCWD, so a chained recovery
     # `cd "$CLAUDE_DISPATCH_WORKTREE" && git status` from a drifted cwd works.
     while IFS= read -r seg; do
       seg="${seg#"${seg%%[![:space:]]*}"}"
-      [[ "$seg" =~ ^cd([[:space:]]|$) ]] || continue
-      cd_tgt=$(printf '%s' "$seg" | sed -E 's/^cd[[:space:]]*//; s/[[:space:]].*//')
+      [[ "$seg" =~ ^(cd|pushd)([[:space:]]|$) ]] || continue
+      cd_tgt=$(printf '%s' "$seg" | sed -E 's/^(cd|pushd)[[:space:]]*//; s/[[:space:]].*//')
       cd_dest=$(resolve_cd "$cd_tgt" "$EFFCWD")
       case "$cd_dest" in
         "$cd_wt"|"$cd_wt"/*) EFFCWD="$cd_dest" ;;
         *)
-          block_msg "this 'cd' leaves your worktree (destination resolves to '${cd_dest:-$cd_tgt}'), from which a relative path could reach the shared checkout. Stay in your worktree or use absolute worktree paths."
+          block_msg "this 'cd'/'pushd' leaves your worktree (destination resolves to '${cd_dest:-$cd_tgt}'), from which a relative path could reach the shared checkout. Stay in your worktree or use absolute worktree paths."
           exit 2
           ;;
       esac
-    done < <(printf '%s' "$DCMD" | sed -E 's/(&&|\|\||;|\||&)/\n/g')
+    done < <(printf '%s' "$SCAN" | sed -E 's/(&&|\|\||;|\||&)/\n/g')
 
-    # A pure cd (only a cd, nothing else) writes nothing → allow.
+    # A pure cd/pushd (only that, nothing else) writes nothing → allow.
     # shellcheck disable=SC2016  # '$(' / '<(' are literals to match, not expansions
     case "$DCMD" in
       *'&&'*|*'||'*|*';'*|*'|'*|*'&'*|*'$('*|*'`'*|*'<('*|*$'\n'*) : ;;
-      *) [[ "$DCMD" =~ ^[[:space:]]*cd([[:space:]]|$) ]] && exit 0 ;;
+      *) [[ "$DCMD" =~ ^[[:space:]]*(cd|pushd)([[:space:]]|$) ]] && exit 0 ;;
     esac
 
     # Parent traversal (..) in a NON-cd word (e.g. `touch ../x`) can escape the
@@ -187,7 +216,7 @@ case "$TOOL" in
     # bounded on both sides by /, whitespace, a quote, or string end — so Git
     # revspecs (`main..HEAD`) and Go's wildcard (`go test ./...`) are allowed.
     TRAV='(^|[[:space:]"'\''/])\.\.([[:space:]"'\''/]|$)'
-    if [[ "$DCMD" =~ $TRAV ]]; then
+    if [[ "$SCAN" =~ $TRAV ]]; then
       block_msg "a '..' path component can escape the worktree. Use an explicit path inside your worktree."
       exit 2
     fi
