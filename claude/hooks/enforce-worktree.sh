@@ -152,19 +152,15 @@ case "$TOOL" in
     # escaped separator can't smuggle a write past the literal scan.
     DCMD=$(printf '%s' "$CMD" | sed 's#\\\(.\)#\1#g')
     # Parent traversal (..) can escape the worktree before the literal scan ever
-    # sees the root — e.g. `cd ../../.. && touch README.md`. (A pure cd is allowed
-    # above and re-checked by cwd on the next command; this catches chained/write
-    # forms.) Match only PATH traversal: `../` or `/..` (slash-adjacent), or a
-    # bare `..` token. This deliberately does NOT match Git revision ranges like
-    # `main..HEAD` / `main...HEAD` (no slash, no surrounding whitespace), which
-    # the /pr skill relies on.
-    case "$DCMD" in
-      *'../'*|*'/..'*)
-        block_msg "a '..' path component can escape the worktree. Use an explicit path inside your worktree."
-        exit 2 ;;
-    esac
-    if [[ " $DCMD " =~ [[:space:]]\.\.[[:space:]] ]]; then
-      block_msg "a bare '..' can escape the worktree. Use an explicit path inside your worktree."
+    # sees the root — e.g. `cd ../../.. && touch README.md`. Match `..` only as a
+    # standalone path component: EXACTLY two dots bounded on both sides by /,
+    # whitespace, a quote, or string end. This deliberately does NOT match a
+    # longer run of dots or word-adjacent dots, so Git revspecs (`main..HEAD`,
+    # `main...HEAD`) and Go's recursive package wildcard (`./...`, `go test ./...`)
+    # are allowed.
+    TRAV='(^|[[:space:]"'\''/])\.\.([[:space:]"'\''/]|$)'
+    if [[ "$DCMD" =~ $TRAV ]]; then
+      block_msg "a '..' path component can escape the worktree. Use an explicit path inside your worktree."
       exit 2
     fi
     # cwd inside the shared checkout (runner cd'd out of its worktree) → block.
