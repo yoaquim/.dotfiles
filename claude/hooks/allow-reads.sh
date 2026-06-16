@@ -127,6 +127,26 @@ if [[ $ok -eq 1 && -n "$CWD" ]]; then
   scan=${CMD//[\"\']/}            # drop quotes so quoted abs paths are seen
   set -f                          # no globbing while word-splitting
   for tok in $scan; do
+    # A token with glob metacharacters is expanded by the real shell; expand it
+    # here against the cwd and validate every match's real target — `cat *` must
+    # not silently read a `leak -> ~/.ssh/id_rsa` match. No match → literal → the
+    # checks below handle it.
+    case "$tok" in
+      *'*'*|*'?'*|*'['*)
+        # shellcheck disable=SC2086  # $tok is unquoted on purpose: glob-expand it against the cwd
+        matches=$(cd "$CWD" 2>/dev/null && set +f && printf '%s\n' $tok 2>/dev/null)
+        while IFS= read -r m; do
+          [[ -z "$m" ]] && continue
+          rp=$(real_prefix "$m") || continue
+          case "$rp" in
+            "$CWD"|"$CWD"/*|"$C_CWD"|"$C_CWD"/*) : ;;  # match inside the project → ok
+            *) ok=0; break ;;                          # match resolves outside → prompt
+          esac
+        done <<< "$matches"
+        [[ $ok -eq 0 ]] && break
+        continue
+        ;;
+    esac
     # Extract an absolute path even when attached to an option, so
     # `--from-file=/etc/passwd` and `-f/etc/passwd` are checked, not just bare /…
     cand="$tok"
