@@ -91,6 +91,23 @@ if [[ $ok -eq 1 ]]; then
     *'~'*|*'$'*|*'..'*) ok=0 ;;
   esac
 fi
+# An UNQUOTED brace can expand to an out-of-project path (`cat {/,}etc/passwd` →
+# /etc/passwd) that the token scan wouldn't see. Quoted braces (e.g. jq '{a:1}')
+# are NOT expanded by the shell, so only reject unquoted ones.
+has_unquoted_brace() {
+  local s="$1"
+  local n=${#s} i=0 c sq=0 dq=0
+  while [[ $i -lt $n ]]; do
+    c=${s:i:1}
+    if [[ $sq -eq 0 && "$c" == "\\" ]]; then i=$((i+2)); continue; fi
+    if [[ $sq -eq 0 && "$c" == '"' ]]; then dq=$((1-dq)); i=$((i+1)); continue; fi
+    if [[ $dq -eq 0 && "$c" == "'" ]]; then sq=$((1-sq)); i=$((i+1)); continue; fi
+    if [[ $sq -eq 0 && $dq -eq 0 && "$c" == '{' ]]; then return 0; fi
+    i=$((i+1))
+  done
+  return 1
+}
+if [[ $ok -eq 1 ]] && has_unquoted_brace "$CMD"; then ok=0; fi
 if [[ $ok -eq 1 && -n "$CWD" ]]; then
   C_CWD=$(cd "$CWD" 2>/dev/null && pwd -P) || C_CWD="$CWD"
   # Resolve as much of an operand as exists (from cwd), following symlinks on the
