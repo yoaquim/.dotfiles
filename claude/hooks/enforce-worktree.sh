@@ -224,10 +224,14 @@ case "$TOOL" in
       block_msg "the status file is a file, not a directory — don't append a path to CLAUDE_DISPATCH_STATUS_FILE."
       exit 2
     fi
-    # Block the literal/canonical main-checkout path OR a reference to the
-    # CLAUDE_DISPATCH_ROOT env var (the shell expands it to that path) — otherwise
-    # `git -C "$CLAUDE_DISPATCH_ROOT" ...` slips past the literal check.
-    if [[ "$MASKED" == *"$DISPATCH_ROOT"* || "$MASKED" == *"$C_ROOT"* || "$DCMD" == *CLAUDE_DISPATCH_ROOT* ]]; then
+    # Block the main-checkout path (raw or canonical) when it appears as a PATH
+    # COMPONENT — boundary-aware (same BOUND as the masking) so a sibling/cache
+    # dir like `/repo-cache` that merely STARTS WITH `/repo` is NOT blocked; the
+    # scope deliberately allows writes outside the checkout. Also block a
+    # CLAUDE_DISPATCH_ROOT env-var ref (the shell expands it to the root).
+    ROOT_RE="$(re_escape "$DISPATCH_ROOT")${BOUND}"
+    [[ "$C_ROOT" != "$DISPATCH_ROOT" ]] && ROOT_RE="${ROOT_RE}|$(re_escape "$C_ROOT")${BOUND}"
+    if printf '%s' "$MASKED" | grep -qE "$ROOT_RE" || [[ "$DCMD" == *CLAUDE_DISPATCH_ROOT* ]]; then
       block_msg "this command references the shared main checkout at '$DISPATCH_ROOT'."
       exit 2
     fi
