@@ -172,10 +172,17 @@ case "$TOOL" in
     # Parent traversal (..) can escape the worktree before the literal scan ever
     # sees the root — e.g. `cd ../../.. && touch README.md`. (A pure cd is allowed
     # above and re-checked by cwd on the next command; this catches chained/write
-    # forms.) We can't know the runtime cwd a `..` resolves against, so reject any
-    # `..` path component outright.
-    if [[ "$DCMD" =~ (^|[^.])\.\.(/|$|[^.]) ]]; then
-      block_msg "a '..' path component can escape the worktree. Use an explicit path inside your worktree."
+    # forms.) Match only PATH traversal: `../` or `/..` (slash-adjacent), or a
+    # bare `..` token. This deliberately does NOT match Git revision ranges like
+    # `main..HEAD` / `main...HEAD` (no slash, no surrounding whitespace), which
+    # the /pr skill relies on.
+    case "$DCMD" in
+      *'../'*|*'/..'*)
+        block_msg "a '..' path component can escape the worktree. Use an explicit path inside your worktree."
+        exit 2 ;;
+    esac
+    if [[ " $DCMD " =~ [[:space:]]\.\.[[:space:]] ]]; then
+      block_msg "a bare '..' can escape the worktree. Use an explicit path inside your worktree."
       exit 2
     fi
     # cwd inside the shared checkout (runner cd'd out of its worktree) → block.
