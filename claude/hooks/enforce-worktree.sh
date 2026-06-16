@@ -191,6 +191,18 @@ case "$TOOL" in
     C_WT=$(canon "$WORKTREE")
     C_ROOT=$(canon "$DISPATCH_ROOT")
     C_SF=$(canon "$STATUS_FILE")
+    # Expand ~/ and $HOME/${HOME} the way the shell will, so a home-dir checkout
+    # (e.g. ~/.dotfiles) can't be referenced via a spelling the literal scan
+    # misses. Aggressive (even inside single quotes) — over-expanding only makes
+    # MORE paths match the protected root, which is fail-safe for a guard.
+    EXPANDED="$DCMD"
+    if [[ -n "${HOME:-}" ]]; then
+      # shellcheck disable=SC2016  # the single-quoted patterns are LITERAL text to find in the command, not expansions
+      EXPANDED=${EXPANDED//'${HOME}'/$HOME}
+      # shellcheck disable=SC2016
+      EXPANDED=${EXPANDED//'$HOME'/$HOME}
+      EXPANDED=${EXPANDED//'~/'/$HOME/}
+    fi
     re_escape() { sed 's#[^a-zA-Z0-9/_-]#\\&#g' <<<"$1"; }
     BOUND='(/|[[:space:]]|["'"'"':;,&|]|$)'
     SED_PROG=""
@@ -198,7 +210,7 @@ case "$TOOL" in
       [[ -z "$p" ]] && continue
       SED_PROG+="s#$(re_escape "$p")${BOUND}#\\1#g;"
     done
-    MASKED=$(printf '%s' "$DCMD" | sed -E "$SED_PROG")
+    MASKED=$(printf '%s' "$EXPANDED" | sed -E "$SED_PROG")
     # Bare $CLAUDE_DISPATCH_WORKTREE / _STATUS_FILE refs are allowed, but the shell
     # can DERIVE the shared root from them. Block:
     #   - parameter manipulation `${CLAUDE_DISPATCH_*<op>}` (e.g. ${…_STATUS_FILE%/.dispatch/…})
