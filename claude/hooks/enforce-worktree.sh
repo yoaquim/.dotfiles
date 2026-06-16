@@ -131,15 +131,37 @@ case "$TOOL" in
   Bash)
     CMD=$(jq -r '.tool_input.command // ""' <<<"$INPUT")
     [[ -z "$CMD" ]] && exit 0
-    # Always allow a pure `cd` (it writes nothing) so a runner whose cwd has
-    # drifted into the main checkout can recover by cd'ing back to its worktree —
-    # the next command runs under the new cwd and is re-checked. Reject if it
-    # chains another command or uses substitution.
-    # shellcheck disable=SC2016  # '$(' / '<(' are literals to match, not expansions
+    # `cd` moves the cwd, from which a later RELATIVE write could reach the shared
+    # checkout without ever naming it (the absolute-path scan wouldn't see it).
+    # So for any command that starts with `cd`, resolve its destination: if it
+    # leaves the worktree, block (covers both `cd ../../../..` as a standalone
+    # call and `cd /parent && touch repo/x` as a chained one). If it stays inside
+    # the worktree, a PURE cd is allowed outright (writes nothing) and a chained
+    # one falls through so the rest of the command is still checked. Recovery
+    # (`cd "$CLAUDE_DISPATCH_WORKTREE"`) lands in the worktree and is allowed even
+    # from a drifted cwd (an absolute cd ignores the old cwd).
+    # shellcheck disable=SC2016  # '$(' / '<(' and the CLAUDE_DISPATCH/HOME patterns are literals, not expansions
     if [[ "$CMD" =~ ^[[:space:]]*cd([[:space:]]|$) ]]; then
-      case "$CMD" in
-        *'&&'*|*'||'*|*';'*|*'|'*|*'&'*|*'$('*|*'`'*|*'<('*|*$'\n'*) : ;;
-        *) exit 0 ;;
+      cd_tgt=$(printf '%s' "$CMD" | sed -E 's/^[[:space:]]*cd[[:space:]]*//; s/[[:space:]&|;].*//')  # target up to first space/separator
+      cd_tgt=${cd_tgt//[\"\']/}                                        # strip quotes
+      cd_tgt=${cd_tgt//'${CLAUDE_DISPATCH_WORKTREE}'/$WORKTREE}
+      cd_tgt=${cd_tgt//'$CLAUDE_DISPATCH_WORKTREE'/$WORKTREE}
+      if [[ -n "${HOME:-}" ]]; then cd_tgt=${cd_tgt//'~/'/$HOME/}; cd_tgt=${cd_tgt//'$HOME'/$HOME}; fi
+      [[ -z "$cd_tgt" || "$cd_tgt" == '~' ]] && cd_tgt="${HOME:-/}"     # bare cd / cd ~ → home
+      cd_dest=$(cd "${CWD:-$WORKTREE}" 2>/dev/null && cd "$cd_tgt" 2>/dev/null && pwd -P) || cd_dest=""
+      cd_wt=$(canon "$WORKTREE")
+      case "$cd_dest" in
+        "$cd_wt"|"$cd_wt"/*)
+          # destination stays in the worktree
+          case "$CMD" in
+            *'&&'*|*'||'*|*';'*|*'|'*|*'&'*|*'$('*|*'`'*|*'<('*|*$'\n'*) : ;;  # chained — fall through, rest is checked
+            *) exit 0 ;;                                                        # pure cd in worktree — allow
+          esac
+          ;;
+        *)
+          block_msg "this 'cd' leaves your worktree (destination resolves to '${cd_dest:-$cd_tgt}'), from which a relative path could reach the shared checkout. Stay in your worktree or use absolute worktree paths."
+          exit 2
+          ;;
       esac
     fi
     # (Brace expansion that builds a main path, e.g. `touch {/main/,}repo/x`, is
