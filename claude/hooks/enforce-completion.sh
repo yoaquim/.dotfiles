@@ -70,24 +70,13 @@ is_terminal() {
   esac
 }
 
-STATUS=$(read_status)
+# Start timestamp from the status file header (`- **started**: <ISO>`).
+read_started() {
+  sed -n 's/^- \*\*started\*\*: //p' "$STATUS_FILE" | head -1
+}
 
-# Terminal → allow exit immediately. The runner has finalized its work.
-if is_terminal "$STATUS"; then
-  exit 0
-fi
-
-STATE_DIR="$DISPATCH_ROOT/.dispatch/state"
-mkdir -p "$STATE_DIR"
-ATTEMPT_FILE="$STATE_DIR/$NAME.attempts"
-
-# --- Escape valve: cap stop attempts to avoid pathological loops ---
-ATTEMPTS=$(cat "$ATTEMPT_FILE" 2>/dev/null || echo 0)
-ATTEMPTS=$((ATTEMPTS + 1))
-echo "$ATTEMPTS" > "$ATTEMPT_FILE"
-
-if [[ $ATTEMPTS -gt 8 ]]; then
-  # Rewrite the status line via awk (macOS sed lacks /I case-insensitive flag).
+# Flip the status line to needs_review in place (macOS sed lacks /I, so awk).
+finalize_needs_review() {
   awk '
     !done && tolower($0) ~ /^[[:space:]]*-[[:space:]]*\*\*status\*\*[[:space:]]*:/ {
       sub(/:.*/, ": needs_review")
@@ -95,7 +84,43 @@ if [[ $ATTEMPTS -gt 8 ]]; then
     }
     { print }
   ' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
-  echo "enforce-completion: >8 stop attempts; allowing stop with status=needs_review" >&2
+}
+
+STATUS=$(read_status)
+
+# Terminal → allow exit immediately. The runner has finalized its work.
+if is_terminal "$STATUS"; then
+  exit 0
+fi
+
+# --- Wall-clock cap: 8hr from start → stop with needs_review ---
+# This is the real give-up bound (mirrors the reviewer's enforce-watch cap). The
+# runner no longer counts its own iterations; the hook owns the limit.
+STARTED=$(read_started)
+if [[ -n "$STARTED" ]]; then
+  # First 19 chars are YYYY-MM-DDTHH:MM:SS regardless of fractional/Z/offset suffix.
+  S_EPOCH=$(date -j -f '%Y-%m-%dT%H:%M:%S' "${STARTED:0:19}" '+%s' 2>/dev/null || echo 0)
+  if [[ "$S_EPOCH" -gt 0 ]] && (( $(date +%s) - S_EPOCH > 28800 )); then
+    finalize_needs_review
+    echo "enforce-completion: 8hr cap reached; allowing stop with status=needs_review" >&2
+    exit 0
+  fi
+fi
+
+STATE_DIR="$DISPATCH_ROOT/.dispatch/state"
+mkdir -p "$STATE_DIR"
+ATTEMPT_FILE="$STATE_DIR/$NAME.attempts"
+
+# --- Runaway-spin backstop: cap stop attempts well above legitimate use ---
+# A healthy review loop Stops ~once/60s → ~480 times over 8hr, so this sits above
+# real use and only catches a session that ignores the sleep and spins.
+ATTEMPTS=$(cat "$ATTEMPT_FILE" 2>/dev/null || echo 0)
+ATTEMPTS=$((ATTEMPTS + 1))
+echo "$ATTEMPTS" > "$ATTEMPT_FILE"
+
+if [[ $ATTEMPTS -gt 1000 ]]; then
+  finalize_needs_review
+  echo "enforce-completion: >1000 stop attempts; allowing stop with status=needs_review (runaway-spin guard)" >&2
   exit 0
 fi
 

@@ -1,8 +1,8 @@
 ---
 name: dispatch
 description: Dispatch work to autonomous runners in isolated worktrees. Accepts Linear tickets or sketch specs. Use when assigning work to background Claude runners or checking runner status.
-argument-hint: <ticket-id|sketch-name|search-query|status> [name]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*
+argument-hint: <ticket-id|sketch-name|search-query|status> [name] [--repo <name|path>]
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/resolve-repo.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*
 ---
 
 # Dispatch
@@ -21,6 +21,23 @@ Scripts live at `~/.claude/skills/dispatch/`. Use them — don't construct raw b
 Attaching to a runner is native now: `claude agents` (TUI) or `claude attach <session-id>` — the session ID is in the status file.
 
 ---
+
+## Target repo (`--repo`, optional)
+
+By default the runner works in the **current** repo. If `--repo <name|path>` is in
+`$ARGUMENTS`, strip it first and resolve the target:
+
+```bash
+TARGET_ROOT=$(bash ~/.claude/skills/dispatch/resolve-repo.sh "<value>") || { echo "$TARGET_ROOT"; exit 1; }
+```
+
+Otherwise `TARGET_ROOT=$(git rev-parse --show-toplevel)`.
+
+`TARGET_ROOT` is the project root for everything below — prompt, status file,
+worktree, and the `spawn.sh` call all use it; the runner runs in that repo. When
+the target maps to a different Linear workspace (see `~/.claude/scripts/repo-projects.json`),
+fetch the ticket from that workspace's MCP. `/dispatch status` finds the runner when
+the target is the current repo or a sibling under the same parent.
 
 ## Argument Detection
 
@@ -54,9 +71,9 @@ Ask via `AskUserQuestion` — adaptive:
 
 ### 5. Prompt File
 
-Get project root: `git rev-parse --show-toplevel`
+Project root = `TARGET_ROOT` (the current repo unless `--repo` was given; see Target repo above).
 
-Write `.dispatch/prompts/<name>.md` (`mkdir -p .dispatch/prompts`):
+Write `<TARGET_ROOT>/.dispatch/prompts/<name>.md` (`mkdir -p`):
 
 ```
 Ticket: <TICKET-ID>
@@ -87,7 +104,7 @@ Branch: Linear issue's branch name if set, else `dispatch/<name>`.
 
 ### 6. Status File
 
-Write `.dispatch/status/<name>.md` (`mkdir -p .dispatch/status`):
+Write `<TARGET_ROOT>/.dispatch/status/<name>.md` (`mkdir -p`):
 
 ```markdown
 # <name>
@@ -256,6 +273,10 @@ Commands:
   /dispatch <sketch-name>          Read sketch spec, discover, spawn runner
   /dispatch <search-terms>         Search Linear, pick ticket, dispatch
   /dispatch status [name]          Check runner progress
+
+Flags:
+  --repo <name|path>               Dispatch into another repo (name resolved under
+                                   ~/Projects, or an explicit path). Default: current repo.
 
 Attach/inspect runners natively:
   claude agents                    TUI of all background sessions

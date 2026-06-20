@@ -18,6 +18,26 @@ INPUT=$(cat)
 COMMAND=$(jq -r '.tool_input.command // ""' <<<"$INPUT" 2>/dev/null || echo "")
 [[ -z "$COMMAND" ]] && exit 0
 
+# Session id lets us stamp the reviewed SHA into this job's state dir so the
+# Stop hook (enforce-watch.sh) can tell "new commit, re-review" from "same SHA,
+# just wait." Recorded at the moment we ALLOW a valid review post — the one
+# point where we know a review is going out, and on which HEAD.
+SID=$(jq -r '.session_id // ""' <<<"$INPUT" 2>/dev/null || echo "")
+
+record_reviewed_sha() {
+  local pr="$1"
+  [[ -z "$SID" ]] && return 0
+  if [[ -z "$pr" ]]; then
+    pr=$(gh pr view --json number -q .number 2>/dev/null || echo "")
+  fi
+  [[ -z "$pr" ]] && return 0
+  local sha
+  sha=$(gh pr view "$pr" --json headRefOid -q .headRefOid 2>/dev/null || echo "")
+  [[ -z "$sha" ]] && return 0
+  mkdir -p "$HOME/.claude/jobs/$SID" 2>/dev/null || true
+  echo "$sha" > "$HOME/.claude/jobs/$SID/last-reviewed-sha" 2>/dev/null || true
+}
+
 # shellcheck disable=SC2016  # backticked code span in prose
 HEADER='# 👾 Reviewed by Claude via the `/pr-review` skill 👾'
 NOFINDINGS_RE='_No bug-class findings'
@@ -48,7 +68,7 @@ if grep -qE '(^|[[:space:]]|;|&&|\|\||\||\(|`|\$\()gh[[:space:]]+api[[:space:]]+
   if ! grep -qF "$HEADER" <<<"$BODY"; then
     ERRORS+=("Payload .body is missing the required /pr-review header line:")
     ERRORS+=("    $HEADER")
-    ERRORS+=("Prepend header.md to the body before posting.")
+    ERRORS+=("Use templates/approved.md or templates/changes-requested.md — they carry it.")
   fi
 
   # Engagement: at least one inline comment OR explicit no-findings line in body.
@@ -84,6 +104,9 @@ if grep -qE '(^|[[:space:]]|;|&&|\|\||\||\(|`|\$\()gh[[:space:]]+api[[:space:]]+
     exit 2
   fi
 
+  # Valid review going out — stamp the SHA it's reviewing.
+  PR_NUM=$(sed -nE 's#.*/pulls/([0-9]+)/reviews.*#\1#p' <<<"$COMMAND" | head -1)
+  record_reviewed_sha "$PR_NUM"
   exit 0
 fi
 
@@ -120,7 +143,7 @@ ERRORS=()
 if ! grep -qF "$HEADER" <<<"$COMMAND"; then
   ERRORS+=("Post is missing the required /pr-review header line:")
   ERRORS+=("    $HEADER")
-  ERRORS+=("Cat the skill's header.md into the body before posting.")
+  ERRORS+=("Cat templates/approved.md or templates/changes-requested.md into the body.")
 fi
 
 HAS_FILELINE=0
@@ -147,4 +170,6 @@ if [[ "${#ERRORS[@]}" -gt 0 ]]; then
   exit 2
 fi
 
+# Valid legacy review going out — stamp the SHA (resolve PR from current branch).
+record_reviewed_sha ""
 exit 0

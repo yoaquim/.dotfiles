@@ -88,28 +88,29 @@ Read the sibling file `bug-checklist.md`. Apply every section to every changed f
 
 Read every file in `criteria/`. Apply each. If a criterion doesn't apply, omit it from the `Criteria applied` header line. Citation goes on the relevant finding(s).
 
-## 4. Compose output
+## 4. Compose output — templates only, no freehand
 
-Two outputs to compose:
+Every surface is a fixed template in `templates/`. Fill the placeholders; never restyle, reorder, or improvise wording. This is what stops reviews from drifting.
 
-**(a) Top-level review body** — prefix with `header.md`, substitute `{criteria}` with `general` plus any criteria slugs that fired. Body is for cross-cutting notes, summary, and the `_No bug-class findings_` line when applicable. Per-finding details live in inline comments, not the body.
+Severity emoji — use the SAME ones everywhere (body breakdown and finding titles):
+🔴 Blocker · 🟡 Concern · 🔵 Nit
 
-**(b) Inline comment per finding** — one resolvable thread on the cited `file:line`. Format each comment as:
+**(a) Top-level review body** — the single review comment every finding threads under.
+- **Zero findings → `templates/approved.md`.** Post it byte-for-byte. No substitutions, no extra prose. The point: the approved review is identical every time.
+- **Findings exist → `templates/changes-requested.md`.** Substitute only:
+  - `{count}` — total findings
+  - `{criteria}` — `general` plus any criteria slugs that fired (comma-separated)
+  - `{breakdown}` — severity tally with emoji, e.g. `🔴 2 Blockers · 🟡 3 Concerns · 🔵 1 Nit` (drop any zero tier)
 
-```
-### <Noun-phrase title in Title Case>
-
-**Severity:** Blocker | Concern | Nit
-**Confidence:** High | Med | Low
-**Criterion:** general | <slug>
-**Issue:** <plain English, no jargon>
-**Suggested fix:** <concrete action>
-
-```diff
-- current
-+ proposed
-```
-```
+**(b) Inline comment per finding** — one resolvable thread on the cited `file:line`, from `templates/finding.md`. Substitute:
+  - `{sev_emoji}` — 🔴 / 🟡 / 🔵 matching severity
+  - `{title}` — see Title rules below
+  - `{severity}` — Blocker | Concern | Nit
+  - `{confidence}` — High | Med | Low
+  - `{criterion}` — general | <slug>
+  - `{issue}` — plain English, no jargon
+  - `{fix}` — concrete action
+  - `{diff}` — a `- current` / `+ proposed` hunk
 
 **Title rules** (same spirit as `/issue`):
 - Concise noun phrase, 2-7 words, Title Case
@@ -124,15 +125,7 @@ Bad: `Fix null check on user.email`, `PER-83: Null Check`, `Update error handlin
 
 Findings without a usable `file:line` (rare — cross-cutting issues) → fold into the top-level body under a `## Cross-cutting` section instead of the comments array.
 
-If step 2 finds nothing, the body is the **clean approval template**:
-
-```
-# 👾 Reviewed by Claude via the `/pr-review` skill 👾
-
-✅ **Ready to merge** — _No bug-class findings; diff reviewed line by line._
-```
-
-(`_No bug-class findings` is required by the hook. The `✅ Ready to merge` line is human-facing — dispatch doesn't parse it; it watches GitHub's `reviewDecision == APPROVED` event.)
+Zero findings → post `templates/approved.md` verbatim. It carries the hook-required `_No bug-class findings` line and the `✅ APPROVED` block. Don't reword it — dispatch doesn't parse the text, it watches GitHub's `reviewDecision == APPROVED` event, and the value of a template is that it's always the same.
 
 Sort findings: Blockers → Concerns → Nits. Within tier, `general` first, then criteria.
 
@@ -149,17 +142,22 @@ else
 fi
 
 # Build comments[] — JSON array of {path, line, body} entries.
-# One entry per finding with a real file:line citation.
+# One entry per finding; each body filled from templates/finding.md.
 # Use start_line + line for multi-line ranges (e.g. file:380-383).
 INLINE_COMMENTS_JSON='[
-  {"path": "src/foo.ts", "line": 42, "body": "<finding markdown>"},
+  {"path": "src/foo.ts", "line": 42, "body": "<templates/finding.md, filled>"},
   ...
 ]'
 
-# Compose body (header.md content + summary + any cross-cutting notes)
-BODY="$(cat header.md)
-... summary lines ...
-"
+# Body comes straight from a template — never hand-composed.
+if [[ "$FINDING_COUNT" -eq 0 ]]; then
+  BODY="$(cat templates/approved.md)"            # static — post as-is
+else
+  BODY="$(cat templates/changes-requested.md)"   # then substitute placeholders
+  BODY="${BODY//\{count\}/$FINDING_COUNT}"
+  BODY="${BODY//\{criteria\}/$CRITERIA}"         # general + fired slugs
+  BODY="${BODY//\{breakdown\}/$BREAKDOWN}"       # e.g. 🔴 2 Blockers · 🟡 3 Concerns
+fi
 
 # Write payload to a tempfile so the hook can read and validate it.
 PAYLOAD=$(mktemp -t review-XXXXXX.json)
@@ -184,25 +182,20 @@ The hook (`hooks/check-post.sh`) reads the payload file and blocks on: missing h
 
 ## 6. Watch loop (default; `--once` skips)
 
-After delivering, never voluntarily exit. The Stop hook (`enforce-watch.sh`) blocks Stop until PR is MERGED/CLOSED or 8hr cap. Loop just keeps the session productive:
+**You do not run the loop — the Stop hook (`enforce-watch.sh`) does.** Never spin a `while true` bash loop: bash can `sleep` but it can't re-review (steps 1–5 are model turns, not shell), so an infinite loop just wedges the session on a single pass. That's the old bug.
 
-```bash
-LAST_SHA=$(jq -r .head_sha <<<"$(~/.claude/scripts/check-pr-state.sh "$PR")")
-while true; do
-  sleep 60
-  STATE=$(~/.claude/scripts/check-pr-state.sh "$PR")
-  SHA=$(jq -r .head_sha <<<"$STATE")
-  if [[ -n "$SHA" && "$SHA" != "$LAST_SHA" ]]; then
-    LAST_SHA="$SHA"
-    # New commit → redo steps 1–5 on the fresh diff, then continue looping.
-  fi
-done
-```
+The model is dead simple: after delivering, **just try to end.** Every time you do, the hook decides:
 
-Terminal exit is the Stop hook's job, not the loop's. If `pr_state != OPEN` or 8hr has passed, the hook lets Stop through on the next iteration's natural Stop attempt.
+- **Stop allowed** — PR is MERGED/CLOSED, `--once` was set, or the 8hr cap passed. Done.
+- **Stop blocked** — the hook compares the PR's current HEAD to the SHA you last reviewed and injects exactly one next action:
+  - **HEAD changed** → redo steps 1–5 on the fresh diff, post, then try to end again.
+  - **HEAD unchanged** → `sleep 60`, re-poll `~/.claude/scripts/check-pr-state.sh $PR`, then try to end again.
+
+So the loop is: review → try to end → do what the hook says → try to end. Repeat. The reviewed SHA is stamped for you when you post (`check-post.sh`) — you don't track it yourself, and you must not re-review the same SHA. Terminal exit is always the hook's call, never yours.
 
 ## Extending
 
 - Broaden the primary pass → add to `bug-checklist.md`.
 - New optional gate → drop a file at `criteria/<slug>.md` (What / Why / How to spot / When NOT / Severity).
 - New mechanical check on the posted output → extend `hooks/check-post.sh`.
+- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Keep the `👾 Reviewed by Claude` header line and, in `approved.md`, the `_No bug-class findings` line — both are hook-enforced.
