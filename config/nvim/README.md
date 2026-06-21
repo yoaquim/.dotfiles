@@ -1,338 +1,87 @@
-# 🚀 AstroNvim Configuration - User Guide
+# 🚀 AstroNvim Configuration
 
-> **A comprehensive guide to using your customized AstroNvim setup**
+Customized AstroNvim setup. `<leader>` is `Space`. Theme: `base16-darkmoss`.
 
-## 📋 Table of Contents
+## Quick Start
 
-- [🔧 Quick Start](#-quick-start)
-- [⌨️ Essential Keymaps](#️-essential-keymaps)
-- [🎯 Core Features](#-core-features)
-- [💻 Development Workflow](#-development-workflow)
-- [🛠️ Advanced Features](#️-advanced-features)
-- [🔍 Troubleshooting](#-troubleshooting)
-- [📚 Reference](#-reference)
-
----
-
-## 🔧 Quick Start
-
-### First-Time Setup
-
-**Recommended**: Use the automated setup script (requires SSH keys for GitHub):
 ```bash
-cd ~/.dotfiles
-bash ./setup-astronvim.sh
+cd ~/.dotfiles && bash ./setup-astronvim.sh   # needs SSH keys (see main README)
 ```
 
-> **Note**: This script requires SSH keys (`~/.ssh/git` and `~/.ssh/git.pub`) to be configured.
-> See the main README.md troubleshooting section for SSH key setup instructions.
+Manual: clone the AstroNvim template into `~/.config/nvim`, then symlink `polish.lua` → `lua/polish.lua` and `user.lua` → `lua/plugins/user.lua`. Plugins auto-install on first `nvim`; `:Mason` verifies LSPs, `:Copilot auth` enables Copilot.
 
-**Manual installation** (alternative):
+`polish.lua` holds settings/keymaps/commands; `user.lua` holds plugin specs (LSP, DAP, testing).
 
-1. **Install AstroNvim**:
-   ```bash
-   git clone --depth 1 https://github.com/AstroNvim/template ~/.config/nvim
-   rm -rf ~/.config/nvim/.git
-   ```
+## Keymaps
 
-2. **Symlink your config**:
-   ```bash
-   ln -sf ~/.dotfiles/config/nvim/polish.lua ~/.config/nvim/lua/polish.lua
-   mkdir -p ~/.config/nvim/lua/plugins
-   ln -sf ~/.dotfiles/config/nvim/user.lua ~/.config/nvim/lua/plugins/user.lua
-   ```
+### Files
+| Key | Action |
+|-----|--------|
+| `<leader>w` / `W` | Save / save with sudo |
+| `<leader>q` / `Q` | Quit / force quit |
+| `<leader>x` / `X` | Save & quit / with sudo |
 
-3. **Launch and setup**:
-   ```bash
-   nvim
-   ```
-   - Plugins will auto-install on first launch
-   - Run `:Mason` to verify language servers
-   - For Copilot: `:Copilot auth`
+### Clipboard (system clipboard is opt-in)
+| Key | Action |
+|-----|--------|
+| `<leader>y` / `yy` / `Y` | Copy selection / line / to end of line |
+| `<leader>p` / `P` | Paste after / before |
+| `<leader>pp` / `PP` | Paste after / before with auto-indent |
 
-### 🎨 Current Theme
-- **Active**: `base16-darkmoss` colorscheme
-- **Available**: `base16-*` (via base16-nvim), `material`, `minimal`
+### Buffers & windows
+| Key | Action |
+|-----|--------|
+| `<leader>j` / `k` | Previous / next buffer |
+| `<leader>bd` / `bl` | Delete buffer / list buffers |
+| `<C-h/j/k/l>` | Move to left/down/up/right window |
 
----
-
-## ⌨️ Essential Keymaps
-
-> **Note**: `<leader>` key is `Space` by default in AstroNvim
-
-### 📁 File Operations
-| Keymap | Description |
-|--------|-------------|
-| `<leader>w` | Save file |
-| `<leader>W` | Save with sudo |
-| `<leader>q` | Quit |
-| `<leader>Q` | Force quit |
-| `<leader>x` | Save and quit |
-| `<leader>X` | Save and quit with sudo |
-
-### 📋 Clipboard Operations
-| Keymap | Mode | Description |
-|--------|------|-------------|
-| `<leader>y` | Normal/Visual | Copy to system clipboard |
-| `<leader>yy` | Normal | Copy line to system clipboard |
-| `<leader>Y` | Normal | Copy from cursor to end of line |
-| `<leader>p` | Normal/Visual | Paste from system clipboard |
-| `<leader>P` | Normal/Visual | Paste before cursor |
-| `<leader>pp` | Normal | Paste with auto-indent |
-| `<leader>PP` | Normal | Paste before with auto-indent |
-
-### 🗂️ Buffer Navigation
-| Keymap | Description |
-|--------|-------------|
-| `<leader>j` | Previous buffer |
-| `<leader>k` | Next buffer |
-| `<leader>bj` | Next buffer (explicit) |
-| `<leader>bk` | Previous buffer (explicit) |
-| `<leader>bd` | Delete buffer |
-| `<leader>bl` | List all buffers |
-
-### 🪟 Window Navigation
-| Keymap | Description |
-|--------|-------------|
-| `<C-h>` | Move to left window |
-| `<C-j>` | Move to window below |
-| `<C-k>` | Move to window above |
-| `<C-l>` | Move to right window |
-
-### 🏃 Fast Scrolling
-| Keymap | Description |
-|--------|-------------|
-| `<M-j>` / `∆` | Scroll down 5 lines |
-| `<M-k>` / `˚` | Scroll up 5 lines |
-| `<M-J>` / `Ô` | Scroll down 15 lines |
-| `<M-K>` / `` | Scroll up 15 lines |
-
-### 🔍 Search & Folding
-| Keymap | Description |
-|--------|-------------|
+### Scroll, search, delete
+| Key | Action |
+|-----|--------|
+| `<M-j>` / `<M-k>` | Scroll 5 lines down / up |
+| `<M-J>` / `<M-K>` | Scroll 15 lines down / up |
 | `<leader>h` | Toggle search highlight |
-| `\` | Toggle fold (or insert space) |
-| `\` (Visual) | Create fold from selection |
+| `\` | Toggle fold (Visual: create fold) |
+| `<leader>d` / `x` | Delete without yanking |
 
-### 🗑️ Smart Deletion
-| Keymap | Description |
-|--------|-------------|
-| `dw` | Delete word backwards |
-| `<leader>d` | Delete without yanking |
-| `x` | Delete character without yanking |
+### mini.nvim
+| Key | Action |
+|-----|--------|
+| `sa` / `sd` / `sr` / `sf` / `sF` | Surround add / delete / replace / find right / find left |
+| `gS` | Split/join lines |
+| `<C-M-h/j/k/l>` | Move text/selection |
 
----
-
-## 🎯 Core Features
-
-### 🎨 Mini.nvim Plugins
-
-#### Surround (`mini.surround`)
-| Keymap | Description |
-|--------|-------------|
-| `sa` | Add surrounding |
-| `sd` | Delete surrounding |
-| `sr` | Replace surrounding |
-| `sf` | Find right surrounding |
-| `sF` | Find left surrounding |
-
-#### Split/Join (`mini.splitjoin`)
-| Keymap | Description |
-|--------|-------------|
-| `gS` | Toggle split/join lines |
-
-#### Move (`mini.move`)
-| Keymap | Description |
-|--------|-------------|
-| `<C-M-h>` | Move text/selection left |
-| `<C-M-j>` | Move text/selection down |
-| `<C-M-k>` | Move text/selection up |
-| `<C-M-l>` | Move text/selection right |
-
-### 🔍 Snacks Picker
-- **Enhanced picker UI** with telescope icon 🔭
-- **Layout**: Preview on top, results below
-- **Size**: 85% width, 90% height
-- **Access**: Use AstroNvim's built-in picker commands
-
----
-
-## 💻 Development Workflow
-
-### 🛠️ Language Server Support
-
-**Auto-installed via Mason**:
-- **Frontend**: TypeScript, JavaScript, HTML, CSS, Tailwind
-- **Backend**: Python, Ruby, Bash
-- **DevOps**: Docker, Terraform, YAML
-- **Documentation**: Markdown, JSON
-
-### 🐛 Debugging
-
-#### Python & JavaScript/TypeScript Debugging
-| Keymap | Description |
-|--------|-------------|
+### Debugging (nvim-dap)
+| Key | Action |
+|-----|--------|
 | `<leader>db` | Toggle breakpoint |
-| `<leader>dc` | Continue execution |
-| `<leader>di` | Step into |
-| `<leader>do` | Step over |
-| `<leader>dO` | Step out |
-| `<leader>dr` | Toggle REPL |
-| `<leader>dl` | Run last |
-| `<leader>du` | Toggle debug UI |
-| `<leader>dt` | Terminate session |
+| `<leader>dc` / `di` / `do` / `dO` | Continue / step into / over / out |
+| `<leader>dr` / `dl` | Toggle REPL / run last |
+| `<leader>du` / `dt` | Toggle UI / terminate |
 
-#### Debugging Workflow
-1. **Set breakpoints** with `<leader>db`
-2. **Start debugging** with `<leader>dc`
-3. **Step through code** with `<leader>di/do/dO`
-4. **UI opens automatically** when debugging starts
+### Testing (neotest)
+| Key | Action |
+|-----|--------|
+| `<leader>tt` / `tf` | Run test under cursor / file |
+| `<leader>td` / `ts` / `ta` | Debug / stop / attach |
 
-### 🧪 Testing
+### Other
+| Key / Cmd | Action |
+|-----------|--------|
+| `<leader>B` | Toggle database client (nvim-dbee) |
+| `<C-g>` / `<C-j>` / `<C-k>` / `<C-o>` (insert) | Copilot accept / next / prev / dismiss |
+| `:Q` / `:W` / `:X` | Force quit / sudo save / sudo save-quit |
 
-#### Test Commands
-| Keymap | Description |
-|--------|-------------|
-| `<leader>tt` | Run test under cursor |
-| `<leader>tf` | Run all tests in file |
-| `<leader>td` | Debug test under cursor |
-| `<leader>ts` | Stop running tests |
-| `<leader>ta` | Attach to test process |
+**Settings:** system clipboard off by default (use `<leader>y/p`), absolute line numbers, 2-space expanded tabs, mouse on, incremental search.
 
-#### Testing Workflow
-1. **Single test**: `<leader>tt` on test function
-2. **File tests**: `<leader>tf` anywhere in test file
-3. **Debug mode**: `<leader>td` to debug specific test
+## Plugins
 
-### 🐳 Docker Development
+Mason auto-installs LSPs for TS/JS, HTML/CSS/Tailwind, Python, Ruby, Bash, Docker, Terraform, YAML, Markdown, JSON. Categories: mini (surround/move/splitjoin), Treesitter, nvim-dap (+ dap-ui, dap-python), neotest (python/jest), Copilot, nvim-dev-container, nvim-dbee, themes (base16/material/minimal).
 
-**Dev Container Support**:
-- **Automatic detection** of `.devcontainer/devcontainer.json`
-- **Full LSP support** inside containers
-- **Transparent editing** with complete IDE features
+## Troubleshooting
 
-### 🗄️ Database Client (nvim-dbee)
-
-| Keymap | Description |
-|--------|-------------|
-| `<leader>B` | Toggle database client |
-
-**Features**:
-- Connect to PostgreSQL, MySQL, SQLite, and more
-- Execute queries and view results
-- Browse database schemas
-
----
-
-## 🛠️ Advanced Features
-
-### 🤖 AI Integration (GitHub Copilot)
-
-| Keymap | Mode | Description |
-|--------|------|-------------|
-| `<C-g>` | Insert | Accept suggestion |
-| `<C-j>` | Insert | Next suggestion |
-| `<C-k>` | Insert | Previous suggestion |
-| `<C-o>` | Insert | Dismiss suggestions |
-
-#### AI Workflow
-1. **Start typing** - suggestions appear automatically
-2. **Accept** with `<C-g>` or cycle through with `<C-j/k>`
-3. **Dismiss** unwanted suggestions with `<C-o>`
-
-### 🎨 Custom Commands
-
-| Command | Description |
-|---------|-------------|
-| `:Q` | Force quit |
-| `:W` | Save with sudo |
-| `:X` | Save and quit with sudo |
-
-### ⚙️ Special Settings
-
-- **Clipboard**: Disabled by default, use `<leader>y/p` for system clipboard
-- **Line numbers**: Absolute (not relative)
-- **Tabs**: 2 spaces, expanded
-- **Mouse**: Enabled
-- **Incremental search**: Enabled
-
----
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-#### Clipboard not working
-- **Solution**: Use `<leader>y` and `<leader>p` instead of default `y` and `p`
-- **Why**: Clipboard integration is intentionally disabled for better performance
-
-#### Language server not starting
-1. **Check Mason**: Run `:Mason` to verify installation
-2. **Restart**: `:LspRestart` to restart language server
-3. **Reinstall**: Use Mason to reinstall the language server
-
-#### Debugging not working
-- **Python**: Ensure `debugpy` is installed in your Python environment
-- **JavaScript**: Verify Node.js is installed and accessible
-- **General**: Check `:checkhealth` for diagnostic information
-
-#### Copilot not working
-1. **Authenticate**: Run `:Copilot auth`
-2. **Check status**: `:Copilot status`
-3. **Restart**: `:Copilot restart`
-
-### Performance Tips
-
-- **Large files**: Use `<leader>h` to toggle search highlighting
-- **Folding**: Use `\` to fold large sections
-- **Buffers**: Use `<leader>bd` to close unused buffers
-
----
-
-## 📚 Reference
-
-### File Structure
-```
-~/.dotfiles/config/nvim/
-├── polish.lua          # Settings, keymaps, and customizations
-├── user.lua            # Plugin configurations
-└── README.md           # This user guide
-```
-
-### Key Configuration Files
-
-#### `polish.lua`
-- **Settings**: Clipboard, colors, indentation
-- **Keymaps**: All custom key mappings
-- **Commands**: Custom user commands
-
-#### `user.lua`  
-- **Plugins**: All plugin specifications
-- **LSP**: Language server configurations
-- **Debugging**: DAP and testing setup
-
-### Plugin Categories
-
-| Category | Plugins |
-|----------|---------|
-| **Mini plugins** | surround, move, splitjoin, snippets |
-| **Language** | Mason, LSP servers, Treesitter |
-| **Debugging** | nvim-dap, dap-ui, dap-python |
-| **Testing** | neotest, neotest-python, neotest-jest |
-| **AI** | GitHub Copilot |
-| **Docker** | nvim-dev-container |
-| **Database** | nvim-dbee |
-| **Themes** | minimal, base16, material |
-
-### Getting Help
-
-- **Which-key**: Press `<leader>` to see available commands
-- **AstroNvim docs**: Built-in help system
-- **Plugin docs**: `:help <plugin-name>`
-- **Health check**: `:checkhealth`
-
----
-
-> **💡 Pro Tip**: Press `<leader>` at any time to see all available keybindings through the which-key interface!
-
-**Happy coding!** 🎉
+- **Clipboard:** use `<leader>y` / `<leader>p` (system clipboard is intentionally off).
+- **LSP not starting:** `:Mason` to verify, `:LspRestart`, `:checkhealth`.
+- **Debugging:** Python needs `debugpy`; JS needs Node. `:checkhealth` for diagnostics.
+- **Copilot:** `:Copilot auth` / `status` / `restart`.
+- Press `<leader>` for the which-key menu of all bindings.
