@@ -3,7 +3,7 @@ name: pr-review
 description: Review a GitHub PR or current branch primarily for bugs (correctness, null/undefined, async/race, error handling, security, resource leaks, test rigor). Posts findings as resolvable inline review comments. Auto-APPROVES when nothing's wrong. House-rules criteria run as additive extras.
 version: 3.1.0
 argument-hint: "[--fg] [--once] [<PR-number-or-URL>]"
-allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Bash(jq*), Bash(mktemp*), Bash(*check-pr-state.sh*), Bash(sleep*), Bash(date*), Read, Glob, Grep
+allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Bash(jq*), Bash(mktemp*), Bash(*check-pr-state.sh*), Bash(*spawn-reviewer.sh*), Bash(sleep*), Bash(date*), Read, Glob, Grep
 hooks:
   PreToolUse:
     - matcher: "Bash"
@@ -42,46 +42,28 @@ Parse `$ARGUMENTS` for these in order:
    - PR number + `-R owner/repo` — uses the explicit repo
 4. **Nothing identifiable** → foreground branch review (skip dispatch entirely; `--once` is implied for branch mode since there's no PR to watch).
 
-### Resolve PROJECT name (in order)
+### Dispatch command — delegate to `spawn-reviewer.sh`
 
-`PROJECT` must be the repo's `owner-repo` slug (slash → dash) — the SAME value
-`spawn-reviewer.sh` builds from `nameWithOwner`. If these disagree the two spawn
-paths can't see each other's reviewer and the PR gets double-reviewed. Derive:
+Do **not** build the session name or spawn here. `spawn-reviewer.sh` is the
+single, idempotent entry point: it derives the name (`review-<repo>[-<ticket>]-pr-<n>`)
+and guards against spawning a second watcher when one is already live. Building
+the name in two places is exactly how the PR ends up double-reviewed — one
+builder, one guard.
 
-1. URL (`…/<owner>/<repo>/pull/N`) → `PROJECT` = `<owner>-<repo>`.
-2. `-R <owner>/<repo>` → `PROJECT` = `<owner>-<repo>`.
-3. Else `gh repo view --json nameWithOwner -q .nameWithOwner`, replace `/` with `-`.
-4. Else → stop with the literal message: `Cannot derive project name. Pass a PR URL, use -R owner/repo, or re-run with --fg.` **Do not silently fall back to foreground.**
-
-### Parse Linear ticket (best-effort)
-
-Try to extract a ticket like `per-83` or `paracha-12` from the PR's branch name or title. If found, include it in the session name; if not, omit cleanly.
+`$PR_ARG` below is whatever preserves repo context: the full URL if a URL was
+passed, or `<PR> -R owner/repo` if `-R` was passed, or the bare integer if neither.
 
 ```bash
-PR_META=$(gh pr view $PR_ARG --json headRefName,title 2>/dev/null || echo '{}')
-TICKET=$(jq -r '"\(.headRefName // "") \(.title // "")"' <<<"$PR_META" \
-  | grep -ioE '[a-z]+-[0-9]+' | head -1 | tr 'A-Z' 'a-z')
-
-if [[ -n "$TICKET" ]]; then
-  SESSION_NAME="review-${PROJECT}-${TICKET}-pr-${PR}"
-else
-  SESSION_NAME="review-${PROJECT}-pr-${PR}"
-fi
-```
-
-### Dispatch command
-
-`$PR_ARG` below is whatever preserves repo context for the child: the full URL if a URL was passed, or `-R owner/repo <PR>` if `-R` was passed, or the bare integer if neither.
-
-```bash
-SESSION_OUTPUT=$(claude --bg \
-    --name "$SESSION_NAME" \
-    --permission-mode bypassPermissions \
-    "/pr-review --fg $PR_ARG" 2>&1)
-SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
+SESSION_OUTPUT=$(bash ~/.claude/skills/dispatch/spawn-reviewer.sh $PR_ARG 2>&1)
+SESSION_ID=$(grep '^session_id:' <<<"$SESSION_OUTPUT" | cut -d: -f2)
+SESSION_NAME=$(grep '^name:' <<<"$SESSION_OUTPUT" | cut -d: -f2)
 ```
 
 Report: `Dispatched as $SESSION_NAME (session $SESSION_ID). Open claude agents to watch.`
+(If `spawn-reviewer.sh` reports `reviewer_status:already-running`, say it reused the live reviewer instead of spawning a new one.)
+
+`--once` only applies to a foreground review (`--fg --once`); a backgrounded PR
+review always runs the watch loop. If you need a one-shot, run it foreground.
 
 ### Failure handling — read carefully
 
