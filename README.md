@@ -406,7 +406,7 @@ Symlinks skills, agents, hooks, scripts, practices, and settings into `~/.claude
 | `/sketch <name>` | Lightweight local spec (ZeeSpec-lite) |
 | `/spec` | Linear feature spec with sub-issues (ZeeSpec) |
 | `/issue` | Single well-formed Linear issue |
-| `/dispatch <id\|name>` | Spawn runner from Linear ticket or sketch |
+| `/dispatch <id\|name> [--repo <r>]` | Spawn runner from Linear ticket or sketch (`--repo` targets another repo) |
 | `/pr` | Review, fix, create PR |
 | `/pr-review` | Bug-focused PR review with watch loop |
 | `/debug` | Systematic root-cause debugging |

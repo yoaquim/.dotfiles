@@ -29,15 +29,23 @@ if [[ -n "$CREATED" ]]; then
   if (( EPOCH > 0 )) && (( $(date +%s) - EPOCH > 28800 )); then exit 0; fi
 fi
 
-PR_STATE=$(gh pr view "$PR" --json state -q .state 2>/dev/null || echo OPEN)
+# One authoritative snapshot — pr_state, review_decision, ci_green, head_sha all
+# from check-pr-state.sh, so the reviewer's exit test uses the SAME green
+# definition as the runner's "completed" test.
+STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR" 2>/dev/null || echo '{}')
+
+PR_STATE=$(jq -r '.pr_state // "OPEN"' <<<"$STATE_JSON")
 [[ "$PR_STATE" != "OPEN" ]] && exit 0
 
-# The reviewer's job is done the moment it has APPROVED — there's nothing left to
-# review. Let it exit instead of watching the PR until a human merges, which left
-# an orphaned session burning until the 8hr cap. A later push can be re-reviewed
-# with a fresh /pr-review.
-REVIEW_DECISION=$(gh pr view "$PR" --json reviewDecision -q .reviewDecision 2>/dev/null || echo "")
-[[ "$REVIEW_DECISION" == "APPROVED" ]] && exit 0
+# The reviewer's job is done once it has APPROVED AND all GitHub checks are green
+# — then there's nothing left to review and nothing left to fail. Let it exit
+# instead of watching until a human merges (which left an orphaned session burning
+# until the 8hr cap). Approved but CI still pending/red → stay alive: a failing
+# check may push a fix it should re-review. ci_green counts running/queued checks
+# as not-green.
+REVIEW_DECISION=$(jq -r '.review_decision // ""' <<<"$STATE_JSON")
+CI_GREEN=$(jq -r 'if .ci_green == true then "true" else "false" end' <<<"$STATE_JSON")
+if [[ "$REVIEW_DECISION" == "APPROVED" && "$CI_GREEN" == "true" ]]; then exit 0; fi
 
 JOBDIR="$HOME/.claude/jobs/$SID"
 
@@ -55,8 +63,9 @@ if (( ATTEMPTS > 1000 )); then
 fi
 
 # --- SHA compare: hand the agent one concrete next action ---
-# last-reviewed-sha is stamped by check-post.sh when a review is posted.
-CUR_SHA=$(gh pr view "$PR" --json headRefOid -q .headRefOid 2>/dev/null || echo "")
+# last-reviewed-sha is stamped by check-post.sh when a review is posted; CUR_SHA
+# reuses the snapshot above.
+CUR_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
 LAST_SHA=$(cat "$JOBDIR/last-reviewed-sha" 2>/dev/null || echo "")
 
 if [[ -n "$CUR_SHA" && "$CUR_SHA" != "$LAST_SHA" ]]; then

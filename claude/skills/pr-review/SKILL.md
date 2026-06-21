@@ -186,7 +186,7 @@ The hook (`hooks/check-post.sh`) reads the payload file and blocks on: missing h
 
 The model is dead simple: after delivering, **just try to end.** Every time you do, the hook decides:
 
-- **Stop allowed** — PR is MERGED/CLOSED, `--once` was set, or the 8hr cap passed. Done.
+- **Stop allowed** — PR is MERGED/CLOSED, you've APPROVED *and* all GitHub checks are green, `--once` was set, or the 8hr cap passed. Done. (Approved but CI still pending/red → keep watching; a failing check may push a fix to re-review.)
 - **Stop blocked** — the hook compares the PR's current HEAD to the SHA you last reviewed and injects exactly one next action:
   - **HEAD changed** → redo steps 1–5 on the fresh diff, post, then try to end again.
   - **HEAD unchanged** → `sleep 60`, re-poll `~/.claude/scripts/check-pr-state.sh $PR`, then try to end again.

@@ -36,17 +36,23 @@ REVIEW_DECISION=$(jq -r '.reviewDecision // "null"' <<<"$PR_VIEW")
 PR_STATE=$(jq -r '.state // "OPEN"' <<<"$PR_VIEW")
 HEAD_SHA=$(jq -r '.headRefOid // ""' <<<"$PR_VIEW")
 
-# CI green = no FAILURE/ERROR/PENDING/IN_PROGRESS/QUEUED rollups.
-# A rollup item shape: {state|conclusion, name, ...}.
-# CHECK_RUN: uses .conclusion (SUCCESS/FAILURE/...). STATUS_CONTEXT: uses .state (SUCCESS/FAILURE/PENDING).
+# CI green = no failing AND no still-running/queued checks.
+# A rollup item is a CHECK_RUN (.status = QUEUED|IN_PROGRESS|COMPLETED, plus
+# .conclusion once COMPLETED) or a STATUS_CONTEXT (.state = SUCCESS|PENDING|...).
+# A running CHECK_RUN has .status=IN_PROGRESS and an empty .conclusion, so we must
+# look at .status too — otherwise an in-flight check reads as green.
+# Not-green if: status is set and not COMPLETED, OR the conclusion/state is set
+# and not one of SUCCESS/NEUTRAL/SKIPPED.
 CI_GREEN=$(jq -r '
-  ([.statusCheckRollup // []
-    | .[]
-    | (.conclusion // .state // "")
-    | ascii_upcase
-   ]
-   | map(select(. != "" and . != "SUCCESS" and . != "NEUTRAL" and . != "SKIPPED"))
-   | length) == 0
+  ([ .statusCheckRollup // []
+     | .[]
+     | { st: ((.status // "") | ascii_upcase),
+         cc: ((.conclusion // .state // "") | ascii_upcase) }
+     | select(
+         (.st != "" and .st != "COMPLETED")
+         or (.cc != "" and .cc != "SUCCESS" and .cc != "NEUTRAL" and .cc != "SKIPPED")
+       )
+   ] | length) == 0
 ' <<<"$PR_VIEW")
 
 # 2. Unresolved review threads via GraphQL
