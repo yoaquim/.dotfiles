@@ -98,8 +98,13 @@ fi
 # runner no longer counts its own iterations; the hook owns the limit.
 STARTED=$(read_started)
 if [[ -n "$STARTED" ]]; then
-  # First 19 chars are YYYY-MM-DDTHH:MM:SS regardless of fractional/Z/offset suffix.
-  S_EPOCH=$(date -j -f '%Y-%m-%dT%H:%M:%S' "${STARTED:0:19}" '+%s' 2>/dev/null || echo 0)
+  # First 19 chars are YYYY-MM-DDTHH:MM:SS regardless of fractional/Z/offset suffix;
+  # normalize a space separator to 'T' so a `2026-06-20 19:57:00` status value parses.
+  STARTED_NORM="${STARTED:0:19}"; STARTED_NORM="${STARTED_NORM/ /T}"
+  # BSD date first, GNU `date -d` fallback (mirrors enforce-watch.sh) so the cap
+  # survives both implementations and minor format drift in the status file.
+  S_EPOCH=$(date -j -f '%Y-%m-%dT%H:%M:%S' "$STARTED_NORM" '+%s' 2>/dev/null \
+         || date -d "$STARTED" +%s 2>/dev/null || echo 0)
   if [[ "$S_EPOCH" -gt 0 ]] && (( $(date +%s) - S_EPOCH > 28800 )); then
     finalize_needs_review
     echo "enforce-completion: 8hr cap reached; allowing stop with status=needs_review" >&2

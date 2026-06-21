@@ -23,18 +23,21 @@ if [[ -z "$PR" ]]; then
   exit 1
 fi
 
-# Deterministic name: review-<project>[-<ticket>]-pr-<pr> (mirrors pr-review SKILL §0).
-PROJECT=$(gh repo view --json name -q '.name' 2>/dev/null || echo "")
-if [[ -z "$PROJECT" ]]; then
-  echo "error: could not resolve repo name (gh repo view)" >&2
+# Deterministic name: review-<owner>-<repo>[-<ticket>]-pr-<pr>.
+# Use nameWithOwner (not basename) so repos like orgA/api and orgB/api don't
+# collide and reuse each other's reviewer; sanitize the slash to be name-safe.
+REPO_SLUG=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>/dev/null || echo "")
+if [[ -z "$REPO_SLUG" ]]; then
+  echo "error: could not resolve repo identity (gh repo view)" >&2
   exit 1
 fi
+PROJECT_SAFE=${REPO_SLUG//\//-}
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
 TICKET=$(grep -ioE '[a-z]+-[0-9]+' <<<"$BRANCH" | head -1 | tr '[:upper:]' '[:lower:]')
 if [[ -n "$TICKET" ]]; then
-  REVIEW_NAME="review-${PROJECT}-${TICKET}-pr-${PR}"
+  REVIEW_NAME="review-${PROJECT_SAFE}-${TICKET}-pr-${PR}"
 else
-  REVIEW_NAME="review-${PROJECT}-pr-${PR}"
+  REVIEW_NAME="review-${PROJECT_SAFE}-pr-${PR}"
 fi
 
 # States a background session can be in that mean "not alive" (finished/gone).
@@ -52,7 +55,15 @@ live_reviewer_id() {
   ' 2>/dev/null || echo ""
 }
 
-EXISTING=$(live_reviewer_id)
+# A reviewer spawned moments ago (e.g. by a prior Completion turn) may not be in
+# `claude agents` yet; a single missed check would re-introduce the double-review
+# bug. Retry briefly — the same latency tolerance the id-resolution loop uses below.
+EXISTING=""
+for _ in 1 2 3; do
+  EXISTING=$(live_reviewer_id)
+  if [[ -n "$EXISTING" ]]; then break; fi
+  sleep 1
+done
 if [[ -n "$EXISTING" ]]; then
   echo "reviewer_status:already-running"
   echo "session_id:$EXISTING"

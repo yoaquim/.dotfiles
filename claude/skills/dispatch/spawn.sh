@@ -126,7 +126,12 @@ SESSION_OUTPUT=$(cd "$WORKTREE" && \
 # latency, then fall back to scraping stdout ("backgrounded · <8-hex>").
 resolve_id_by_name() {
     claude agents --json 2>/dev/null | jq -r --arg n "$RUNNER_NAME" '
-      [ .[] | select((.name // "") == $n) | (.id // .sessionId // "") ] | first // ""
+      ["completed","done","failed","stopped","exited","cancelled","canceled"] as $terminal
+      | [ .[]
+          | select((.name // "") == $n)
+          | select(((.state // .status // "") | ascii_downcase) as $s | ($terminal | index($s) | not))
+          | (.id // .sessionId // "")
+        ] | first // ""
     ' 2>/dev/null || echo ""
 }
 SESSION_ID=""

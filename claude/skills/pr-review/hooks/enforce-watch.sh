@@ -63,7 +63,7 @@ if (( ATTEMPTS > 1000 )); then
 fi
 
 # --- SHA compare: hand the agent one concrete next action ---
-# last-reviewed-sha is stamped by check-post.sh when a review is posted; CUR_SHA
+# last-reviewed-sha is stamped by record-sha.sh after a successful post; CUR_SHA
 # reuses the snapshot above.
 CUR_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
 LAST_SHA=$(cat "$JOBDIR/last-reviewed-sha" 2>/dev/null || echo "")

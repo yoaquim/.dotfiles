@@ -11,6 +11,12 @@ hooks:
         - type: command
           command: "$HOME/.claude/skills/pr-review/hooks/check-post.sh"
           timeout: 10
+  PostToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/skills/pr-review/hooks/record-sha.sh"
+          timeout: 15
   Stop:
     - hooks:
         - type: command
@@ -191,7 +197,7 @@ The model is dead simple: after delivering, **just try to end.** Every time you 
   - **HEAD changed** → redo steps 1–5 on the fresh diff, post, then try to end again.
   - **HEAD unchanged** → `sleep 60`, re-poll `~/.claude/scripts/check-pr-state.sh $PR`, then try to end again.
 
-So the loop is: review → try to end → do what the hook says → try to end. Repeat. The reviewed SHA is stamped for you when you post (`check-post.sh`) — you don't track it yourself, and you must not re-review the same SHA. Terminal exit is always the hook's call, never yours.
+So the loop is: review → try to end → do what the hook says → try to end. Repeat. The reviewed SHA is stamped for you after a successful post (`record-sha.sh`) — you don't track it yourself, and you must not re-review the same SHA. Terminal exit is always the hook's call, never yours.
 
 ## Extending
 

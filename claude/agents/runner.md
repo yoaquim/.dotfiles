@@ -102,7 +102,7 @@ is not readable outside this session, so this checkbox list is the ONLY external
 view of progress: `/dispatch status` parses these boxes for its progress column.
 Example:
 
-```
+```md
 ## Progress
 - [x] Create auth middleware
 - [x] Add token refresh
