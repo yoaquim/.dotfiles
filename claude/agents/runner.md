@@ -123,6 +123,11 @@ Example:
    bash ~/.claude/skills/dispatch/spawn-reviewer.sh "$PR"
    ```
 
+   `spawn-reviewer.sh` is the ONLY sanctioned way to start a reviewer. NEVER
+   hand-roll a `claude --bg ...` / `claude -p "...please re-review..."` call:
+   doing so spawns an off-book agent (wrong permission mode, no idempotency, not
+   even the `/pr-review` skill) that double-reviews the PR.
+
 5. **Review loop — the Stop hook owns it.** Do NOT run a `sleep`/`while` loop and
    do NOT count iterations. Do one round of work, then try to end. `enforce-completion.sh`
    blocks the Stop while the status is non-terminal, kicks you back each turn (it
@@ -137,8 +142,9 @@ Example:
       - `pr_state == CLOSED` → `closed-without-merge`
       - `review_decision == APPROVED` AND `ci_green` → `completed`
    3. **Otherwise** — if `unresolved_threads` is non-empty: fix in place, commit,
-      `git push` (the reviewer re-reviews on the new SHA), then
-      `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>` for each addressed.
+      `git push`, then `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>`
+      for each addressed. The watching reviewer re-reviews the new SHA on its own —
+      do NOT spawn a new agent or post a "please re-review" prompt to nudge it.
       If empty, there's nothing to do yet — just try to end.
    4. Try to end. Non-terminal → the hook returns you to step 5.1. Terminal → you exit.
 
@@ -165,3 +171,4 @@ Example:
 - Use discovery findings from prompt — don't re-explore from scratch
 - Absolute paths for status/spec files — worktree relative paths won't reach main tree
 - Ambiguity → make a reasonable choice, document in Notes
+- Reviewers come ONLY from `spawn-reviewer.sh`. Never spawn an ad-hoc `claude --bg`/`-p` agent to review or to nudge a re-review — push and let the watcher handle it.
