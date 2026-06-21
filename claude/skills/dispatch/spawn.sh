@@ -109,19 +109,40 @@ RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
 # runner identity — it enforces against these, not the session cwd, so a runner
 # that cd's into the main checkout still can't write there.
 PROJECT_NAME="$(basename "$TARGET_REPO")"
+RUNNER_NAME="dispatch-$PROJECT_NAME-$NAME"
 SESSION_OUTPUT=$(cd "$WORKTREE" && \
     CLAUDE_DISPATCH_WORKTREE="$WORKTREE" \
     CLAUDE_DISPATCH_ROOT="$TARGET_REPO" \
     CLAUDE_DISPATCH_STATUS_FILE="$STATUS_FILE" \
     claude --bg \
     --agent runner \
-    --name "dispatch-$PROJECT_NAME-$NAME" \
+    --name "$RUNNER_NAME" \
     --permission-mode bypassPermissions \
     --append-system-prompt-file "$RUNTIME_PROMPT" \
     "Execute the task described in the system prompt." 2>&1)
 
-# Extract session ID from --bg output (format: "backgrounded · <8-hex-chars>")
-SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
+# Resolve the session id by the --name we set — robust to --bg stdout wording,
+# which is the one fragile coupling to CLI output. Retry briefly for agent-list
+# latency, then fall back to scraping stdout ("backgrounded · <8-hex>").
+resolve_id_by_name() {
+    claude agents --json 2>/dev/null | jq -r --arg n "$RUNNER_NAME" '
+      ["completed","done","failed","stopped","exited","cancelled","canceled"] as $terminal
+      | [ .[]
+          | select((.name // "") == $n)
+          | select(((.state // .status // "") | ascii_downcase) as $s | ($terminal | index($s) | not))
+          | (.id // .sessionId // "")
+        ] | first // ""
+    ' 2>/dev/null || echo ""
+}
+SESSION_ID=""
+for _ in 1 2 3 4 5; do
+    SESSION_ID=$(resolve_id_by_name)
+    if [[ -n "$SESSION_ID" ]]; then break; fi
+    sleep 1
+done
+if [[ -z "$SESSION_ID" ]]; then
+    SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
+fi
 
 if [[ -z "$SESSION_ID" ]]; then
     echo "error: failed to spawn background session" >&2

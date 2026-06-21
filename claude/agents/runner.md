@@ -96,42 +96,60 @@ Absolute path from prompt. Update after every task. Only update:
 
 Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`.
 
+**Progress** mirrors your `TaskCreate` list as one checkbox per task — `- [x]`
+done, `- [ ]` pending — rewritten on every `TaskUpdate`. The Task tool's state
+is not readable outside this session, so this checkbox list is the ONLY external
+view of progress: `/dispatch status` parses these boxes for its progress column.
+Example:
+
+```md
+## Progress
+- [x] Create auth middleware
+- [x] Add token refresh
+- [ ] Wire up logout
+```
+
 ## Completion
 
 1. Full test suite passing
 2. `git push -u origin <branch>`
 3. `/pr` to review and create PR. Required — `gh pr create` is hook-blocked unless it conforms to the same rules, so there is no manual fallback.
-4. **Spawn `/pr-review` ONCE** — it has its own watch loop and Stop hook; no respawning.
+4. **Spawn the reviewer (idempotent)** — one watcher per PR; the script reuses a
+   live reviewer if one already exists, so re-running this step after a Stop-hook
+   kickback can NOT create a second review session.
 
    ```bash
    PR=$(gh pr view --json number -q '.number')
-   PROJECT=$(gh repo view --json name -q '.name')
-   BRANCH=$(git rev-parse --abbrev-ref HEAD)
-   TICKET=$(echo "$BRANCH" | grep -ioE '[a-z]+-[0-9]+' | head -1 | tr 'A-Z' 'a-z')
-   if [[ -n "$TICKET" ]]; then
-     REVIEW_NAME="review-${PROJECT}-${TICKET}-pr-${PR}"
-   else
-     REVIEW_NAME="review-${PROJECT}-pr-${PR}"
-   fi
-   claude --bg --permission-mode bypassPermissions --name "$REVIEW_NAME" "/pr-review --fg $PR" > /dev/null 2>&1
+   bash ~/.claude/skills/dispatch/spawn-reviewer.sh "$PR"
    ```
 
-5. **Runner review loop**: address unresolved threads, push commits, watch PR state until terminal.
+   `spawn-reviewer.sh` is the ONLY sanctioned way to start a reviewer. NEVER
+   hand-roll a `claude --bg ...` / `claude -p "...please re-review..."` call:
+   doing so spawns an off-book agent (wrong permission mode, no idempotency, not
+   even the `/pr-review` skill) that double-reviews the PR.
 
-   Constraints: 8hr cap, 20 fix iterations.
+5. **Review loop — the Stop hook owns it.** Do NOT run a `sleep`/`while` loop and
+   do NOT count iterations. Do one round of work, then try to end. `enforce-completion.sh`
+   blocks the Stop while the status is non-terminal, kicks you back each turn (it
+   tells you to sleep 60 if idle), and enforces the caps (8hr wall-clock + a
+   runaway-spin guard) — so the loop, the timing, and the give-up point all live
+   in the hook, not here.
 
-   Each iteration:
+   Each turn:
    1. `STATE=$(~/.claude/scripts/check-pr-state.sh "$PR")`
-   2. **Terminal**:
-      - `pr_state == MERGED` → status `completed`, exit
-      - `pr_state == CLOSED` → status `closed-without-merge`, exit
-      - `review_decision == APPROVED` AND `ci_green` → status `completed`, exit
-      - 8hr cap → status `needs_review`, exit
-      - 20 fix iterations → status `needs_review`, exit
-   3. **Work** — if `unresolved_threads` non-empty:
-      - Fix in place, commit, `git push` (the reviewer's watch loop sees the new SHA and re-reviews)
-      - `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>` for each addressed
-   4. `sleep 60`, loop.
+   2. **Terminal** → write the status, then let Stop through:
+      - `pr_state == MERGED` → `completed`
+      - `pr_state == CLOSED` → `closed-without-merge`
+      - `review_decision == APPROVED` AND `ci_green` → `completed`
+   3. **Otherwise** — if `unresolved_threads` is non-empty: fix in place, commit,
+      `git push`, then `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>`
+      for each addressed. The watching reviewer re-reviews the new SHA on its own —
+      do NOT spawn a new agent or post a "please re-review" prompt to nudge it.
+      If empty, there's nothing to do yet — just try to end.
+   4. Try to end. Non-terminal → the hook returns you to step 5.1. Terminal → you exit.
+
+   (The hook writes `needs_review` itself on the 8hr cap or spin guard — you don't
+   need to handle those.)
 
 6. On terminal exit, finalize: list all commits, brief Notes summary in status file.
 
@@ -153,3 +171,4 @@ Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`
 - Use discovery findings from prompt — don't re-explore from scratch
 - Absolute paths for status/spec files — worktree relative paths won't reach main tree
 - Ambiguity → make a reasonable choice, document in Notes
+- Reviewers come ONLY from `spawn-reviewer.sh`. Never spawn an ad-hoc `claude --bg`/`-p` agent to review or to nudge a re-review — push and let the watcher handle it.

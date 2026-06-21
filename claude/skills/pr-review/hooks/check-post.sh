@@ -18,6 +18,11 @@ INPUT=$(cat)
 COMMAND=$(jq -r '.tool_input.command // ""' <<<"$INPUT" 2>/dev/null || echo "")
 [[ -z "$COMMAND" ]] && exit 0
 
+# NOTE: this PreToolUse hook only VALIDATES the post. The reviewed SHA is stamped
+# by the PostToolUse hook record-sha.sh, which fires AFTER the post and only on a
+# confirmed-successful one — recording here (before the gh api call runs) would
+# stamp an unreviewed HEAD if the post then failed.
+
 # shellcheck disable=SC2016  # backticked code span in prose
 HEADER='# 👾 Reviewed by Claude via the `/pr-review` skill 👾'
 NOFINDINGS_RE='_No bug-class findings'
@@ -48,7 +53,7 @@ if grep -qE '(^|[[:space:]]|;|&&|\|\||\||\(|`|\$\()gh[[:space:]]+api[[:space:]]+
   if ! grep -qF "$HEADER" <<<"$BODY"; then
     ERRORS+=("Payload .body is missing the required /pr-review header line:")
     ERRORS+=("    $HEADER")
-    ERRORS+=("Prepend header.md to the body before posting.")
+    ERRORS+=("Use templates/approved.md or templates/changes-requested.md — they carry it.")
   fi
 
   # Engagement: at least one inline comment OR explicit no-findings line in body.
@@ -120,7 +125,7 @@ ERRORS=()
 if ! grep -qF "$HEADER" <<<"$COMMAND"; then
   ERRORS+=("Post is missing the required /pr-review header line:")
   ERRORS+=("    $HEADER")
-  ERRORS+=("Cat the skill's header.md into the body before posting.")
+  ERRORS+=("Cat templates/approved.md or templates/changes-requested.md into the body.")
 fi
 
 HAS_FILELINE=0
