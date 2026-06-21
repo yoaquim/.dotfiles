@@ -1,352 +1,140 @@
-# 🐚 Bash Configuration - User Guide
+# 🐚 Bash Configuration
 
-> **A comprehensive guide to your customized bash setup with aliases, functions, and tools**
+Customized bash setup — aliases, functions, git workflow, and tool integration.
 
-## 📋 Table of Contents
+## Quick Start
 
-- [🔧 Quick Start](#-quick-start)
-- [📁 File Structure](#-file-structure)
-- [⚙️ Core Settings](#️-core-settings)
-- [🔀 Aliases](#-aliases)
-- [🛠️ Functions](#️-functions)
-- [🌳 Git Workflow](#-git-workflow)
-- [📦 Tool Integration](#-tool-integration)
-- [💡 Pro Tips](#-pro-tips)
+```bash
+ln -sf ~/.dotfiles/config/bash/bash_profile ~/.bash_profile
+source ~/.bash_profile   # or: sb
+```
 
----
-
-## 🔧 Quick Start
-
-### Setup Instructions
-
-1. **Symlink the profile**:
-   ```bash
-   ln -sf ~/.dotfiles/config/bash/bash_profile ~/.bash_profile
-   ```
-
-2. **Reload your shell**:
-   ```bash
-   source ~/.bash_profile
-   # or use the alias:
-   sb
-   ```
-
-3. **Verify setup**:
-   ```bash
-   echo $PS1  # Should show custom prompt
-   alias | grep "alias"  # Should show custom aliases
-   ```
-
----
-
-## 📁 File Structure
+## File Structure
 
 | File | Purpose |
 |------|---------|
-| `bash_profile` | Main profile that sources all other files |
-| `bash_profile_aliases` | All command aliases |
-| `bash_profile_functions` | Custom bash functions |
-| `bash_profile_git` | Git-specific aliases and functions |
+| `bash_profile` | Main profile; sources the others |
+| `bash_profile_aliases` | Command aliases |
+| `bash_profile_functions` | Custom functions |
+| `bash_profile_git` | Git aliases and functions |
 | `bash_profile_tools` | Tool integrations (nvm, pyenv, etc.) |
 | `bash_profile_ssh` | SSH agent configuration |
-| `bash_profile_local` | Local machine-specific settings (not in git) |
+| `bash_profile_local` | Machine-specific settings (not in git) |
 
----
+## Core Settings
 
-## ⚙️ Core Settings
+- **Prompt:** custom PS1 (directory + git branch), truecolor, Base16 integration.
+- **History:** eternal (no size limit), timestamped, written immediately, at `~/.bash_eternal_history`.
+- **Shell:** vi mode (`set -o vi`), `globstar`, `histappend`, `cmdhist`.
 
-### 🎨 Prompt & Colors
-- **Custom PS1**: Shows current directory and git branch
-- **Colors**: Full truecolor support (`COLORTERM=truecolor`)
-- **Base16 Shell**: Integrated color scheme support
+## Aliases
 
-### 📚 History Configuration
-- **Eternal History**: No size limits (`HISTFILESIZE=` `HISTSIZE=`)
-- **Timestamps**: Each command timestamped (`HISTTIMEFORMAT='[%F %T] '`)
-- **Immediate Write**: Commands written to history immediately
-- **File Location**: `~/.bash_eternal_history`
+### Essential
+| Alias | Command |
+|-------|---------|
+| `c`, `cl` | `clear` |
+| `v` / `nv`, `av` | `vim` / `nvim` |
+| `t` | `touch` |
+| `sb` | `source ~/.bash_profile` |
 
-### 🔧 Shell Options
-- **Vi Mode**: `set -o vi` for vim-style editing
-- **Globstar**: `shopt -s globstar` for `**` pattern matching
-- **History Append**: `shopt -s histappend` to preserve history
-- **Command History**: `shopt -s cmdhist` for multiline commands
+### Files
+| Alias | Command |
+|-------|---------|
+| `l`, `ll` | `ls -l` |
+| `la` | `ls -la` |
+| `lh` | `ls -lh` |
+| `lah`, `lha` | `ls -lah` |
+| `l1`, `la1` | `ls -lh1`, `ls -lah1` |
+| `rmd` | `rm -rf` |
 
----
+### Navigation
+| Alias | Command |
+|-------|---------|
+| `..` | `cd ..` |
+| `...` | `cd -` |
+| `cd.` | `cd ~/.dotfiles` |
+| `cdv` | `cd ~/.vim` |
+| `cdd` | `cd ~/Desktop/` |
+| `cdc` | `cd ~/Cave/` (Mountain Duck mount) |
+| `cdp` | `cd ~/Projects/` |
+| `cds` | `cd ~/Scratches/` |
 
-## 🔀 Aliases
+### Clipboard
+| Alias | Command |
+|-------|---------|
+| `pbc` / `pbp` | `pbcopy` / `pbpaste` |
+| `cwd` | `pwd \| pbcopy` |
+| `lcp` | `xclip -sel clip` |
 
-### 📋 Essential Shortcuts
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `c`, `cl` | `clear` | Clear terminal |
-| `v` | `vim` | Open vim |
-| `nv`, `av` | `nvim` | Open neovim |
-| `t` | `touch` | Create file |
-| `sb` | `source ~/.bash_profile` | Reload bash config |
+### Edit configs
+| Alias | Opens |
+|-------|-------|
+| `vb` / `vba` / `vbf` / `vbt` / `vbg` / `vbl` | bash profile / aliases / functions / tools / git / local |
+| `vk` | kitty config |
+| `vnv`, `nvc` | neovim config |
+| `vt` | tmux config |
+| `vg` | `~/.gitconfig` |
+| `vetc` | `sudo nvim /etc/hosts` |
 
-### 📂 File Operations
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `l`, `ll` | `ls -l` | Long listing |
-| `la` | `ls -la` | Show all files |
-| `lh` | `ls -lh` | Human readable sizes |
-| `lah`, `lha` | `ls -lah` | All files, human readable |
-| `l1`, `la1` | `ls -lh1`, `ls -lah1` | Single column |
-| `rmd` | `rm -rf` | Remove directory |
+### Dev tools
+| Alias | Command |
+|-------|---------|
+| `tm` / `tml` / `tma` / `tmk` | `tmux` / `ls` / `attach -t` / `kill-session -t` |
+| `dcp` | `docker compose` |
+| `npms` | `npm -s` |
+| `flush` | flush DNS cache |
 
-### 🧭 Navigation
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `..` | `cd ..` | Go up one directory |
-| `...` | `cd -` | Go to previous directory |
-| `cd.` | `cd ~/.dotfiles` | Go to dotfiles |
-| `cdv` | `cd ~/.vim` | Go to vim config |
-| `cdd` | `cd ~/Desktop/` | Go to desktop |
-| `cdc` | `cd ~/Cave/` | Go to Cave (Mountain Duck mount) |
-| `cdp` | `cd ~/Projects/` | Go to projects |
-| `cds` | `cd ~/Scratches/` | Go to scratches |
+## Functions
 
-### 📋 Clipboard
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `pbc` | `pbcopy` | Copy to clipboard |
-| `pbp` | `pbpaste` | Paste from clipboard |
-| `cwd` | `pwd \| pbcopy` | Copy current directory path |
-| `lcp` | `xclip -sel clip` | Linux clipboard copy |
+**Directory navigation**
+- `up [n]` (alias `ff`) — go up N levels (`up 3`).
 
-### 🔧 Configuration Files
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `vb` | `nvim ~/.bash_profile` | Edit bash profile |
-| `vbf` | `nvim ~/.config/bash/bash_profile_functions` | Edit functions |
-| `vbt` | `nvim ~/.config/bash/bash_profile_tools` | Edit tools |
-| `vbg` | `nvim ~/.config/bash/bash_profile_git` | Edit git config |
-| `vbl` | `nvim ~/.config/bash/bash_profile_local` | Edit local config |
-| `vba` | `nvim ~/.config/bash/bash_profile_aliases` | Edit aliases |
-| `vk` | `nvim ~/.config/kitty/kitty.conf` | Edit kitty config |
-| `vnv`, `nvc` | `nvim ~/.config/nvim` | Edit neovim config |
-| `vt` | `nvim ~/.config/tmux/tmux.conf` | Edit tmux config |
-| `vg` | `nvim ~/.gitconfig` | Edit git config |
-| `vetc` | `sudo nvim /etc/hosts` | Edit hosts file |
+**Bookmarks**
+| Function | Usage |
+|----------|-------|
+| `mark <name>` | Bookmark current dir |
+| `jump <name>` / `j <name>` | Jump to bookmark |
+| `marks` | List bookmarks |
+| `unmark <name>` | Remove bookmark |
 
-### 🐳 Development Tools
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `tm` | `tmux` | Start tmux |
-| `tml` | `tmux ls` | List tmux sessions |
-| `tma` | `tmux attach -t` | Attach to session |
-| `tmk` | `tmux kill-session -t` | Kill session |
-| `dcp` | `docker compose` | Docker compose |
-| `npms` | `npm -s` | NPM silent mode |
-| `flush` | DNS cache flush | Flush DNS cache |
-
----
-
-## 🛠️ Functions
-
-### 📁 Directory Navigation
-
-#### `up [number]` (alias: `ff`)
-Navigate up multiple directory levels:
 ```bash
-up 3      # Go up 3 directories
-ff 2      # Same as above (alias)
-up        # Go up 1 directory (same as ..)
+cd ~/Projects/my-app && mark myapp
+cd /elsewhere && j myapp          # back to ~/Projects/my-app
 ```
 
-#### Directory Bookmarking System
-| Function | Usage | Description |
-|----------|-------|-------------|
-| `mark <name>` | `mark project` | Bookmark current directory |
-| `jump <name>` | `jump project` | Jump to bookmarked directory |
-| `j <name>` | `j project` | Jump (alias) |
-| `marks` | `marks` | List all bookmarks |
-| `unmark <name>` | `unmark project` | Remove bookmark |
+**System**
+- `toggle_hidden` — show/hide dotfiles in Finder.
+- `cave` — open the `~/Cave` Mountain Duck mount in Finder.
 
-**Example Workflow**:
-```bash
-cd ~/Projects/my-app
-mark myapp               # Bookmark this location
-cd /somewhere/else
-j myapp                 # Jump back to ~/Projects/my-app
-marks                   # See all bookmarks
-unmark myapp            # Remove bookmark
-```
+## Git Workflow
 
-### 🔧 System Functions
+### Aliases
+| Alias | Command |
+|-------|---------|
+| `gs` / `gf` | `git status` / `fetch` |
+| `ga` / `gall` / `gau` / `gap` | `git add` / `--all` / `-u` / `-p` |
+| `gcomm` | `git commit -m` |
+| `gp` / `gpr` | `git pull` / `--rebase` |
+| `gb` / `gco` / `gcb` | `git branch` / `checkout` / `checkout -b` |
+| `gbcp` | Copy current branch name to clipboard |
+| `gr` / `grh` | `git reset` / `--hard` |
+| `gam` / `gamn` | `git commit --amend` / `--no-edit` |
+| `gd` / `gds` | `git diff` / `--staged` |
+| `gfd` | List files in last commit |
+| `glog` | Pretty log (`git plog`) |
 
-#### `toggle_hidden()`
-Toggle visibility of hidden files in macOS Finder:
-```bash
-toggle_hidden           # Show/hide dotfiles in Finder
-```
+### Functions
+- `gbu` — set upstream to `origin/<current-branch>`.
+- `gcg <pattern>` — checkout first branch matching pattern.
+- `gcrb <name>` — create branch `remote-run/<name>`.
+- `gpush [--force]` — push current branch to origin.
+- `gup <message>` — commit and push in one step.
+- `roob [branch]` — rebase current branch on `branch` (default branch if omitted).
 
-#### `cave`
-Open the Cave Mountain Duck mount in Finder:
-```bash
-cave                    # Opens ~/Cave in Finder
-```
+## Tool Integration
 
----
+Auto-loaded in all shells with tab completion: **nvm** (`~/.nvm`), **pyenv** (`~/.pyenv`), **direnv** (`.envrc`), **ngrok** (if installed).
 
-## 🌳 Git Workflow
+## Customization
 
-### 📝 Basic Git Aliases
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `gs` | `git status` | Show status |
-| `ga` | `git add` | Add files |
-| `gall` | `git add --all` | Add all files |
-| `gau` | `git add -u` | Add tracked files |
-| `gap` | `git add -p` | Interactive add |
-| `gcomm` | `git commit -m` | Commit with message |
-| `gp` | `git pull` | Pull changes |
-| `gpr` | `git pull --rebase` | Pull with rebase |
-| `gf` | `git fetch` | Fetch changes |
-
-### 🌿 Branch Management
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `gb` | `git branch` | List branches |
-| `gco` | `git checkout` | Checkout branch |
-| `gcb` | `git checkout -b` | Create new branch |
-| `gbcp` | Copy branch name | Copy current branch name |
-
-### 🔄 Advanced Git Operations
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `gr` | `git reset` | Reset changes |
-| `grh` | `git reset --hard` | Hard reset |
-| `gam` | `git commit --amend` | Amend last commit |
-| `gamn` | `git commit --amend --no-edit` | Amend without editing |
-| `gd` | `git diff` | Show differences |
-| `gds` | `git diff --staged` | Show staged differences |
-| `gfd` | Show files in last commit | List changed files |
-| `glog` | `git plog` | Pretty log (custom alias) |
-
-### 🔧 Git Functions
-
-#### `gbu()` - Set Branch Upstream
-Set tracking info for current branch:
-```bash
-gbu                     # Set upstream to origin/current-branch
-```
-
-#### `gcg <pattern>` - Grep Checkout
-Checkout first branch matching pattern:
-```bash
-gcg feature            # Checkout first branch containing "feature"
-```
-
-#### `gcrb <name>` - Remote Run Branch
-Create branch with `remote-run/` prefix:
-```bash
-gcrb testing           # Creates "remote-run/testing"
-```
-
-#### `gpush [options]` - Smart Push
-Push current branch to origin:
-```bash
-gpush                  # Push current branch
-gpush --force          # Push with force
-```
-
-#### `gup <message>` - Commit and Push
-Commit and push in one command:
-```bash
-gup "Fix bug in login"  # Commit and push
-```
-
-#### `roob [source_branch]` - Rebase on Branch
-Rebase current branch on another branch:
-```bash
-roob master            # Rebase current branch on master
-roob                   # Rebase on default branch
-```
-
----
-
-## 📦 Tool Integration
-
-### 🟢 Node Version Manager (NVM)
-- **Auto-loaded**: NVM available in all shells
-- **Directory**: `~/.nvm`
-- **Completion**: Tab completion enabled
-
-### 🐍 Python Environment Manager (pyenv)
-- **Auto-loaded**: pyenv available in all shells
-- **Directory**: `~/.pyenv`
-- **Integration**: Automatic Python version switching
-
-### 📁 Directory Environment (direnv)
-- **Auto-loaded**: Environment variables from `.envrc`
-- **Integration**: Automatic activation/deactivation
-
-### 🌐 Ngrok
-- **Completion**: Tab completion for ngrok commands
-- **Integration**: Auto-loaded if installed
-
----
-
-## 💡 Pro Tips
-
-### 🔥 Productivity Shortcuts
-1. **Use bookmarks** for frequently accessed directories:
-   ```bash
-   mark work && cd /long/path/to/somewhere && j work
-   ```
-
-2. **Leverage git functions** for faster workflow:
-   ```bash
-   gup "Quick fix"        # Commit and push
-   gcg feat              # Quick branch switching
-   ```
-
-3. **Edit configs quickly**:
-   ```bash
-   vba                   # Edit aliases
-   vbf                   # Edit functions
-   sb                    # Reload immediately
-   ```
-
-### 🎯 Advanced Usage
-
-#### Custom Prompt Information
-The prompt shows:
-- **Current directory** (colored green)
-- **Git branch** (if in git repo)
-- **Username** (colored cyan)
-
-#### History Search
-With vi mode enabled:
-- `Ctrl+R` - Reverse search
-- `ESC` then `/` - Search in vi mode
-- `j/k` - Navigate history in vi mode
-
-#### Tab Completion
-- **Mark completion**: `j <TAB>` shows available bookmarks
-- **Git completion**: Git commands have full tab completion
-- **Tool completion**: NVM, pyenv, direnv all support completion
-
-### 🔧 Customization
-
-#### Adding Personal Aliases
-Edit `bash_profile_local` for machine-specific settings:
-```bash
-vbl                    # Edit local config
-# Add your personal aliases here
-```
-
-#### Environment Variables
-Add to `bash_profile_local`:
-```bash
-export MY_VAR="value"
-export PATH="$PATH:/my/custom/path"
-```
-
----
-
-> **💡 Pro Tip**: Use `sb` after making any configuration changes to reload your bash profile instantly!
-
-**Happy bash-ing!** 🚀
+Machine-specific aliases, exports, and PATH go in `bash_profile_local` (`vbl`); run `sb` to reload.
