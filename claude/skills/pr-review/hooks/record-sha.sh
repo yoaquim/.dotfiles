@@ -52,4 +52,13 @@ SHA=$(gh pr view "$PR" --json headRefOid -q .headRefOid 2>/dev/null || echo "")
 
 mkdir -p "$HOME/.claude/jobs/$SID" 2>/dev/null || true
 echo "$SHA" > "$HOME/.claude/jobs/$SID/last-reviewed-sha" 2>/dev/null || true
+
+# If this was the clean/approved review (its body carries the no-findings marker
+# from templates/approved.md — the same token check-post.sh requires for an
+# APPROVE), also stamp last-approved-sha. enforce-watch.sh lets the reviewer stop
+# once an approved HEAD has green CI, which works even on self-authored PRs where
+# GitHub's reviewDecision can never become APPROVED.
+if grep -q '_No bug-class findings' <<<"$RESP"; then
+  echo "$SHA" > "$HOME/.claude/jobs/$SID/last-approved-sha" 2>/dev/null || true
+fi
 exit 0

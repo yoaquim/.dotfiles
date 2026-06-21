@@ -37,17 +37,25 @@ STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR" 2>/dev/null ||
 PR_STATE=$(jq -r '.pr_state // "OPEN"' <<<"$STATE_JSON")
 [[ "$PR_STATE" != "OPEN" ]] && exit 0
 
-# The reviewer's job is done once it has APPROVED AND all GitHub checks are green
-# — then there's nothing left to review and nothing left to fail. Let it exit
-# instead of watching until a human merges (which left an orphaned session burning
-# until the 8hr cap). Approved but CI still pending/red → stay alive: a failing
-# check may push a fix it should re-review. ci_green counts running/queued checks
-# as not-green.
 REVIEW_DECISION=$(jq -r '.review_decision // ""' <<<"$STATE_JSON")
 CI_GREEN=$(jq -r 'if .ci_green == true then "true" else "false" end' <<<"$STATE_JSON")
-if [[ "$REVIEW_DECISION" == "APPROVED" && "$CI_GREEN" == "true" ]]; then exit 0; fi
+CUR_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
 
 JOBDIR="$HOME/.claude/jobs/$SID"
+LAST_APPROVED=$(cat "$JOBDIR/last-approved-sha" 2>/dev/null || echo "")
+
+# The reviewer's job is done once it has signed off on THIS HEAD AND CI is green —
+# then there's nothing left to review and nothing left to fail. "Signed off" means
+# it posted its clean/approved comment (templates/approved.md) for the current
+# HEAD; record-sha.sh stamps last-approved-sha then. Self-authored PRs can't move
+# GitHub's reviewDecision, so we trust the reviewer's own approve — a real
+# reviewDecision==APPROVED (external/bot reviewer) counts too. CI is the gate:
+# approved but CI pending/red → keep watching (ci_green counts running/queued
+# checks as not-green; a failing check may push a fix to re-review).
+APPROVED_HEAD=no
+if [[ -n "$CUR_SHA" && "$CUR_SHA" == "$LAST_APPROVED" ]]; then APPROVED_HEAD=yes; fi
+if [[ "$REVIEW_DECISION" == "APPROVED" ]]; then APPROVED_HEAD=yes; fi
+if [[ "$APPROVED_HEAD" == "yes" && "$CI_GREEN" == "true" ]]; then exit 0; fi
 
 # --- Runaway-spin backstop ---
 # The 8hr cap bounds wall-clock; this bounds a session that ignores the sleep
@@ -62,10 +70,19 @@ if (( ATTEMPTS > 1000 )); then
   exit 0
 fi
 
+# Approved this exact HEAD, but CI isn't green yet → wait specifically on CI.
+if [[ "$APPROVED_HEAD" == "yes" ]]; then
+  {
+    echo "Do NOT stop — you've approved PR #$PR HEAD ($CUR_SHA) but CI is not green yet."
+    echo "Wait on the checks: sleep 60, then re-poll ~/.claude/scripts/check-pr-state.sh $PR."
+    echo "You'll be allowed to stop once ci_green is true. If a new commit lands, re-review it."
+  } >&2
+  exit 2
+fi
+
 # --- SHA compare: hand the agent one concrete next action ---
 # last-reviewed-sha is stamped by record-sha.sh after a successful post; CUR_SHA
 # reuses the snapshot above.
-CUR_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
 LAST_SHA=$(cat "$JOBDIR/last-reviewed-sha" 2>/dev/null || echo "")
 
 if [[ -n "$CUR_SHA" && "$CUR_SHA" != "$LAST_SHA" ]]; then
