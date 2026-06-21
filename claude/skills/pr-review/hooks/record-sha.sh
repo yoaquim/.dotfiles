@@ -19,11 +19,14 @@ SID=$(jq -r '.session_id // ""' <<<"$INPUT")
 [[ -z "$SID" ]] && exit 0
 
 COMMAND=$(jq -r '.tool_input.command // ""' <<<"$INPUT" 2>/dev/null || echo "")
-# Only the inline-review POST path or the legacy gh pr review/comment path.
-grep -qE 'pulls/[0-9]+/reviews|gh[[:space:]]+pr[[:space:]]+(review|comment)' <<<"$COMMAND" || exit 0
+# Scope to the skill's ONE supported posting surface: the canonical inline-review
+# POST (`gh api .../pulls/N/reviews` with -X POST / --input). A bare reviews GET,
+# or the legacy `gh pr review|comment` path, is intentionally out of scope — they
+# don't return a review object we can confirm, so we'd never stamp them anyway.
+grep -qE 'pulls/[0-9]+/reviews' <<<"$COMMAND" || exit 0
+grep -qE '(-X[[:space:]=]+["'"'"']?POST|--input)' <<<"$COMMAND" || exit 0
 
-# Flatten the tool response (shape varies: object with stdout/stderr, or a string)
-# and require a posted-review signature so a failed post does not stamp.
+# Flatten the tool response (shape varies: object with stdout/stderr, or a string).
 RESP=$(jq -r '
   [ (.tool_response.stdout? // empty),
     (.tool_response.output? // empty),
@@ -31,7 +34,13 @@ RESP=$(jq -r '
     (if (.tool_response|type) == "string" then .tool_response else empty end) ]
   | join("\n")
 ' <<<"$INPUT" 2>/dev/null || echo "")
-grep -q 'pull_request_url' <<<"$RESP" || exit 0   # no success object → don't stamp
+
+# Confirm success without depending solely on a field name in stdout: prefer the
+# Bash tool's exit code if the payload exposes it, else fall back to the presence
+# of a posted-review object (pull_request_url). A filtered post (--jq/-q) strips
+# the token but still exits 0; a missed stamp would loop the watcher on one HEAD.
+EXIT=$(jq -r '.tool_response.exit_code? // .tool_response.exitCode? // .tool_response.code? // empty' <<<"$INPUT" 2>/dev/null || echo "")
+[[ "$EXIT" == "0" ]] || grep -q 'pull_request_url' <<<"$RESP" || exit 0
 
 # Resolve PR (from the command, else current branch) and stamp the current HEAD.
 PR=$(sed -nE 's#.*/pulls/([0-9]+)/reviews.*#\1#p' <<<"$COMMAND" | head -1)

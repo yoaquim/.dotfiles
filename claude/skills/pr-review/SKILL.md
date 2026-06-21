@@ -44,9 +44,14 @@ Parse `$ARGUMENTS` for these in order:
 
 ### Resolve PROJECT name (in order)
 
-1. If a URL or `-R owner/repo` was provided → `PROJECT` = the repo segment (e.g. URL `…/nullbreaker/pull/21` → `nullbreaker`).
-2. Else, if `git rev-parse --show-toplevel` succeeds → `PROJECT` = its basename.
-3. Else → stop with the literal message: `Cannot derive project name. Pass a PR URL, use -R owner/repo, or re-run with --fg.` **Do not silently fall back to foreground.**
+`PROJECT` must be the repo's `owner-repo` slug (slash → dash) — the SAME value
+`spawn-reviewer.sh` builds from `nameWithOwner`. If these disagree the two spawn
+paths can't see each other's reviewer and the PR gets double-reviewed. Derive:
+
+1. URL (`…/<owner>/<repo>/pull/N`) → `PROJECT` = `<owner>-<repo>`.
+2. `-R <owner>/<repo>` → `PROJECT` = `<owner>-<repo>`.
+3. Else `gh repo view --json nameWithOwner -q .nameWithOwner`, replace `/` with `-`.
+4. Else → stop with the literal message: `Cannot derive project name. Pass a PR URL, use -R owner/repo, or re-run with --fg.` **Do not silently fall back to foreground.**
 
 ### Parse Linear ticket (best-effort)
 
