@@ -140,12 +140,41 @@ Example:
    2. **Terminal** → write the status, then let Stop through:
       - `pr_state == MERGED` → `completed`
       - `pr_state == CLOSED` → `closed-without-merge`
+      - `approved_at_head == true` AND `ci_green` → `completed`
+        (the reviewer posted its approved.md for the current HEAD; this is the
+        self-authored-PR signal — GitHub's `reviewDecision` can't APPROVE your
+        own PR, so do NOT wait on it.)
       - `review_decision == APPROVED` AND `ci_green` → `completed`
-   3. **Otherwise** — if `unresolved_threads` is non-empty: fix in place, commit,
-      `git push`, then `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>`
-      for each addressed. The watching reviewer re-reviews the new SHA on its own —
-      do NOT spawn a new agent or post a "please re-review" prompt to nudge it.
-      If empty, there's nothing to do yet — just try to end.
+        (covers an external/non-author reviewer, when there is one)
+   3. **Otherwise — advance the PR, then make sure it's being reviewed.** The
+      runner and reviewer ping-pong on their own until the PR is approved AND CI is
+      green; you never wait for a human to tell you to re-review or to address
+      comments. Each turn, in order:
+
+      a. **Unresolved threads** (`unresolved_threads` non-empty) → fix each in
+         place, commit, `git push`, then
+         `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>` for each addressed.
+      b. **Red/failing CI** (`ci_green == false`) → the merge is blocked by a
+         check, not a comment, and fixing it is in scope — don't wait for a human.
+         `gh pr checks "$PR"` to see which check failed, then read its logs
+         (`gh run view <run-id> --log-failed`), fix the code/test, commit, `git push`.
+         A check that is genuinely external/flaky/needs-a-human → record it in the
+         status file Notes and keep looping; the 8hr cap will flag `needs_review`.
+      c. **Ensure a reviewer is watching the current HEAD** — every turn, idempotently:
+
+         ```bash
+         bash ~/.claude/skills/dispatch/spawn-reviewer.sh "$PR"
+         ```
+
+         A reviewer exits the moment it approves a HEAD, and any reviewer can die,
+         so this is what guarantees each new SHA actually gets reviewed without you
+         nudging it. It is NOT a second reviewer: the script reuses a live watcher,
+         reports `already-complete` when HEAD is already approved, and only spawns
+         when the current SHA genuinely has none. Never hand-roll a `claude --bg`/`-p`
+         review agent.
+
+      If nothing above applied (no threads, CI green, a reviewer already watching),
+      there's nothing to do this turn — just try to end.
    4. Try to end. Non-terminal → the hook returns you to step 5.1. Terminal → you exit.
 
    (The hook writes `needs_review` itself on the 8hr cap or spin guard — you don't

@@ -22,11 +22,14 @@
 #     spawn-reviewer.sh 42 -R owner/repo
 #
 # Output (key:value on stdout):
-#   reviewer_status:already-running|spawned
-#   session_id:<short id>
+#   reviewer_status:already-complete|already-running|spawned
+#   session_id:<short id>          # omitted for already-complete (no live session)
 #   name:<review session name>
 #
-# Exit 0 on success (spawned or reused), 1 on bad usage / resolution / spawn failure.
+# already-complete = the PR's current HEAD already carries the reviewer's
+# approved.md sign-off; the review is done and nothing is spawned.
+#
+# Exit 0 on success (complete, spawned, or reused), 1 on bad usage / resolution / spawn failure.
 
 set -uo pipefail
 
@@ -37,7 +40,7 @@ fi
 
 # Resolve EVERYTHING the name depends on from the PR itself (not from cwd or the
 # local branch), so the name is identical no matter who calls this or from where.
-PR_JSON=$(gh pr view "$@" --json number,headRefName,title,url 2>/dev/null)
+PR_JSON=$(gh pr view "$@" --json number,headRefName,title,url,headRefOid 2>/dev/null)
 if [[ -z "$PR_JSON" ]]; then
   echo "error: could not resolve PR from: $*" >&2
   exit 1
@@ -64,6 +67,39 @@ if [[ -n "$TICKET" ]]; then
   REVIEW_NAME="review-${PROJECT_SAFE}-${TICKET}-pr-${PR}"
 else
   REVIEW_NAME="review-${PROJECT_SAFE}-pr-${PR}"
+fi
+
+# SHA-gate (authoritative dedup) — runs BEFORE the session-liveness check.
+# Session-liveness alone is the wrong signal: a reviewer that finished cleanly
+# sits in state `done`, which the liveness filter (TERMINAL, below) reads as
+# "not alive" → it would re-spawn a second reviewer to re-review code that's
+# already approved. So first ask GitHub the real question: is the PR's CURRENT
+# HEAD already signed off? "Signed off" = a review carrying the approved.md
+# sentinel (the `# ✅ APPROVED ✅` headline) whose commit_id == this HEAD. If so the review
+# for this code is complete — do NOT spawn. When a fix later lands, HEAD changes,
+# commit_id no longer matches, and this gate opens again for the fresh SHA.
+HEAD_SHA=$(jq -r '.headRefOid // empty' <<<"$PR_JSON")
+# owner/repo from the canonical url, host-agnostic (handles GHE too).
+NO_SCHEME=${REPO_PART#*://}   # <host>/<owner>/<repo>
+OWNER_REPO=${NO_SCHEME#*/}    # <owner>/<repo>
+# Approval sentinel from the single source of truth (pr-review-markers.sh →
+# approved.md), the same one check-post.sh/record-sha.sh/check-pr-state.sh use.
+APPROVED_MARKER=""
+# shellcheck disable=SC1091  # installed at runtime; not resolvable at lint time
+source "$HOME/.claude/scripts/lib/pr-review-markers.sh" 2>/dev/null && APPROVED_MARKER=$(pr_review_approved_marker)
+if [[ -n "$HEAD_SHA" && -n "$APPROVED_MARKER" ]]; then
+  APPROVED_AT_HEAD=$(gh api --paginate "repos/$OWNER_REPO/pulls/$PR/reviews" 2>/dev/null \
+    | jq -s --arg sha "$HEAD_SHA" --arg marker "$APPROVED_MARKER" '
+        [ (add // [])[]
+          | select((.commit_id // "") == $sha)
+          | select((.body // "") | contains($marker)) ]
+        | (length > 0)
+      ' 2>/dev/null || echo false)
+  if [[ "$APPROVED_AT_HEAD" == "true" ]]; then
+    echo "reviewer_status:already-complete"
+    echo "name:$REVIEW_NAME"
+    exit 0
+  fi
 fi
 
 # States a background session can be in that mean "not alive" (finished/gone).

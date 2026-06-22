@@ -23,9 +23,18 @@ COMMAND=$(jq -r '.tool_input.command // ""' <<<"$INPUT" 2>/dev/null || echo "")
 # confirmed-successful one — recording here (before the gh api call runs) would
 # stamp an unreviewed HEAD if the post then failed.
 
-# shellcheck disable=SC2016  # backticked code span in prose
-HEADER='# 👾 Reviewed by Claude via the `/pr-review` skill 👾'
-NOFINDINGS_RE='_No bug-class findings'
+# Header + approval sentinel come from the single source of truth (read back from
+# the posted templates) so this gate and the approval detectors can never
+# disagree. If the lib is somehow missing, fall back to inline literals and keep
+# failing OPEN (this gate's documented stance) rather than wedge the reviewer.
+# shellcheck disable=SC1091  # installed at runtime; not resolvable at lint time
+if ! source "$HOME/.claude/scripts/lib/pr-review-markers.sh" 2>/dev/null; then
+  # shellcheck disable=SC2016,SC2329  # literal fallbacks, invoked indirectly below
+  pr_review_header() { printf '%s' '# 👾 Reviewed by Claude via the `/pr-review` skill 👾'; }
+  # shellcheck disable=SC2329
+  pr_review_is_approved_body() { grep -qF '# ✅ APPROVED ✅' <<<"$1"; }
+fi
+HEADER=$(pr_review_header)
 FILELINE_RE='[A-Za-z_][A-Za-z0-9_./-]*\.(ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cc|cpp|h|hpp|cs|sh|sql|css|scss|html|md|json|ya?ml|toml|tf|hcl)(:[0-9]+(-[0-9]+)?)?'
 
 # -------- Path 1: new inline-review API --------
@@ -56,14 +65,15 @@ if grep -qE '(^|[[:space:]]|;|&&|\|\||\||\(|`|\$\()gh[[:space:]]+api[[:space:]]+
     ERRORS+=("Use templates/approved.md or templates/changes-requested.md — they carry it.")
   fi
 
-  # Engagement: at least one inline comment OR explicit no-findings line in body.
-  HAS_NOFINDINGS=0
-  grep -qF "$NOFINDINGS_RE" <<<"$BODY" && HAS_NOFINDINGS=1
+  # Engagement: at least one inline comment OR an approved body (the approved.md
+  # sentinel). Post templates/approved.md verbatim for a clean approve.
+  HAS_APPROVED=0
+  pr_review_is_approved_body "$BODY" && HAS_APPROVED=1
 
-  if [[ "$COMMENTS_LEN" -eq 0 && "$HAS_NOFINDINGS" -eq 0 ]]; then
+  if [[ "$COMMENTS_LEN" -eq 0 && "$HAS_APPROVED" -eq 0 ]]; then
     ERRORS+=("Post shows no engagement with the diff.")
     ERRORS+=("Required: at least one inline comment in .comments[],")
-    ERRORS+=("OR the explicit body line: _No bug-class findings — diff reviewed line by line._")
+    ERRORS+=("OR an approve posted verbatim from templates/approved.md.")
   fi
 
   # APPROVE with findings or REQUEST_CHANGES with zero findings is inconsistent.
@@ -71,8 +81,8 @@ if grep -qE '(^|[[:space:]]|;|&&|\|\||\||\(|`|\$\()gh[[:space:]]+api[[:space:]]+
     ERRORS+=("Event is APPROVE but comments[] has $COMMENTS_LEN inline comments.")
     ERRORS+=("APPROVE means zero findings. Use REQUEST_CHANGES when posting comments.")
   fi
-  if [[ "$EVENT" == "REQUEST_CHANGES" && "$COMMENTS_LEN" -eq 0 && "$HAS_NOFINDINGS" -eq 1 ]]; then
-    ERRORS+=("Event is REQUEST_CHANGES but body declares no findings.")
+  if [[ "$EVENT" == "REQUEST_CHANGES" && "$COMMENTS_LEN" -eq 0 && "$HAS_APPROVED" -eq 1 ]]; then
+    ERRORS+=("Event is REQUEST_CHANGES but body is an approval.")
     ERRORS+=("Use APPROVE when there are no findings.")
   fi
 
@@ -129,14 +139,14 @@ if ! grep -qF "$HEADER" <<<"$COMMAND"; then
 fi
 
 HAS_FILELINE=0
-HAS_NOFINDINGS=0
+HAS_APPROVED=0
 grep -qE "$FILELINE_RE" <<<"$COMMAND" && HAS_FILELINE=1
-grep -qF "$NOFINDINGS_RE" <<<"$COMMAND" && HAS_NOFINDINGS=1
+pr_review_is_approved_body "$COMMAND" && HAS_APPROVED=1
 
-if [[ "$HAS_FILELINE" -eq 0 && "$HAS_NOFINDINGS" -eq 0 ]]; then
+if [[ "$HAS_FILELINE" -eq 0 && "$HAS_APPROVED" -eq 0 ]]; then
   ERRORS+=("Post shows no engagement with the diff.")
   ERRORS+=("Required: either at least one file:line citation in a finding,")
-  ERRORS+=("OR the explicit line: _No bug-class findings — diff reviewed line by line._")
+  ERRORS+=("OR an approve posted verbatim from templates/approved.md.")
 fi
 
 if [[ "${#ERRORS[@]}" -gt 0 ]]; then

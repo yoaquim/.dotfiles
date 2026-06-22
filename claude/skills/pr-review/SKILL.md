@@ -55,19 +55,22 @@ passed, or `<PR> -R owner/repo` if `-R` was passed, or the bare integer if neith
 
 ```bash
 SESSION_OUTPUT=$(bash ~/.claude/skills/dispatch/spawn-reviewer.sh $PR_ARG 2>&1)
+STATUS=$(grep '^reviewer_status:' <<<"$SESSION_OUTPUT" | cut -d: -f2)
 SESSION_ID=$(grep '^session_id:' <<<"$SESSION_OUTPUT" | cut -d: -f2)
 SESSION_NAME=$(grep '^name:' <<<"$SESSION_OUTPUT" | cut -d: -f2)
 ```
 
-Report: `Dispatched as $SESSION_NAME (session $SESSION_ID). Open claude agents to watch.`
-(If `spawn-reviewer.sh` reports `reviewer_status:already-running`, say it reused the live reviewer instead of spawning a new one.)
+Report based on `reviewer_status`:
+- `already-complete` → the PR's current HEAD is already approved; there is nothing to review. Say so and stop — this is success, NOT a failed dispatch (there's no `session_id` because no session was spawned, which is correct).
+- `already-running` → say it reused the live reviewer instead of spawning a new one.
+- `spawned` → `Dispatched as $SESSION_NAME (session $SESSION_ID). Open claude agents to watch.`
 
 `--once` only applies to a foreground review (`--fg --once`); a backgrounded PR
 review always runs the watch loop. If you need a one-shot, run it foreground.
 
 ### Failure handling — read carefully
 
-If `SESSION_ID` is empty, the dispatch failed. **Surface `SESSION_OUTPUT` verbatim to the user and stop.** Do not paraphrase. Do not invent reasons (e.g. "the --bg flag isn't available"). The `--bg` flag DOES exist on Claude Code; it is hidden from `claude --help` but valid. If the literal bash output says something else, report exactly what it says. **Do not fall back to running in foreground.** The user can re-run with `--fg` if they want that.
+If `SESSION_ID` is empty AND `reviewer_status` is neither `already-complete` nor `already-running`, the dispatch failed. **Surface `SESSION_OUTPUT` verbatim to the user and stop.** Do not paraphrase. Do not invent reasons (e.g. "the --bg flag isn't available"). The `--bg` flag DOES exist on Claude Code; it is hidden from `claude --help` but valid. If the literal bash output says something else, report exactly what it says. **Do not fall back to running in foreground.** The user can re-run with `--fg` if they want that.
 
 ## 1. Read the diff
 
@@ -118,7 +121,7 @@ Bad: `Fix null check on user.email`, `PER-83: Null Check`, `Update error handlin
 
 Findings without a usable `file:line` (rare — cross-cutting issues) → fold into the top-level body under a `## Cross-cutting` section instead of the comments array.
 
-Zero findings → post `templates/approved.md` verbatim. It carries the hook-required `_No bug-class findings` line and the `✅ APPROVED` block. Don't reword it — dispatch doesn't parse the text, it watches GitHub's `reviewDecision == APPROVED` event, and the value of a template is that it's always the same.
+Zero findings → post `templates/approved.md` verbatim. It carries the `👾 Reviewed by Claude` header and the `# ✅ APPROVED ✅` headline. **Keep that headline intact** — it's the approval sentinel: on a self-authored PR GitHub's `reviewDecision` can never become `APPROVED`, so both this watcher (`enforce-watch.sh`) and the dispatch runner detect approval by finding that exact line in a review whose `commit_id` is the current HEAD. The single source of truth is `scripts/lib/pr-review-markers.sh`, which reads the line back from this template — so don't reword it.
 
 Sort findings: Blockers → Concerns → Nits. Within tier, `general` first, then criteria.
 
@@ -163,15 +166,34 @@ jq -n \
 # Resolve owner/repo (works for current repo or via -R/URL context)
 OWNER_REPO=$(gh repo view $REPO_FLAG --json nameWithOwner -q .nameWithOwner)
 
-gh api "repos/${OWNER_REPO}/pulls/${PR}/reviews" -X POST --input "$PAYLOAD"
+# Post the review. On a dispatch PR the reviewer IS the PR author, and GitHub
+# 422s an author's own APPROVE/REQUEST_CHANGES — fall back to a COMMENT review
+# carrying the SAME body+comments. The approved.md sentinel still lands against
+# this commit_id, which is what the loop detects; it does NOT need reviewDecision.
+ERR=$(mktemp)
+if ! gh api "repos/${OWNER_REPO}/pulls/${PR}/reviews" -X POST --input "$PAYLOAD" 2>"$ERR"; then
+  if grep -qiE 'on your own pull request|422|unprocessable' "$ERR"; then
+    jq '.event = "COMMENT"' "$PAYLOAD" > "${PAYLOAD}.c" && mv "${PAYLOAD}.c" "$PAYLOAD"
+    gh api "repos/${OWNER_REPO}/pulls/${PR}/reviews" -X POST --input "$PAYLOAD"
+  else
+    cat "$ERR" >&2; exit 1
+  fi
+fi
 ```
 
-Event semantics:
-- `APPROVE` (zero findings) → `reviewDecision` becomes `APPROVED`. This is the runner's exit signal in the ping-pong loop.
-- `REQUEST_CHANGES` (findings exist) → `reviewDecision` becomes `CHANGES_REQUESTED`. Runner picks up unresolved threads and fixes them.
-- Never use `COMMENT` event — it doesn't move `reviewDecision`, breaks the loop.
+Event semantics — choose by finding count, but expect the self-authored fallback:
+- Zero findings → `APPROVE`; findings exist → `REQUEST_CHANGES`.
+- On a dispatch PR the reviewer is the author, so that event 422s; re-post the
+  same payload as `COMMENT`. The verdict is carried by the **body**, not the
+  event: an approve still includes the `# ✅ APPROVED ✅` sentinel, and both this
+  watcher (`enforce-watch.sh`) and the runner detect approval by finding that
+  sentinel in a review whose `commit_id` is the current HEAD. So a COMMENTED
+  approval ends the loop exactly like an APPROVED one — `reviewDecision` is never
+  required (and can't move on a self-authored PR anyway).
+- An external (non-author) reviewer's APPROVE/REQUEST_CHANGES posts normally and
+  also moves `reviewDecision`, which the runner treats as terminal too.
 
-The hook (`hooks/check-post.sh`) reads the payload file and blocks on: missing header in body, or zero engagement (empty `comments[]` AND no `_No bug-class findings_` line in body). Fix the body/comments and retry — do not bypass.
+The hook (`hooks/check-post.sh`) reads the payload file and blocks on: missing header in body, or zero engagement (empty `comments[]` AND the body is not an approve per `templates/approved.md`). Fix the body/comments and retry — do not bypass.
 
 ## 6. Watch loop (default; `--once` skips)
 
@@ -191,4 +213,4 @@ So the loop is: review → try to end → do what the hook says → try to end. 
 - Broaden the primary pass → add to `bug-checklist.md`.
 - New optional gate → drop a file at `criteria/<slug>.md` (What / Why / How to spot / When NOT / Severity).
 - New mechanical check on the posted output → extend `hooks/check-post.sh`.
-- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Keep the `👾 Reviewed by Claude` header line and, in `approved.md`, the `_No bug-class findings` line — both are hook-enforced.
+- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Two lines in `approved.md` are load-bearing — keep both: the `# 👾 Reviewed by Claude …` header (matched by `^# .*Reviewed by Claude`) and the `# ✅ APPROVED ✅` headline (matched by `^# .*APPROVED`). `scripts/lib/pr-review-markers.sh` reads them back from the template as the single source of truth for `check-post.sh`, `record-sha.sh`, `check-pr-state.sh`, and `spawn-reviewer.sh`; reword either line and approval detection silently breaks.

@@ -7,6 +7,7 @@
 #     pr_state:        OPEN|MERGED|CLOSED,
 #     head_sha:        <40-char SHA of the PR's head commit>,
 #     ci_green:        true|false,
+#     approved_at_head: true|false,   # reviewer posted its approved.md for THIS HEAD
 #     unresolved_threads: [
 #       { id, path, line, body, author }
 #     ] }
@@ -55,6 +56,30 @@ CI_GREEN=$(jq -r '
    ] | length) == 0
 ' <<<"$PR_VIEW")
 
+# 1b. Reviewer sign-off at the current HEAD.
+# GitHub's reviewDecision can never become APPROVED on a self-authored dispatch
+# PR (you can't approve your own PR), so we detect the reviewer's OWN sign-off
+# instead: a review whose body carries the approved.md sentinel AND was submitted
+# against the current HEAD (commit_id == head SHA). The sentinel is read from the
+# single source of truth (pr-review-markers.sh → approved.md), the same one
+# check-post.sh/record-sha.sh use; the commit_id scope means a stale approval on
+# an older commit correctly does NOT count.
+# --paginate concatenates one JSON array per page; `jq -s 'add'` slurps them.
+APPROVED_MARKER=""
+# shellcheck disable=SC1091  # installed at runtime; not resolvable at lint time
+source "$HOME/.claude/scripts/lib/pr-review-markers.sh" 2>/dev/null && APPROVED_MARKER=$(pr_review_approved_marker)
+APPROVED_AT_HEAD=false
+if [[ -n "$HEAD_SHA" && -n "$APPROVED_MARKER" ]]; then
+  APPROVED_AT_HEAD=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR/reviews" 2>/dev/null \
+    | jq -s --arg sha "$HEAD_SHA" --arg marker "$APPROVED_MARKER" '
+        [ (add // [])[]
+          | select((.commit_id // "") == $sha)
+          | select((.body // "") | contains($marker)) ]
+        | (length > 0)
+      ' 2>/dev/null || echo false)
+  [[ "$APPROVED_AT_HEAD" == "true" || "$APPROVED_AT_HEAD" == "false" ]] || APPROVED_AT_HEAD=false
+fi
+
 # 2. Unresolved review threads via GraphQL
 # shellcheck disable=SC2016  # $vars are GraphQL variables, not shell
 THREADS_JSON=$(gh api graphql \
@@ -102,11 +127,13 @@ jq -n \
   --arg ps "$PR_STATE" \
   --arg sha "$HEAD_SHA" \
   --argjson green "$CI_GREEN" \
+  --argjson approved "$APPROVED_AT_HEAD" \
   --argjson threads "$UNRESOLVED" \
   '{
      review_decision: (if $rd == "null" or $rd == "" then null else $rd end),
      pr_state: $ps,
      head_sha: $sha,
      ci_green: $green,
+     approved_at_head: $approved,
      unresolved_threads: $threads
    }'

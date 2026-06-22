@@ -56,6 +56,11 @@ Lowercase the ticket identifier (`ENG-142` → `eng-142`).
 
 Check prior runs: `bash ~/.claude/skills/dispatch/status.sh <project-root> <name>`. Parse `state:`:
 - `alive` → stop: "Runner still active. Use `/dispatch status <name>` or `claude attach <session-id>`."
+- `dead` → the runner **halted mid-loop** (status `in_progress`, no live session — machine sleep, crash, etc.). Do NOT re-discover or rewrite the prompt; **resume in place** so it continues from its status file + git. Read `branch` from the status file, then:
+  ```bash
+  bash ~/.claude/skills/dispatch/spawn.sh <name> <branch> <project-root> <project-root>/.dispatch/prompts/<name>.md
+  ```
+  Update `session_id` in the status file from spawn.sh output. (The watchdog cron does exactly this automatically every ~10 min for fresh halts; this is the on-demand path.)
 - `completed` or `failed` → ask: "Previously dispatched (status: <status>). Re-dispatch?" → "Yes" / "No"
 - No status file → proceed
 
