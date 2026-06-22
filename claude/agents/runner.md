@@ -169,9 +169,9 @@ Example:
          A reviewer exits the moment it approves a HEAD, and any reviewer can die,
          so this is what guarantees each new SHA actually gets reviewed without you
          nudging it. It is NOT a second reviewer: the script reuses a live watcher,
-         reports `already-complete` when HEAD is already approved, and only spawns
-         when the current SHA genuinely has none. Never hand-roll a `claude --bg`/`-p`
-         review agent.
+         reports `already-reviewed` when the current HEAD already has a review, and
+         only spawns when the current SHA genuinely has none. Never hand-roll a
+         `claude --bg`/`-p` review agent.
 
       If nothing above applied (no threads, CI green, a reviewer already watching),
       there's nothing to do this turn — just try to end.

@@ -61,7 +61,7 @@ SESSION_NAME=$(grep '^name:' <<<"$SESSION_OUTPUT" | cut -d: -f2)
 ```
 
 Report based on `reviewer_status`:
-- `already-complete` → the PR's current HEAD is already approved; there is nothing to review. Say so and stop — this is success, NOT a failed dispatch (there's no `session_id` because no session was spawned, which is correct).
+- `already-reviewed` → the PR's current HEAD already has a review (approve or findings); there is nothing to spawn. Say so and stop — this is success, NOT a failed dispatch (there's no `session_id` because no session was spawned, which is correct).
 - `already-running` → say it reused the live reviewer instead of spawning a new one.
 - `spawned` → `Dispatched as $SESSION_NAME (session $SESSION_ID). Open claude agents to watch.`
 
@@ -70,7 +70,7 @@ review always runs the watch loop. If you need a one-shot, run it foreground.
 
 ### Failure handling — read carefully
 
-If `SESSION_ID` is empty AND `reviewer_status` is neither `already-complete` nor `already-running`, the dispatch failed. **Surface `SESSION_OUTPUT` verbatim to the user and stop.** Do not paraphrase. Do not invent reasons (e.g. "the --bg flag isn't available"). The `--bg` flag DOES exist on Claude Code; it is hidden from `claude --help` but valid. If the literal bash output says something else, report exactly what it says. **Do not fall back to running in foreground.** The user can re-run with `--fg` if they want that.
+If `SESSION_ID` is empty AND `reviewer_status` is neither `already-reviewed` nor `already-running`, the dispatch failed. **Surface `SESSION_OUTPUT` verbatim to the user and stop.** Do not paraphrase. Do not invent reasons (e.g. "the --bg flag isn't available"). The `--bg` flag DOES exist on Claude Code; it is hidden from `claude --help` but valid. If the literal bash output says something else, report exactly what it says. **Do not fall back to running in foreground.** The user can re-run with `--fg` if they want that.
 
 ## 1. Read the diff
 

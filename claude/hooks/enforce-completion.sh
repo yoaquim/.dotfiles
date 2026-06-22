@@ -210,7 +210,7 @@ STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR_NUMBER" 2>/dev/
   echo "  - Run: ~/.claude/scripts/check-pr-state.sh $PR_NUMBER"
   echo "  - Unresolved threads → fix → commit → push → ~/.claude/skills/dispatch/resolve-thread.sh <id>"
   echo "  - ci_green==false → fix the failing check (gh pr checks $PR_NUMBER; gh run view <run-id> --log-failed) → commit → push. In scope; don't wait for a human."
-  echo "  - Every turn, ensure a reviewer is watching: ~/.claude/skills/dispatch/spawn-reviewer.sh \"$PR_NUMBER\" (idempotent — reuses live / already-complete / spawns). Never hand-roll a claude --bg review agent."
+  echo "  - Every turn, ensure a reviewer is watching: ~/.claude/skills/dispatch/spawn-reviewer.sh \"$PR_NUMBER\" (idempotent — reuses live / already-reviewed / spawns). Never hand-roll a claude --bg review agent."
   echo "  - Terminal when approved_at_head==true AND ci_green (self-authored PRs never reach reviewDecision==APPROVED), or on merge/close."
   echo "  - Sleep 60s if idle, then re-check"
   echo

@@ -7,7 +7,8 @@
 #     pr_state:        OPEN|MERGED|CLOSED,
 #     head_sha:        <40-char SHA of the PR's head commit>,
 #     ci_green:        true|false,
-#     approved_at_head: true|false,   # reviewer posted its approved.md for THIS HEAD
+#     reviewed_at_head: true|false,   # ANY review exists for THIS HEAD (approve or findings)
+#     approved_at_head: true|false,   # a review at THIS HEAD carries the approved.md sentinel
 #     unresolved_threads: [
 #       { id, path, line, body, author }
 #     ] }
@@ -56,28 +57,33 @@ CI_GREEN=$(jq -r '
    ] | length) == 0
 ' <<<"$PR_VIEW")
 
-# 1b. Reviewer sign-off at the current HEAD.
-# GitHub's reviewDecision can never become APPROVED on a self-authored dispatch
-# PR (you can't approve your own PR), so we detect the reviewer's OWN sign-off
-# instead: a review whose body carries the approved.md sentinel AND was submitted
-# against the current HEAD (commit_id == head SHA). The sentinel is read from the
-# single source of truth (pr-review-markers.sh → approved.md), the same one
-# check-post.sh/record-sha.sh use; the commit_id scope means a stale approval on
-# an older commit correctly does NOT count.
+# 1b. Review coverage at the current HEAD — the authoritative dedup/exit signal.
+# GitHub's reviewDecision can never become APPROVED on a self-authored dispatch PR
+# (you can't approve your own PR), so coverage is decided from the reviews
+# themselves, scoped to the current HEAD via commit_id. Both are computed from one
+# fetch of the reviews list:
+#   reviewed_at_head — ANY review submitted against this HEAD (approve OR findings).
+#                      "This code has been reviewed" → don't re-review, don't spawn
+#                      a second reviewer for it. Moves off when HEAD changes.
+#   approved_at_head — a review at this HEAD carrying the approved.md sentinel (the
+#                      same one check-post.sh/record-sha.sh use, read from the
+#                      single source of truth pr-review-markers.sh → approved.md).
 # --paginate concatenates one JSON array per page; `jq -s 'add'` slurps them.
 APPROVED_MARKER=""
 # shellcheck disable=SC1091  # installed at runtime; not resolvable at lint time
 source "$HOME/.claude/scripts/lib/pr-review-markers.sh" 2>/dev/null && APPROVED_MARKER=$(pr_review_approved_marker)
+REVIEWED_AT_HEAD=false
 APPROVED_AT_HEAD=false
-if [[ -n "$HEAD_SHA" && -n "$APPROVED_MARKER" ]]; then
-  APPROVED_AT_HEAD=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR/reviews" 2>/dev/null \
-    | jq -s --arg sha "$HEAD_SHA" --arg marker "$APPROVED_MARKER" '
-        [ (add // [])[]
-          | select((.commit_id // "") == $sha)
-          | select((.body // "") | contains($marker)) ]
-        | (length > 0)
-      ' 2>/dev/null || echo false)
-  [[ "$APPROVED_AT_HEAD" == "true" || "$APPROVED_AT_HEAD" == "false" ]] || APPROVED_AT_HEAD=false
+if [[ -n "$HEAD_SHA" ]]; then
+  REVIEWS_AT_HEAD=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR/reviews" 2>/dev/null \
+    | jq -sc --arg sha "$HEAD_SHA" '[ (add // [])[] | select((.commit_id // "") == $sha) ]' 2>/dev/null || echo '[]')
+  [[ -n "$REVIEWS_AT_HEAD" ]] || REVIEWS_AT_HEAD='[]'
+  [[ "$(jq 'length' <<<"$REVIEWS_AT_HEAD" 2>/dev/null || echo 0)" -gt 0 ]] && REVIEWED_AT_HEAD=true
+  if [[ -n "$APPROVED_MARKER" ]]; then
+    APPROVED_AT_HEAD=$(jq --arg marker "$APPROVED_MARKER" \
+      '[ .[] | select((.body // "") | contains($marker)) ] | (length > 0)' <<<"$REVIEWS_AT_HEAD" 2>/dev/null || echo false)
+    [[ "$APPROVED_AT_HEAD" == "true" || "$APPROVED_AT_HEAD" == "false" ]] || APPROVED_AT_HEAD=false
+  fi
 fi
 
 # 2. Unresolved review threads via GraphQL
@@ -127,6 +133,7 @@ jq -n \
   --arg ps "$PR_STATE" \
   --arg sha "$HEAD_SHA" \
   --argjson green "$CI_GREEN" \
+  --argjson reviewed "$REVIEWED_AT_HEAD" \
   --argjson approved "$APPROVED_AT_HEAD" \
   --argjson threads "$UNRESOLVED" \
   '{
@@ -134,6 +141,7 @@ jq -n \
      pr_state: $ps,
      head_sha: $sha,
      ci_green: $green,
+     reviewed_at_head: $reviewed,
      approved_at_head: $approved,
      unresolved_threads: $threads
    }'

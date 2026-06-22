@@ -22,14 +22,15 @@
 #     spawn-reviewer.sh 42 -R owner/repo
 #
 # Output (key:value on stdout):
-#   reviewer_status:already-complete|already-running|spawned
-#   session_id:<short id>          # omitted for already-complete (no live session)
+#   reviewer_status:already-reviewed|already-running|spawned
+#   session_id:<short id>          # omitted for already-reviewed (no live session)
 #   name:<review session name>
 #
-# already-complete = the PR's current HEAD already carries the reviewer's
-# approved.md sign-off; the review is done and nothing is spawned.
+# already-reviewed = the PR's current HEAD already has a review (approve or
+# findings); this code is covered, so nothing is spawned. A new reviewer spawns
+# only when HEAD is genuinely unreviewed AND no live reviewer exists.
 #
-# Exit 0 on success (complete, spawned, or reused), 1 on bad usage / resolution / spawn failure.
+# Exit 0 on success (reviewed, spawned, or reused), 1 on bad usage / resolution / spawn failure.
 
 set -uo pipefail
 
@@ -69,34 +70,26 @@ else
   REVIEW_NAME="review-${PROJECT_SAFE}-pr-${PR}"
 fi
 
-# SHA-gate (authoritative dedup) — runs BEFORE the session-liveness check.
-# Session-liveness alone is the wrong signal: a reviewer that finished cleanly
-# sits in state `done`, which the liveness filter (TERMINAL, below) reads as
-# "not alive" → it would re-spawn a second reviewer to re-review code that's
-# already approved. So first ask GitHub the real question: is the PR's CURRENT
-# HEAD already signed off? "Signed off" = a review carrying the approved.md
-# sentinel (the `# ✅ APPROVED ✅` headline) whose commit_id == this HEAD. If so the review
-# for this code is complete — do NOT spawn. When a fix later lands, HEAD changes,
-# commit_id no longer matches, and this gate opens again for the fresh SHA.
+# Reviewed-at-HEAD gate (authoritative dedup) — runs BEFORE the session-liveness
+# check. Session-liveness alone is the wrong signal: a reviewer that finished a
+# pass sits in state `done`, which the liveness filter (TERMINAL, below) reads as
+# "not alive" → it would re-spawn a second reviewer to re-review a SHA that was
+# ALREADY reviewed (the double-review bug). So first ask GitHub the real question:
+# does the PR's CURRENT HEAD already have ANY review (approve OR findings, by
+# commit_id)? If so this code is covered — do NOT spawn. The runner advances by
+# fixing findings and pushing; that moves HEAD, the commit_id no longer matches,
+# and this gate reopens for the genuinely-new SHA. (Approve vs findings doesn't
+# matter for spawning — either way this exact HEAD has been reviewed.)
 HEAD_SHA=$(jq -r '.headRefOid // empty' <<<"$PR_JSON")
 # owner/repo from the canonical url, host-agnostic (handles GHE too).
 NO_SCHEME=${REPO_PART#*://}   # <host>/<owner>/<repo>
 OWNER_REPO=${NO_SCHEME#*/}    # <owner>/<repo>
-# Approval sentinel from the single source of truth (pr-review-markers.sh →
-# approved.md), the same one check-post.sh/record-sha.sh/check-pr-state.sh use.
-APPROVED_MARKER=""
-# shellcheck disable=SC1091  # installed at runtime; not resolvable at lint time
-source "$HOME/.claude/scripts/lib/pr-review-markers.sh" 2>/dev/null && APPROVED_MARKER=$(pr_review_approved_marker)
-if [[ -n "$HEAD_SHA" && -n "$APPROVED_MARKER" ]]; then
-  APPROVED_AT_HEAD=$(gh api --paginate "repos/$OWNER_REPO/pulls/$PR/reviews" 2>/dev/null \
-    | jq -s --arg sha "$HEAD_SHA" --arg marker "$APPROVED_MARKER" '
-        [ (add // [])[]
-          | select((.commit_id // "") == $sha)
-          | select((.body // "") | contains($marker)) ]
-        | (length > 0)
-      ' 2>/dev/null || echo false)
-  if [[ "$APPROVED_AT_HEAD" == "true" ]]; then
-    echo "reviewer_status:already-complete"
+if [[ -n "$HEAD_SHA" ]]; then
+  REVIEWED_AT_HEAD=$(gh api --paginate "repos/$OWNER_REPO/pulls/$PR/reviews" 2>/dev/null \
+    | jq -s --arg sha "$HEAD_SHA" '[ (add // [])[] | select((.commit_id // "") == $sha) ] | (length > 0)' \
+      2>/dev/null || echo false)
+  if [[ "$REVIEWED_AT_HEAD" == "true" ]]; then
+    echo "reviewer_status:already-reviewed"
     echo "name:$REVIEW_NAME"
     exit 0
   fi

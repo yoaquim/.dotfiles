@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # Stop hook for /pr-review. Allows Stop only when:
+#   - the current HEAD is approved (a review at HEAD carries the approved.md
+#     sentinel, or an external reviewDecision==APPROVED) AND CI is green
 #   - PR is MERGED or CLOSED
 #   - 8hr cap reached (state.json .createdAt)
 #   - --once was in args
 #   - no PR identifier in args (branch mode)
-# Otherwise blocks; Claude re-enters the watch loop.
+# Otherwise blocks: Claude reviews the HEAD if it's unreviewed, else idles. All
+# coverage/approval signals come from GitHub (check-pr-state.sh), NOT local stamp
+# files — the stamps proved fragile (silently unwritten), which made reviewers
+# re-review the same SHA and let duplicate reviewers spawn.
 
 set -uo pipefail
 trap 'exit 0' ERR
@@ -40,21 +45,22 @@ PR_STATE=$(jq -r '.pr_state // "OPEN"' <<<"$STATE_JSON")
 REVIEW_DECISION=$(jq -r '.review_decision // ""' <<<"$STATE_JSON")
 CI_GREEN=$(jq -r 'if .ci_green == true then "true" else "false" end' <<<"$STATE_JSON")
 CUR_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
+REVIEWED_AT_HEAD=$(jq -r 'if .reviewed_at_head == true then "true" else "false" end' <<<"$STATE_JSON")
+APPROVED_AT_HEAD=$(jq -r 'if .approved_at_head == true then "true" else "false" end' <<<"$STATE_JSON")
 
 JOBDIR="$HOME/.claude/jobs/$SID"
-LAST_APPROVED=$(cat "$JOBDIR/last-approved-sha" 2>/dev/null || echo "")
 
 # The reviewer's job is done once it has signed off on THIS HEAD AND CI is green —
-# then there's nothing left to review and nothing left to fail. "Signed off" means
-# it posted its clean/approved comment (templates/approved.md) for the current
-# HEAD; record-sha.sh stamps last-approved-sha then. Self-authored PRs can't move
-# GitHub's reviewDecision, so we trust the reviewer's own approve — a real
-# reviewDecision==APPROVED (external/bot reviewer) counts too. CI is the gate:
-# approved but CI pending/red → keep watching (ci_green counts running/queued
-# checks as not-green; a failing check may push a fix to re-review).
+# then there's nothing left to review and nothing left to fail. "Signed off" is
+# read from GitHub (check-pr-state: a review at the current HEAD carrying the
+# approved.md sentinel), NOT a local stamp. Self-authored PRs can't move GitHub's
+# reviewDecision, so the sentinel is the signal; a real reviewDecision==APPROVED
+# (external/bot reviewer) counts too. CI is the gate: approved but CI pending/red
+# → keep watching (ci_green counts running/queued checks as not-green; a failing
+# check may push a fix to re-review).
 APPROVED_HEAD=no
-if [[ -n "$CUR_SHA" && "$CUR_SHA" == "$LAST_APPROVED" ]]; then APPROVED_HEAD=yes; fi
-if [[ "$REVIEW_DECISION" == "APPROVED" ]]; then APPROVED_HEAD=yes; fi
+[[ "$APPROVED_AT_HEAD" == "true" ]] && APPROVED_HEAD=yes
+[[ "$REVIEW_DECISION" == "APPROVED" ]] && APPROVED_HEAD=yes
 if [[ "$APPROVED_HEAD" == "yes" && "$CI_GREEN" == "true" ]]; then exit 0; fi
 
 # --- Runaway-spin backstop ---
@@ -80,24 +86,21 @@ if [[ "$APPROVED_HEAD" == "yes" ]]; then
   exit 2
 fi
 
-# --- SHA compare: hand the agent one concrete next action ---
-# last-reviewed-sha is stamped by record-sha.sh after a successful post; CUR_SHA
-# reuses the snapshot above.
-LAST_SHA=$(cat "$JOBDIR/last-reviewed-sha" 2>/dev/null || echo "")
-
-if [[ -n "$CUR_SHA" && "$CUR_SHA" != "$LAST_SHA" ]]; then
+# --- Coverage check: is THIS HEAD already reviewed? (GitHub, not a local stamp) ---
+# reviewed_at_head (check-pr-state) is true iff a review exists whose commit_id ==
+# current HEAD. Unreviewed → review it. Already reviewed → idle (don't re-review
+# the same SHA). This replaces the fragile last-reviewed-sha stamp, whose silent
+# failures made the reviewer re-review one SHA repeatedly.
+if [[ "$REVIEWED_AT_HEAD" != "true" ]]; then
   {
-    echo "Do NOT stop — PR #$PR has an unreviewed HEAD."
+    echo "Do NOT stop — PR #$PR HEAD ($CUR_SHA) has not been reviewed yet."
     echo
-    echo "  last reviewed: ${LAST_SHA:-<none>}"
-    echo "  current HEAD:  $CUR_SHA"
-    echo
-    echo "Re-review the fresh diff now (SKILL.md steps 1-5):"
-    echo "  1. gh pr diff $PR                     — read the new diff end to end"
+    echo "Review the diff now (SKILL.md steps 1-5):"
+    echo "  1. gh pr diff $PR                     — read the diff end to end"
     echo "  2. Apply bug-checklist.md + criteria/"
     echo "  3. Fill templates/ (approved.md or changes-requested.md) + finding.md per finding"
     echo "  4. Post: gh api .../pulls/$PR/reviews --input <payload.json>"
-    echo "           (APPROVE if zero findings, else REQUEST_CHANGES)"
+    echo "           (APPROVE if zero findings, else REQUEST_CHANGES; on a self-authored 422, re-post as COMMENT)"
     echo
     echo "Then try to end again — this hook re-evaluates every turn."
   } >&2
