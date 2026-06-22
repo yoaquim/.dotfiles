@@ -114,9 +114,12 @@ Example:
 1. Full test suite passing
 2. `git push -u origin <branch>`
 3. `/pr` to review and create PR. Required — `gh pr create` is hook-blocked unless it conforms to the same rules, so there is no manual fallback.
-4. **Spawn the reviewer (idempotent)** — one watcher per PR; the script reuses a
-   live reviewer if one already exists, so re-running this step after a Stop-hook
-   kickback can NOT create a second review session.
+4. **Spawn the ONE reviewer for this PR (idempotent) — do this exactly once.** The
+   script reuses a live reviewer and reports `already-reviewed` when the HEAD is
+   already covered, so a Stop-hook kickback that lands you here again can't create
+   a second session — but don't deliberately re-run it. This is the only time a
+   reviewer is spawned; the loop in step 5 never spawns another, and the reviewer
+   re-reviews each push on its own.
 
    ```bash
    PR=$(gh pr view --json number -q '.number')
@@ -146,10 +149,9 @@ Example:
         own PR, so do NOT wait on it.)
       - `review_decision == APPROVED` AND `ci_green` → `completed`
         (covers an external/non-author reviewer, when there is one)
-   3. **Otherwise — advance the PR, then make sure it's being reviewed.** The
-      runner and reviewer ping-pong on their own until the PR is approved AND CI is
-      green; you never wait for a human to tell you to re-review or to address
-      comments. Each turn, in order:
+   3. **Otherwise — advance the PR.** You and the ONE reviewer spawned in step 4
+      ping-pong until the PR is approved AND CI is green; you never wait for a human
+      to tell you to re-review or address comments. Each turn, in order:
 
       a. **Unresolved threads** (`unresolved_threads` non-empty) → fix each in
          place, commit, `git push`, then
@@ -160,21 +162,16 @@ Example:
          (`gh run view <run-id> --log-failed`), fix the code/test, commit, `git push`.
          A check that is genuinely external/flaky/needs-a-human → record it in the
          status file Notes and keep looping; the 8hr cap will flag `needs_review`.
-      c. **Ensure a reviewer is watching the current HEAD** — every turn, idempotently:
 
-         ```bash
-         bash ~/.claude/skills/dispatch/spawn-reviewer.sh "$PR"
-         ```
+      **Do NOT spawn or re-spawn a reviewer here.** There is exactly ONE reviewer
+      per PR — the one from step 4 — and it watches the PR's HEAD on its own: every
+      time you push, it re-reviews the new commit. Pushing your fix IS the handoff.
+      Never call `spawn-reviewer.sh` again, and never hand-roll a `claude --bg`/`-p`
+      review agent. (If the reviewer genuinely died — e.g. the machine slept — the
+      operator re-kicks `/pr-review $PR`; that's not your job.)
 
-         A reviewer exits the moment it approves a HEAD, and any reviewer can die,
-         so this is what guarantees each new SHA actually gets reviewed without you
-         nudging it. It is NOT a second reviewer: the script reuses a live watcher,
-         reports `already-reviewed` when the current HEAD already has a review, and
-         only spawns when the current SHA genuinely has none. Never hand-roll a
-         `claude --bg`/`-p` review agent.
-
-      If nothing above applied (no threads, CI green, a reviewer already watching),
-      there's nothing to do this turn — just try to end.
+      If nothing above applied (no threads, CI green), there's nothing to do this
+      turn — just try to end; pushing already handed any new commit to the reviewer.
    4. Try to end. Non-terminal → the hook returns you to step 5.1. Terminal → you exit.
 
    (The hook writes `needs_review` itself on the 8hr cap or spin guard — you don't

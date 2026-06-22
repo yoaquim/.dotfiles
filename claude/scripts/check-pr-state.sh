@@ -13,27 +13,35 @@
 #       { id, path, line, body, author }
 #     ] }
 #
-# Usage: check-pr-state.sh <pr-number>
+# Usage: check-pr-state.sh <pr-number> [owner/repo]
+#   Pass owner/repo to resolve the PR explicitly (cwd-independent). Callers that
+#   may run from the wrong directory — e.g. enforce-watch.sh after the runner's
+#   worktree is cleaned up — should always pass it. Falls back to `gh repo view`
+#   (current dir) when omitted.
 # Exit 0 always (errors are reported in JSON when possible).
 
 set -uo pipefail
 
 PR="${1:-}"
 if [[ -z "$PR" ]]; then
-  echo '{"error":"usage: check-pr-state.sh <pr-number>"}' >&2
+  echo '{"error":"usage: check-pr-state.sh <pr-number> [owner/repo]"}' >&2
   exit 1
 fi
 
-OWNER_REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>/dev/null || echo "")
+OWNER_REPO="${2:-}"
 if [[ -z "$OWNER_REPO" ]]; then
-  echo '{"error":"could not resolve owner/repo from current dir"}' >&2
+  OWNER_REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner' 2>/dev/null || echo "")
+fi
+if [[ -z "$OWNER_REPO" ]]; then
+  echo '{"error":"could not resolve owner/repo (pass owner/repo or run inside the repo)"}' >&2
   exit 1
 fi
 OWNER="${OWNER_REPO%/*}"
 REPO="${OWNER_REPO#*/}"
 
-# 1. PR-level state: reviewDecision, state, CI rollup, head SHA
-PR_VIEW=$(gh pr view "$PR" --json reviewDecision,state,statusCheckRollup,headRefOid 2>/dev/null || echo '{}')
+# 1. PR-level state: reviewDecision, state, CI rollup, head SHA.
+# -R makes this cwd-independent so the right PR is read even if cwd drifted.
+PR_VIEW=$(gh pr view "$PR" -R "$OWNER_REPO" --json reviewDecision,state,statusCheckRollup,headRefOid 2>/dev/null || echo '{}')
 REVIEW_DECISION=$(jq -r '.reviewDecision // "null"' <<<"$PR_VIEW")
 PR_STATE=$(jq -r '.state // "OPEN"' <<<"$PR_VIEW")
 HEAD_SHA=$(jq -r '.headRefOid // ""' <<<"$PR_VIEW")
