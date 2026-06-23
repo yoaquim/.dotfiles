@@ -74,8 +74,8 @@ CI_GREEN=$(jq -r '
 #                      "This code has been reviewed" → don't re-review, don't spawn
 #                      a second reviewer for it. Moves off when HEAD changes.
 #   approved_at_head — a review at this HEAD carrying the approved.md sentinel (the
-#                      same one check-post.sh/record-sha.sh use, read from the
-#                      single source of truth pr-review-markers.sh → approved.md).
+#                      same one check-post.sh uses, read from the single source of
+#                      truth pr-review-markers.sh → approved.md).
 # --paginate concatenates one JSON array per page; `jq -s 'add'` slurps them.
 APPROVED_MARKER=""
 # shellcheck disable=SC1091  # installed at runtime; not resolvable at lint time

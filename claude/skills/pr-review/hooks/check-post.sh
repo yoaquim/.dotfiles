@@ -18,10 +18,10 @@ INPUT=$(cat)
 COMMAND=$(jq -r '.tool_input.command // ""' <<<"$INPUT" 2>/dev/null || echo "")
 [[ -z "$COMMAND" ]] && exit 0
 
-# NOTE: this PreToolUse hook only VALIDATES the post. The reviewed SHA is stamped
-# by the PostToolUse hook record-sha.sh, which fires AFTER the post and only on a
-# confirmed-successful one — recording here (before the gh api call runs) would
-# stamp an unreviewed HEAD if the post then failed.
+# NOTE: this PreToolUse hook only VALIDATES the post. HEAD coverage/approval is
+# read straight from GitHub by enforce-watch.sh (via check-pr-state.sh) — there is
+# no local SHA stamp anymore (the old record-sha.sh stamps proved fragile and
+# nothing read them, so that hook was removed).
 
 # Header + approval sentinel come from the single source of truth (read back from
 # the posted templates) so this gate and the approval detectors can never

@@ -11,12 +11,11 @@ hooks:
         - type: command
           command: "$HOME/.claude/skills/pr-review/hooks/check-post.sh"
           timeout: 10
-  PostToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "$HOME/.claude/skills/pr-review/hooks/record-sha.sh"
-          timeout: 15
+# NOTE: there is no PostToolUse stamp hook. record-sha.sh used to write
+# last-reviewed-sha/last-approved-sha here, but enforce-watch.sh reads HEAD
+# coverage/approval straight from GitHub (check-pr-state.sh) now — the local
+# stamps proved fragile (silently unwritten) and nothing reads them, so the hook
+# was removed rather than left writing dead files to the wrong job dir.
 # NOTE: the watch-loop Stop hook (enforce-watch.sh) is registered ONLY in global
 # settings.json, NOT here. A skill-frontmatter Stop hook double-fired alongside the
 # global one for the bg pr-reviewer agent (the only session whose template passes
@@ -219,4 +218,4 @@ So the loop is: review → try to end → do what the hook says → try to end. 
 - Broaden the primary pass → add to `bug-checklist.md`.
 - New optional gate → drop a file at `criteria/<slug>.md` (What / Why / How to spot / When NOT / Severity).
 - New mechanical check on the posted output → extend `hooks/check-post.sh`.
-- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Two lines in `approved.md` are load-bearing — keep both: the `# 👾 Reviewed by Claude …` header (matched by `^# .*Reviewed by Claude`) and the `# ✅ APPROVED ✅` headline (matched by `^# .*APPROVED`). `scripts/lib/pr-review-markers.sh` reads them back from the template as the single source of truth for `check-post.sh`, `record-sha.sh`, `check-pr-state.sh`, and `spawn-reviewer.sh`; reword either line and approval detection silently breaks.
+- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Two lines in `approved.md` are load-bearing — keep both: the `# 👾 Reviewed by Claude …` header (matched by `^# .*Reviewed by Claude`) and the `# ✅ APPROVED ✅` headline (matched by `^# .*APPROVED`). `scripts/lib/pr-review-markers.sh` reads them back from the template as the single source of truth for `check-post.sh`, `check-pr-state.sh`, and `spawn-reviewer.sh`; reword either line and approval detection silently breaks.

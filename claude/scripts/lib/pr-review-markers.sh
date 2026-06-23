@@ -3,7 +3,6 @@
 #
 # Sourced by every site that has to recognize a posted review:
 #   - skills/pr-review/hooks/check-post.sh   (enforce a conforming post)
-#   - skills/pr-review/hooks/record-sha.sh   (stamp last-approved-sha)
 #   - scripts/check-pr-state.sh              (approved_at_head for the runner)
 #   - skills/dispatch/spawn-reviewer.sh      (SHA-gate: don't re-spawn an approved HEAD)
 #
