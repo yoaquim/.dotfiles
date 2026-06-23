@@ -142,7 +142,10 @@ fi
 
 # Spawn the watcher with the PR url so the child always has repo context,
 # regardless of the cwd it lands in.
-SPAWN_OUT=$(claude --bg --permission-mode bypassPermissions --name "$REVIEW_NAME" "/pr-review --fg $PR_URL" 2>&1)
+# --inline: review in THIS (already-backgrounded) session — do NOT dispatch
+# another watcher. It does NOT mean one-shot: the watch loop still runs, so this
+# one reviewer re-reviews every new commit until the PR is approved+green/closed.
+SPAWN_OUT=$(claude --bg --permission-mode bypassPermissions --name "$REVIEW_NAME" "/pr-review --inline $PR_URL" 2>&1)
 
 # Resolve the id by the NAME we set (robust to --bg stdout wording). Retry a few
 # times for agent-list latency, then fall back to scraping --bg stdout.

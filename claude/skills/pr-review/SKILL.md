@@ -2,7 +2,7 @@
 name: pr-review
 description: Review a GitHub PR or current branch primarily for bugs (correctness, null/undefined, async/race, error handling, security, resource leaks, test rigor). Posts findings as resolvable inline review comments. Auto-APPROVES when nothing's wrong. House-rules criteria run as additive extras.
 version: 3.1.0
-argument-hint: "[--fg] [--once] [<PR-number-or-URL>]"
+argument-hint: "[--inline] [--once] [<PR-number-or-URL>]"
 allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Bash(jq*), Bash(mktemp*), Bash(*check-pr-state.sh*), Bash(*spawn-reviewer.sh*), Bash(sleep*), Bash(date*), Read, Glob, Grep
 hooks:
   PreToolUse:
@@ -34,8 +34,8 @@ hooks:
 
 Parse `$ARGUMENTS` for these in order:
 
-1. **`--fg` flag** anywhere → strip it; proceed to step 1 in this session. Done.
-2. **`--once` flag** → strip it and remember; passed to step 6 to skip the watch loop after delivery.
+1. **`--inline` flag** (alias: `--fg`) anywhere → strip it and review in THIS session instead of dispatching a *new* background watcher. This is exactly how the dispatch reviewer is launched (`claude --bg "/pr-review --inline <url>"`): the background session already exists, so `--inline` means only "don't dispatch another one." It does **NOT** make this a one-shot — proceed to step 1, and the watch loop (step 6) still runs unless `--once` is also set. Done.
+2. **`--once` flag** → strip it and remember; passed to step 6 to skip the watch loop after delivery. This is the ONLY flag that disables watching.
 3. **PR identifier**, accepting any of:
    - Bare integer (e.g. `18`) — current repo
    - Full URL (e.g. `https://github.com/owner/repo/pull/18`) — extracts `owner/repo` and PR number
@@ -65,12 +65,17 @@ Report based on `reviewer_status`:
 - `already-running` → say it reused the live reviewer instead of spawning a new one.
 - `spawned` → `Dispatched as $SESSION_NAME (session $SESSION_ID). Open claude agents to watch.`
 
-`--once` only applies to a foreground review (`--fg --once`); a backgrounded PR
-review always runs the watch loop. If you need a one-shot, run it foreground.
+**The watch loop runs for EVERY PR review** — a freshly-dispatched background
+session AND an `--inline` review inside an already-background session (the dispatch
+reviewer). `--inline` does **not** skip it; do not treat an `--inline` review as a
+one-shot. The ONLY way to skip the watch loop is `--once` (or branch mode, where
+there's no PR to watch). A one-shot is `--once` / `--inline --once`; plain
+`--inline` watches and re-reviews every new commit until the PR is approved+green
+or merged/closed.
 
 ### Failure handling — read carefully
 
-If `SESSION_ID` is empty AND `reviewer_status` is neither `already-reviewed` nor `already-running`, the dispatch failed. **Surface `SESSION_OUTPUT` verbatim to the user and stop.** Do not paraphrase. Do not invent reasons (e.g. "the --bg flag isn't available"). The `--bg` flag DOES exist on Claude Code; it is hidden from `claude --help` but valid. If the literal bash output says something else, report exactly what it says. **Do not fall back to running in foreground.** The user can re-run with `--fg` if they want that.
+If `SESSION_ID` is empty AND `reviewer_status` is neither `already-reviewed` nor `already-running`, the dispatch failed. **Surface `SESSION_OUTPUT` verbatim to the user and stop.** Do not paraphrase. Do not invent reasons (e.g. "the --bg flag isn't available"). The `--bg` flag DOES exist on Claude Code; it is hidden from `claude --help` but valid. If the literal bash output says something else, report exactly what it says. **Do not fall back to running in foreground.** The user can re-run with `--inline` if they want that.
 
 ## 1. Read the diff
 
@@ -201,12 +206,12 @@ The hook (`hooks/check-post.sh`) reads the payload file and blocks on: missing h
 
 The model is dead simple: after delivering, **just try to end.** Every time you do, the hook decides:
 
-- **Stop allowed** — PR is MERGED/CLOSED; OR you posted your clean **`approved.md`** comment for the current HEAD *and* all GitHub checks are green; OR `--once` was set; OR the 8hr cap passed. (Posting approve doesn't require GitHub's APPROVE event — which you can't use on a self-authored PR; the hook tracks your approved comment via `record-sha.sh`. Approved but CI still pending/red → keep watching; a failing check may push a fix to re-review.)
-- **Stop blocked** — the hook compares the PR's current HEAD to the SHA you last reviewed and injects exactly one next action:
-  - **HEAD changed** → redo steps 1–5 on the fresh diff, post, then try to end again.
-  - **HEAD unchanged** → `sleep 60`, re-poll `~/.claude/scripts/check-pr-state.sh $PR`, then try to end again.
+- **Stop allowed** — PR is MERGED/CLOSED; OR the current HEAD is approved (your `approved.md` review is on it, or an external `reviewDecision == APPROVED`) *and* all GitHub checks are green; OR `--once` was set; OR the 8hr cap passed. (You can't APPROVE your own PR, so the hook detects approval from your posted `approved.md` review at the current commit — not a GitHub APPROVE event. Approved but CI pending/red → keep watching; a failing check may push a fix to re-review.)
+- **Stop blocked** — the hook reads from GitHub whether the **current HEAD has been reviewed** (`check-pr-state.sh` → `reviewed_at_head`, by `commit_id`) and injects one next action:
+  - **HEAD unreviewed** (a new commit was pushed) → redo steps 1–5 on the fresh diff, post, then try to end again.
+  - **HEAD already reviewed** → `sleep 60`, re-poll, then try to end again.
 
-So the loop is: review → try to end → do what the hook says → try to end. Repeat. The reviewed SHA is stamped for you after a successful post (`record-sha.sh`) — you don't track it yourself, and you must not re-review the same SHA. Terminal exit is always the hook's call, never yours.
+So the loop is: review → try to end → do what the hook says → try to end. Repeat. Coverage is read from GitHub (a review whose `commit_id` is the current HEAD), not a local stamp — so you don't track SHAs yourself, and you must not re-review a commit that's already reviewed. Terminal exit is always the hook's call, never yours.
 
 ## Extending
 
