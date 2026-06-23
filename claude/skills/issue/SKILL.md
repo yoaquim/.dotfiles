@@ -88,4 +88,9 @@ Senior engineer to senior engineer. Personality fine, slop not.
 
 No confirmation. Linear MCP `save_issue`, then `open "$ISSUE_URL"`.
 
-Report issue ID + URL. A `PostToolUse` hook (`validate-issue.sh`) auto-checks style on every `save_issue` call.
+Then close with the standardized summary block (`~/.claude/skills/issue/created-summary.md`), in this order:
+
+1. **What it does** — plain-English, succinct (under a paragraph, 3–5 lines, more only if truly needed): what the issue captures, in plain terms.
+2. **What was issued** — issue ID + URL.
+
+Two hooks back this: `validate-issue.sh` (`PostToolUse`) auto-checks style on every `save_issue`; `enforce-created-summary.sh` (`Stop`) re-prompts if the closing block is missing.

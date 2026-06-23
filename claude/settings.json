@@ -35,6 +35,11 @@
             "type": "command",
             "command": "\"$HOME\"/.claude/hooks/notify-done.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/hooks/enforce-created-summary.sh",
+            "timeout": 10
           }
         ]
       }

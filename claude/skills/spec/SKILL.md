@@ -146,7 +146,12 @@ Confirm via `AskUserQuestion`: ordered list with titles, scope, points.
 
 Create: master issue → spec document (attached) → sub-issues in order (set parent + blocking).
 
-Report: master ticket ID + URL, sub-issue count, total points, next step (`/dispatch <ticket-id>`).
+Then close with the standardized summary block (`~/.claude/skills/issue/created-summary.md`), in this order:
+
+1. **What it does** — plain-English, succinct (under a paragraph, 3–5 lines, more only if truly needed): what the feature actually does for someone using it. No jargon, no ticket IDs.
+2. **What was specced** — master ticket ID + URL, sub-issue count, total points, next step (`/dispatch <ticket-id>`).
+
+A `Stop` hook (`enforce-created-summary.sh`) re-prompts if this block is missing.
 
 ## 7. Discovery Capture (Optional)
 
