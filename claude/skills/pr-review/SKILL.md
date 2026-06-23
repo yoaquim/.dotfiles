@@ -17,11 +17,12 @@ hooks:
         - type: command
           command: "$HOME/.claude/skills/pr-review/hooks/record-sha.sh"
           timeout: 15
-  Stop:
-    - hooks:
-        - type: command
-          command: "$HOME/.claude/skills/pr-review/hooks/enforce-watch.sh"
-          timeout: 10
+# NOTE: the watch-loop Stop hook (enforce-watch.sh) is registered ONLY in global
+# settings.json, NOT here. A skill-frontmatter Stop hook double-fired alongside the
+# global one for the bg pr-reviewer agent (the only session whose template passes
+# enforce-watch's gate), double-incrementing watch.attempts; for any other session
+# it's a no-op exit. The global registration fires for every session, so this one
+# was pure redundancy.
 ---
 
 # PR Review

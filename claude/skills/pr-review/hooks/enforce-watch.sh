@@ -28,7 +28,16 @@ INPUT=$(cat 2>/dev/null || echo '{}')
 SID=$(jq -r '.session_id // ""' <<<"$INPUT")
 [[ -z "$SID" ]] && exit 0
 
-STATE="$HOME/.claude/jobs/$SID/state.json"
+# Resolve the job dir. `claude --bg` names the dir by the SHORT session id (the
+# first UUID segment, e.g. 3aa6edb5), but a Stop hook receives the FULL session id
+# (3aa6edb5-a8e7-…). Interactive sessions use the full-uuid dir; bg reviewers use
+# the short one. Try full first, then fall back to ${SID%%-*}. This was THE bug:
+# the hook built the path from the full id, never found the bg reviewer's state
+# file, and bailed fail-open at the check below — before it could ever watch, so
+# watch.attempts stayed unwritten and every reviewer ended after one review.
+JOBDIR="$HOME/.claude/jobs/$SID"
+[[ -d "$JOBDIR" ]] || JOBDIR="$HOME/.claude/jobs/${SID%%-*}"
+STATE="$JOBDIR/state.json"
 [[ -f "$STATE" ]] || exit 0
 
 # GATE: act ONLY on a pr-reviewer agent session. The harness records the agent in
@@ -59,7 +68,8 @@ fi
 # is the fix for reviewers dying after a single review — a transient hiccup in the
 # hook used to fail open (exit 0) and let the session end, so the runner re-spawned
 # a fresh reviewer per commit. The guards below still bound the loop.
-JOBDIR="$HOME/.claude/jobs/$SID"
+# (JOBDIR was resolved during identification — don't rebuild it from $SID here,
+# which would re-break the short/full id lookup the identification phase fixed.)
 trap 'echo "enforce-watch: transient error — staying in the watch loop. sleep 60, then try to end again." >&2; exit 2' ERR
 
 # Runaway-spin backstop, incremented FIRST so the loop is bounded even if anything
@@ -68,7 +78,18 @@ trap 'echo "enforce-watch: transient error — staying in the watch loop. sleep 
 ATTEMPT_FILE="$JOBDIR/watch.attempts"
 ATTEMPTS=$(( $(cat "$ATTEMPT_FILE" 2>/dev/null || echo 0) + 1 ))
 echo "$ATTEMPTS" > "$ATTEMPT_FILE" 2>/dev/null || true
+
+# Durable audit trail. watch.attempts (above) lives in the job dir, which the
+# daemon deletes the instant the session is killed — so it can't prove the hook
+# fired after the fact. Append one line per fire to a log OUTSIDE the job dir, via
+# an EXIT trap so every exit path is recorded with the decision it reached. Set
+# here, past the gates, so only confirmed reviewer fires are logged.
+WATCH_LOG="$HOME/.claude/pr-review-watch.log"
+DECISION="keep-watching(transient-err)"
+trap 'echo "$(date "+%Y-%m-%dT%H:%M:%S%z") sid=${SID%%-*} pr=$PR attempt=$ATTEMPTS decision=$DECISION" >> "$WATCH_LOG" 2>/dev/null' EXIT
+
 if (( ATTEMPTS > 1000 )); then
+  DECISION="allow-stop(runaway-guard)"
   echo "enforce-watch: >1000 stop attempts on PR #$PR; allowing stop (runaway-spin guard). Re-run /pr-review to resume watching." >&2
   exit 0
 fi
@@ -78,7 +99,7 @@ CREATED=$(jq -r '.createdAt // ""' "$STATE")
 if [[ -n "$CREATED" ]]; then
   EPOCH=$(date -j -f '%Y-%m-%dT%H:%M:%S' "${CREATED%.*}" '+%s' 2>/dev/null \
        || date -d "$CREATED" +%s 2>/dev/null || echo 0)
-  if (( EPOCH > 0 )) && (( $(date +%s) - EPOCH > 28800 )); then exit 0; fi
+  if (( EPOCH > 0 )) && (( $(date +%s) - EPOCH > 28800 )); then DECISION="allow-stop(8hr-cap)"; exit 0; fi
 fi
 
 # One authoritative snapshot — pr_state, review_decision, ci_green, head_sha,
@@ -88,15 +109,13 @@ fi
 STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR" "$REPO_SLUG" 2>/dev/null || echo '{}')
 
 PR_STATE=$(jq -r '.pr_state // "OPEN"' <<<"$STATE_JSON")
-[[ "$PR_STATE" != "OPEN" ]] && exit 0
+[[ "$PR_STATE" != "OPEN" ]] && { DECISION="allow-stop(pr-$PR_STATE)"; exit 0; }
 
 REVIEW_DECISION=$(jq -r '.review_decision // ""' <<<"$STATE_JSON")
 CI_GREEN=$(jq -r 'if .ci_green == true then "true" else "false" end' <<<"$STATE_JSON")
 CUR_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
 REVIEWED_AT_HEAD=$(jq -r 'if .reviewed_at_head == true then "true" else "false" end' <<<"$STATE_JSON")
 APPROVED_AT_HEAD=$(jq -r 'if .approved_at_head == true then "true" else "false" end' <<<"$STATE_JSON")
-
-JOBDIR="$HOME/.claude/jobs/$SID"
 
 # The reviewer's job is done once it has signed off on THIS HEAD AND CI is green —
 # then there's nothing left to review and nothing left to fail. "Signed off" is
@@ -109,10 +128,11 @@ JOBDIR="$HOME/.claude/jobs/$SID"
 APPROVED_HEAD=no
 [[ "$APPROVED_AT_HEAD" == "true" ]] && APPROVED_HEAD=yes
 [[ "$REVIEW_DECISION" == "APPROVED" ]] && APPROVED_HEAD=yes
-if [[ "$APPROVED_HEAD" == "yes" && "$CI_GREEN" == "true" ]]; then exit 0; fi
+if [[ "$APPROVED_HEAD" == "yes" && "$CI_GREEN" == "true" ]]; then DECISION="allow-stop(approved+ci-green)"; exit 0; fi
 
 # Approved this exact HEAD, but CI isn't green yet → wait specifically on CI.
 if [[ "$APPROVED_HEAD" == "yes" ]]; then
+  DECISION="keep-watching(approved,ci-pending)"
   {
     echo "Do NOT stop — you've approved PR #$PR HEAD ($CUR_SHA) but CI is not green yet."
     echo "Wait on the checks: sleep 60, then re-poll ~/.claude/scripts/check-pr-state.sh $PR."
@@ -127,6 +147,7 @@ fi
 # the same SHA). This replaces the fragile last-reviewed-sha stamp, whose silent
 # failures made the reviewer re-review one SHA repeatedly.
 if [[ "$REVIEWED_AT_HEAD" != "true" ]]; then
+  DECISION="keep-watching(review-new-head)"
   {
     echo "Do NOT stop — PR #$PR HEAD ($CUR_SHA) has not been reviewed yet."
     echo
@@ -143,6 +164,7 @@ if [[ "$REVIEWED_AT_HEAD" != "true" ]]; then
 fi
 
 # HEAD already reviewed → nothing new. Idle one beat; do NOT re-review same SHA.
+DECISION="keep-watching(idle,head-reviewed)"
 {
   echo "Do NOT stop, and do NOT re-review — PR #$PR HEAD (${CUR_SHA:-unknown}) is already reviewed."
   echo
