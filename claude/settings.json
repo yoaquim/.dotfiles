@@ -40,6 +40,11 @@
             "type": "command",
             "command": "\"$HOME\"/.claude/hooks/enforce-created-summary.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/skills/pr-review/hooks/enforce-watch.sh",
+            "timeout": 15
           }
         ]
       }

@@ -1,25 +1,15 @@
 ---
 name: pr-reviewer
-description: Background PR watcher. Reviews ONE pull request and re-reviews each new commit until it's approved + CI green, merged, or closed. Spawned by spawn-reviewer.sh — exists so the watch-loop Stop hook actually fires (skill-frontmatter hooks do NOT register for a `claude --bg "/pr-review"` session; agent-frontmatter hooks do).
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "$HOME/.claude/skills/pr-review/hooks/check-post.sh"
-          timeout: 10
-  Stop:
-    - hooks:
-        - type: command
-          command: "$HOME/.claude/skills/pr-review/hooks/enforce-watch.sh"
-          timeout: 10
+description: Background PR watcher. Reviews ONE pull request and re-reviews each new commit until it's approved + CI green, merged, or closed. Spawned by spawn-reviewer.sh. The watch-loop Stop hook (enforce-watch.sh) is registered GLOBALLY in settings.json — NOT here — because agent-frontmatter hooks are cached at Claude Code startup and never fire for an agent added mid-session. enforce-watch gates on this agent's `template` tag, so it only engages for pr-reviewer sessions.
 ---
 
 # PR Reviewer
 
-You are the single, persistent reviewer for ONE pull request. Your prompt invokes
-the `/pr-review` skill on that PR — run it exactly as the skill instructs (read the
-diff, apply `bug-checklist.md` + `criteria/`, post via the templates).
+You are the single, persistent reviewer for ONE pull request. Your prompt names
+that PR (a URL). **Your first action: run the `/pr-review` skill on it with
+`--inline`** — `/pr-review --inline <the PR URL from your prompt>` — and review
+exactly as the skill instructs (read the diff, apply `bug-checklist.md` +
+`criteria/`, post via the templates).
 
 **The watch loop is owned by your Stop hook (`enforce-watch.sh`), not by you.** This
 agent's entire reason to exist is that the Stop hook only fires for an *agent*

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop hook for /pr-review. Allows Stop only when:
+# Stop hook for the pr-reviewer watch loop. Allows Stop only when:
 #   - the current HEAD is approved (a review at HEAD carries the approved.md
 #     sentinel, or an external reviewDecision==APPROVED) AND CI is green
 #   - PR is MERGED or CLOSED
@@ -10,6 +10,12 @@
 # coverage/approval signals come from GitHub (check-pr-state.sh), NOT local stamp
 # files — the stamps proved fragile (silently unwritten), which made reviewers
 # re-review the same SHA and let duplicate reviewers spawn.
+#
+# REGISTRATION: this is registered GLOBALLY in settings.json Stop, NOT in the
+# pr-reviewer agent's frontmatter. Agent-frontmatter hooks are cached at Claude
+# Code startup, so a freshly-added agent's hooks never fire until a restart;
+# settings.json Stop hooks fire for every session (incl. `claude --bg`). The
+# template gate below scopes it to pr-reviewer sessions only.
 
 set -uo pipefail
 
@@ -24,6 +30,12 @@ SID=$(jq -r '.session_id // ""' <<<"$INPUT")
 
 STATE="$HOME/.claude/jobs/$SID/state.json"
 [[ -f "$STATE" ]] || exit 0
+
+# GATE: act ONLY on a pr-reviewer agent session. The harness records the agent in
+# state.json as `template`. Since this hook is registered globally, every other
+# session (interactive, runners, other agents) MUST exit 0 here — we can never
+# trap a non-reviewer in the watch loop.
+[[ "$(jq -r '.template // ""' "$STATE" 2>/dev/null)" == "pr-reviewer" ]] || exit 0
 
 INTENT=$(jq -r '.intent // ""' "$STATE")
 [[ "$INTENT" == *"--once"* ]] && exit 0

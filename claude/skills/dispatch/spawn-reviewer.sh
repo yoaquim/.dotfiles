@@ -142,14 +142,16 @@ fi
 
 # Spawn the watcher with the PR url so the child always has repo context,
 # regardless of the cwd it lands in.
-# Spawn as the `pr-reviewer` AGENT — this is what makes the watch loop work. The
-# Stop hook (enforce-watch) that keeps the reviewer alive between commits only
-# fires for an agent session; it does NOT register for a bare `claude --bg
-# "/pr-review"` (skill-frontmatter hooks aren't applied to a skill-as-prompt bg
-# session). The agent carries enforce-watch in its frontmatter, then runs the
-# /pr-review skill. --inline = review here, don't dispatch yet another watcher
-# (and it does NOT mean one-shot — the loop still runs).
-SPAWN_OUT=$(claude --bg --agent pr-reviewer --permission-mode bypassPermissions --name "$REVIEW_NAME" "/pr-review --inline $PR_URL" 2>&1)
+# Spawn as the `pr-reviewer` AGENT with a PLAIN prompt — this is what makes the
+# watch loop work. The Stop hook (enforce-watch) that keeps the reviewer alive
+# between commits only fires for an agent session, exactly like the runner's
+# enforce-completion. Two things matter and BOTH are mirrored from the runner:
+#   1. --agent pr-reviewer  → registers enforce-watch at the session level
+#      (skill-frontmatter hooks do NOT register for a spawned session).
+#   2. a PLAIN prompt (NOT a leading "/pr-review …") → a slash-command as the
+#      initial prompt makes the harness treat it as a skill session, which does
+#      not apply the agent's hooks. The agent's body invokes /pr-review --inline.
+SPAWN_OUT=$(claude --bg --agent pr-reviewer --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL" 2>&1)
 
 # Resolve the id by the NAME we set (robust to --bg stdout wording). Retry a few
 # times for agent-list latency, then fall back to scraping --bg stdout.
