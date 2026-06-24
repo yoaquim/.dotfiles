@@ -6,6 +6,7 @@ Coding practices and preferences. Used by `inject-practices.sh` to auto-detect a
 |----------|------|----------|--------|
 | TDD | `tdd.md` | **MANDATORY** for all implementation tasks | always |
 | No Comments | `no-comments.md` | **MANDATORY** — default to zero comments | always |
+| Scope | `scope.md` | **MANDATORY** — minimum code, surgical changes, no over-building | always |
 | Receiving Review | `receiving-review.md` | **MANDATORY** — evaluate review feedback technically | always |
 | Verification | `verification.md` | **MANDATORY** — show command output before claiming done | always |
 | Django | `django.md` | Django projects: views, models, templates, forms | manage.py |
@@ -27,12 +28,6 @@ Coding practices and preferences. Used by `inject-practices.sh` to auto-detect a
 - `file1,file2` — inject if any of the listed files exist
 - _(empty)_ — listed in fallback for runner to decide
 
-## Common Combinations
+## Authority
 
-TDD is always included.
-
-- **Django backend**: `tdd` + `django`
-- **Django + frontend**: `tdd` + `django` + `tailwind`
-- **React app**: `tdd` + `react`
-- **React + styling**: `tdd` + `react` + `tailwind`
-- **Dockerized**: `tdd` + `docker` + relevant stack practice
+Injection is automatic: `inject-practices.sh` reads the **Detect** column above and is the single source of truth. `always` rows inject unconditionally; the rest inject when their detect rule matches the project. No combination needs to be hand-curated here.
