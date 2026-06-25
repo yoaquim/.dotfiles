@@ -27,6 +27,18 @@
         ]
       }
     ],
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/skills/handoff/hooks/precompact-nudge.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
