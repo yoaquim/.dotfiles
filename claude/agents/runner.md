@@ -112,7 +112,13 @@ Example:
 ## Completion
 
 1. Full test suite passing
-2. `git push -u origin <branch>`
+2. **Local CodeRabbit pre-flight, then push.** If — and only if — the CodeRabbit CLI is
+   present and authed (`which coderabbit && coderabbit auth status` both succeed), run
+   `coderabbit review --agent --base <default-branch>`, fix what it flags, and commit
+   (same commit/no-comment rules as everything else). Re-run until clean or it stops
+   making progress — blocking, but don't grind: a stubborn nit goes to the status Notes
+   and you proceed. If the CLI is absent or unauthed, skip this entirely. It's additive —
+   the Claude reviewer in step 4 is still the real gate. Then `git push -u origin <branch>`.
 3. `/pr` to review and create PR. Required — `gh pr create` is hook-blocked unless it conforms to the same rules, so there is no manual fallback.
 4. **Spawn the ONE reviewer for this PR (idempotent) — do this exactly once.** The
    script reuses a live reviewer and reports `already-reviewed` when the HEAD is
