@@ -1,0 +1,4 @@
+# Track only the hand-managed config; ignore any state Ghostty/cmux writes here.
+*
+!.gitignore
+!config

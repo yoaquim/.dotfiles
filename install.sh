@@ -360,6 +360,8 @@ link_symlinks() {
     # Link application configurations
     create_symlink "${SCRIPT_DIR}/config/tmux" "$HOME/.config/tmux"
     create_symlink "${SCRIPT_DIR}/config/kitty" "$HOME/.config/kitty"
+    create_symlink "${SCRIPT_DIR}/config/cmux" "$HOME/.config/cmux"
+    create_symlink "${SCRIPT_DIR}/config/ghostty" "$HOME/.config/ghostty"
     create_symlink "${SCRIPT_DIR}/config/gitconfig" "$HOME/.gitconfig"
     mkdir -p "$HOME/.config/git"
     create_symlink "${SCRIPT_DIR}/config/git/ignore" "$HOME/.config/git/ignore"

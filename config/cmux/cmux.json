@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux.schema.json",
+  "schemaVersion": 1,
+
+  // ───────────────────────────────────────────────────────────────────────
+  // cmux config — managed in ~/.dotfiles/config/cmux/cmux.json
+  // Mirrors ~/.config/tmux/tmux.conf where it makes sense. JSONC (comments OK).
+  // Reload after editing:  cmux reload-config   (no app restart needed)
+  //
+  // LEADER (your tmux prefix `  ->  Cmd+`)
+  //   Hybrid scheme: leader chords drive the core tmux verbs below.
+  //   Native ⌘ shortcuts are KEPT for the rest:
+  //     ⌘T new tab/surface · ⌘W close tab · ⌘⇧W close workspace
+  //     ⌘R / ⌘⇧R rename tab/workspace · ⌘F find · ⌘, settings
+  //     ⌘N new workspace · ⌘1–9 select workspace · ⌘B sidebar · ⌘I notifications
+  //   NOTE: Cmd+` overrides macOS "cycle app windows" only while cmux is focused.
+  // ───────────────────────────────────────────────────────────────────────
+
+  "terminal": {
+    "copyOnSelect": true,            // ≈ tmux-yank: copy selection automatically
+    "autoResumeAgentSessions": true  // ≈ tmux-resurrect/continuum: restore sessions
+  },
+
+  // ── Theme management: handled by base16-shell (your existing setup), not here.
+  // base16-shell recolors cmux terminal CONTENT live across all 139 schemes
+  // and persists via ~/.base16_theme — no cmux color config needed.
+  // cmux's app CHROME (sidebar/tabs) can't follow base16 live; it's just set
+  // to dark below. To use cmux's own (non-base16) theme catalog instead:
+  //   cmux themes set "<name>"   (see `cmux themes list`)
+  "app": {
+    "appearance": "dark"
+  },
+
+  // Fonts — markdown viewer matches your terminal font (Ghostty sets the rest).
+  "markdown": {
+    "fontFamily": "CaskaydiaCove Nerd Font Mono"
+  },
+
+  "shortcuts": {
+    "bindings": {
+      // Pane focus — tmux: prefix h/j/k/l  (replaces default ⌥⌘arrows)
+      "focusLeft":  ["cmd+`", "h"],
+      "focusDown":  ["cmd+`", "j"],
+      "focusUp":    ["cmd+`", "k"],
+      "focusRight": ["cmd+`", "l"],
+
+      // Splits — tmux: prefix \ and -  (replaces default ⌘D / ⌘⇧D)
+      "splitRight": ["cmd+`", "\\"],
+      "splitDown":  ["cmd+`", "-"],
+
+      // Pane sizing / zoom
+      "toggleSplitZoom": ["cmd+`", "z"],  // zoom pane (new capability vs your tmux)
+      "equalizeSplits":  ["cmd+`", "t"],  // ≈ tmux 'tiled' layout (replaces ⌃⌘=)
+
+      // Surfaces = tmux windows — tmux: prefix . / ,  (replaces ⌘⇧] / ⌘⇧[)
+      "nextSurface": ["cmd+`", "."],
+      "prevSurface": ["cmd+`", ","],
+
+      // Copy mode (vi scrollback) — tmux: prefix [  (replaces ⌘⇧M)
+      "toggleTerminalCopyMode": ["cmd+`", "["],
+
+      // Command palette — tmux: prefix Space command-prompt  (replaces ⌘⇧P)
+      "commandPalette": ["cmd+`", "space"],
+
+      // Reload config — tmux: prefix r  (replaces ⌘⇧,)
+      "reloadConfiguration": ["cmd+`", "r"]
+    }
+  }
+}

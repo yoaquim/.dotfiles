@@ -1,0 +1,5 @@
+# cmux writes runtime state (settings.json, caches) into this dir.
+# Track only the hand-managed config.
+*
+!.gitignore
+!cmux.json

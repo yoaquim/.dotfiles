@@ -1,0 +1,34 @@
+# Ghostty config — managed in ~/.dotfiles/config/ghostty/config
+# cmux reads this for terminal rendering & behavior (fonts, colors, scrollback,
+# cursor, shell). Mirrors ~/.dotfiles/config/kitty/kitty.conf.
+# Reload with cmux:  cmux reload-config
+# List themes:       ghostty +list-themes
+
+# Font (matches kitty)
+font-family = CaskaydiaCove Nerd Font Mono
+font-size = 13
+
+# Window padding (kitty: window_padding_width 10)
+window-padding-x = 10
+window-padding-y = 10
+
+# Shell (kitty: shell /opt/homebrew/bin/bash)
+command = /opt/homebrew/bin/bash
+
+# Huge scrollback ≈ tmux `history-limit 1000000`. Ghostty counts bytes (~100 MB).
+scrollback-limit = 100000000
+
+# Send Option as Alt/Meta — handy for readline & nvim meta keybinds.
+# Comment out if you type accented characters with the Option key.
+macos-option-as-alt = true
+
+# Cursor (your tmux set beam/block via escapes; default to block here)
+cursor-style = block
+
+mouse-hide-while-typing = true
+
+# ── Colors: managed by base16-shell, NOT here (same as your kitty config).
+# base16-shell repaints the palette via OSC escape sequences on shell start
+# and whenever you run `base16_<scheme>`, so colors follow your global base16
+# choice (~/.base16_theme, currently helios) in every cmux terminal — live,
+# across all 139 schemes. Setting a palette here would override that.
