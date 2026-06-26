@@ -15,7 +15,7 @@ alias nv="nvim"
 alias av="nvim"
 
 # ALIAS REMOVE DIR ('RMDIR') TO 'RMD'
-alias rmd="rmdir"
+alias rmd="rm -rf"
 
 # show hidden files, long listing format
 alias la="ls -la"
