@@ -81,6 +81,7 @@ symlink_directory "$SCRIPT_DIR/agents"    "$HOME/.claude/agents"    "agents/"
 symlink_directory "$SCRIPT_DIR/practices" "$HOME/.claude/practices" "practices/"
 symlink_directory "$SCRIPT_DIR/hooks"     "$HOME/.claude/hooks"     "hooks/"
 symlink_directory "$SCRIPT_DIR/scripts"   "$HOME/.claude/scripts"   "scripts/"
+symlink_directory "$SCRIPT_DIR/statusline" "$HOME/.claude/statusline" "statusline/"
 
 # Symlink settings.json
 if [[ -f "$SCRIPT_DIR/settings.json" ]]; then
@@ -123,7 +124,7 @@ done
 # Verify
 echo ""
 info "Verifying..."
-for dir in skills agents practices hooks scripts; do
+for dir in skills agents practices hooks scripts statusline; do
     if [[ -L "$HOME/.claude/$dir" ]]; then
         echo "  + $dir/"
     else
