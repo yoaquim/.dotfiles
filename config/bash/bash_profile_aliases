@@ -14,8 +14,8 @@ alias v="nvim"
 alias nv="nvim"
 alias av="nvim"
 
-# ALIAS REMOVE DIR ('RMDIR') TO 'RMD'
-alias rmd="rm -rf"
+# ALIAS 'RMD' TO RECURSIVE FORCE REMOVE, PROMPTING ONCE (-I) BEFORE A BIG DELETE
+alias rmd="rm -rfI"
 
 # show hidden files, long listing format
 alias la="ls -la"

@@ -2,7 +2,7 @@
 name: dispatch
 description: Dispatch work to autonomous runners in isolated worktrees. Accepts Linear tickets or sketch specs. Use when assigning work to background Claude runners or checking runner status.
 argument-hint: <ticket-id|sketch-name|search-query|status> [name] [--repo <name|path>]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/resolve-repo.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/resolve-repo.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*, mcp__linear-lul__*, mcp__linear-rimas__*
 ---
 
 # Dispatch

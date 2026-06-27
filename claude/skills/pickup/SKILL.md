@@ -4,7 +4,7 @@ description: Get a fresh session up to speed — read the latest handoff, the re
 version: 1.0.0
 argument-hint: "[handoff-file]"
 arguments: handoff_file
-allowed-tools: Read, Glob, Grep, Task, Bash(ls*), Bash(git*), Bash(*/resolve-project.sh*), AskUserQuestion, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*
+allowed-tools: Read, Glob, Grep, Task, Bash(ls*), Bash(git*), Bash(*/resolve-project.sh*), AskUserQuestion, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*, mcp__linear-lul__*, mcp__linear-rimas__*
 ---
 
 # Pickup

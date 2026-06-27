@@ -45,7 +45,7 @@ source ~/.bash_profile   # or: sb
 | `lh` | `ls -lh` |
 | `lah`, `lha` | `ls -lah` |
 | `l1`, `la1` | `ls -lh1`, `ls -lah1` |
-| `rmd` | `rm -rf` |
+| `rmd` | `rm -rfI` |
 
 ### Navigation
 | Alias | Command |

@@ -4,7 +4,7 @@ description: Create a single Linear issue — correctly titled, pointed, milesto
 version: 1.0.0
 argument-hint: "[subject]"
 arguments: subject
-allowed-tools: Read, Glob, Grep, Bash(git*), Bash(date*), Bash(open*), Bash(*/resolve-project.sh*), Bash(*/resolve-label.sh*), Bash(*/validate-title.sh*), AskUserQuestion, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*
+allowed-tools: Read, Glob, Grep, Bash(git*), Bash(date*), Bash(open*), Bash(*/resolve-project.sh*), Bash(*/resolve-label.sh*), Bash(*/validate-title.sh*), AskUserQuestion, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*, mcp__linear-lul__*, mcp__linear-rimas__*
 hooks:
   PostToolUse:
     - matcher: "mcp__.*__save_issue"
