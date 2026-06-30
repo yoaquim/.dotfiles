@@ -39,6 +39,18 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
+# Machine-local kill switch. Some machines (e.g. a personal/work box where you
+# review your own PRs by hand) don't want an auto-spawned reviewer at all. Set
+# DISPATCH_NO_REVIEWER=1 in that machine's bash_profile_local to short-circuit
+# here. This is the single chokepoint, so it covers BOTH callers — the dispatch
+# runner and /pr-review's background dispatch. Exit 0 so the caller treats it as
+# success (no reviewer was needed), not a failure.
+if [[ -n "${DISPATCH_NO_REVIEWER:-}" ]]; then
+  echo "reviewer_status:disabled"
+  echo "name:(auto-reviewer disabled on this machine via DISPATCH_NO_REVIEWER)"
+  exit 0
+fi
+
 # Resolve EVERYTHING the name depends on from the PR itself (not from cwd or the
 # local branch), so the name is identical no matter who calls this or from where.
 PR_JSON=$(gh pr view "$@" --json number,headRefName,title,url,headRefOid 2>/dev/null)
