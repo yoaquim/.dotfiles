@@ -1,6 +1,11 @@
 {
   "_comment": "Maps git repo names to Linear project(s), team, and description. Used by resolve-project.sh (placement) and /spec (discovery).",
   "repos": {
+    "cyberdeck": {
+      "team": "Cyber Deck",
+      "projects": ["cyberdeck"],
+      "description": "Persistent control plane for your agent fleet that happens to have a first-class full terminal in it — tmux in the browser over Tailscale. Bun end-to-end (Bun.serve + native PTY) + React/Vite/xterm.js. Built bit-by-bit, terminal-hardening pillar first. NOTE: lives in the dedicated cyber-deck workspace — use the linear-cyberdeck MCP for Linear calls, not the default workspace."
+    },
     "rimas-infrastructure": {
       "team": "Rimas",
       "projects": ["Infrastructure"],
