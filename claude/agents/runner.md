@@ -112,19 +112,36 @@ Example:
 ## Completion
 
 1. Full test suite passing
-2. **Local CodeRabbit pre-flight, then push.** If — and only if — the CodeRabbit CLI is
-   present and authed (`which coderabbit && coderabbit auth status` both succeed), run
-   `coderabbit review --agent --base <default-branch>`, fix what it flags, and commit
-   (same commit/no-comment rules as everything else). Re-run until clean or it stops
-   making progress — blocking, but don't grind: a stubborn nit goes to the status Notes
-   and you proceed. If the CLI is absent or unauthed, skip this entirely. It's additive —
-   the Claude reviewer in step 4 is still the real gate. Then `git push -u origin <branch>`.
-3. `/pr` to review and create PR. Required — `gh pr create` is hook-blocked unless it conforms to the same rules, so there is no manual fallback.
-4. **Spawn the ONE reviewer for this PR (idempotent) — do this exactly once.** The
+2. **Create the PR.** Two paths — prefer the Augment plugin when it's installed:
+
+   **If the `engineering:pr` skill is available** — the `augment-risk/engineering`
+   plugin is installed; check your available skills, or test
+   `ls ~/.claude/plugins/cache/augment-risk/engineering/*/skills/pr/SKILL.md` —
+   invoke `/engineering:pr`. It runs CodeRabbit for you (via `/ar:pr-review`),
+   applies Augment PR standards, pushes, and creates the PR. Do **NOT** also run a
+   separate CodeRabbit pre-flight — `engineering:pr` already covers it; doing both
+   double-runs CodeRabbit.
+
+   **Otherwise, fall back:**
+   a. **Local CodeRabbit pre-flight.** If — and only if — the CodeRabbit CLI is
+      present and authed (`which coderabbit && coderabbit auth status` both
+      succeed), run `coderabbit review --agent --base <default-branch>`, fix what it
+      flags, and commit (same commit/no-comment rules as everything else). Re-run
+      until clean or it stops making progress — blocking, but don't grind: a stubborn
+      nit goes to the status Notes and you proceed. If the CLI is absent or unauthed,
+      skip this entirely. It's additive — the Claude reviewer in step 3 is still the
+      real gate.
+   b. `git push -u origin <branch>`, then `/pr` to review and create the PR.
+      Required — `gh pr create` is hook-blocked unless it conforms to the same
+      rules, so there is no manual fallback.
+
+   Either path ends with a created PR; step 3 then spawns the reviewer the same way
+   regardless of which path got you here.
+3. **Spawn the ONE reviewer for this PR (idempotent) — do this exactly once.** The
    script reuses a live reviewer and reports `already-reviewed` when the HEAD is
    already covered, so a Stop-hook kickback that lands you here again can't create
    a second session — but don't deliberately re-run it. This is the only time a
-   reviewer is spawned; the loop in step 5 never spawns another, and the reviewer
+   reviewer is spawned; the loop in step 4 never spawns another, and the reviewer
    re-reviews each push on its own.
 
    ```bash
@@ -137,7 +154,7 @@ Example:
    doing so spawns an off-book agent (wrong permission mode, no idempotency, not
    even the `/pr-review` skill) that double-reviews the PR.
 
-5. **Review loop — the Stop hook owns it.** Do NOT run a `sleep`/`while` loop and
+4. **Review loop — the Stop hook owns it.** Do NOT run a `sleep`/`while` loop and
    do NOT count iterations. Do one round of work, then try to end. `enforce-completion.sh`
    blocks the Stop while the status is non-terminal, kicks you back each turn (it
    tells you to sleep 60 if idle), and enforces the caps (8hr wall-clock + a
@@ -155,7 +172,7 @@ Example:
         own PR, so do NOT wait on it.)
       - `review_decision == APPROVED` AND `ci_green` → `completed`
         (covers an external/non-author reviewer, when there is one)
-   3. **Otherwise — advance the PR.** You and the ONE reviewer spawned in step 4
+   3. **Otherwise — advance the PR.** You and the ONE reviewer spawned in step 3
       ping-pong until the PR is approved AND CI is green; you never wait for a human
       to tell you to re-review or address comments. Each turn, in order:
 
@@ -170,7 +187,7 @@ Example:
          status file Notes and keep looping; the 8hr cap will flag `needs_review`.
 
       **Do NOT spawn or re-spawn a reviewer here.** There is exactly ONE reviewer
-      per PR — the one from step 4 — and it watches the PR's HEAD on its own: every
+      per PR — the one from step 3 — and it watches the PR's HEAD on its own: every
       time you push, it re-reviews the new commit. Pushing your fix IS the handoff.
       Never call `spawn-reviewer.sh` again, and never hand-roll a `claude --bg`/`-p`
       review agent. (If the reviewer genuinely died — e.g. the machine slept — the
@@ -178,12 +195,12 @@ Example:
 
       If nothing above applied (no threads, CI green), there's nothing to do this
       turn — just try to end; pushing already handed any new commit to the reviewer.
-   4. Try to end. Non-terminal → the hook returns you to step 5.1. Terminal → you exit.
+   4. Try to end. Non-terminal → the hook returns you to step 4.1. Terminal → you exit.
 
    (The hook writes `needs_review` itself on the 8hr cap or spin guard — you don't
    need to handle those.)
 
-6. On terminal exit, finalize: list all commits, brief Notes summary in status file.
+5. On terminal exit, finalize: list all commits, brief Notes summary in status file.
 
 ## Failure
 
