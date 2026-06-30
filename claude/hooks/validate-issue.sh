@@ -7,18 +7,32 @@ set -euo pipefail
 
 INPUT=$(cat)
 
-# Extract the tool response (the created issue data)
-TOOL_RESPONSE=$(echo "$INPUT" | jq -r '.tool_response // ""')
+# Extract the tool response and normalize it to an issue object.
+# Linear MCP variants return tool_response as a plain object, an array of
+# content blocks, or content blocks with the issue JSON embedded as text.
+RAW=$(echo "$INPUT" | jq -c '.tool_response // {}' 2>/dev/null || echo '{}')
 
-# If no response or it's an error, skip validation
-if [[ -z "$TOOL_RESPONSE" ]] || echo "$TOOL_RESPONSE" | jq -e '.error' &>/dev/null; then
+ISSUE=$(jq -n --argjson r "$RAW" '
+  def parse: (try fromjson catch {});
+  if   (($r|type) == "object") then $r
+  elif (($r|type) == "array")  then
+    ( [ $r[]
+        | if   (type=="object" and (has("title") or has("id"))) then .
+          elif (type=="object" and has("text")) then (.text|parse)
+          else (tostring|parse) end ]
+      | map(select((type=="object") and (has("title") or has("id"))))
+      | (.[0] // {}) )
+  else ($r|tostring|parse) end' 2>/dev/null || echo '{}')
+
+# If it's an error response, skip validation
+if echo "$ISSUE" | jq -e '.error' &>/dev/null; then
   exit 0
 fi
 
-TITLE=$(echo "$TOOL_RESPONSE" | jq -r '.title // ""')
-DESCRIPTION=$(echo "$TOOL_RESPONSE" | jq -r '.description // ""')
-ISSUE_ID=$(echo "$TOOL_RESPONSE" | jq -r '.id // ""')
-ESTIMATE=$(echo "$TOOL_RESPONSE" | jq -r '.estimate // empty')
+TITLE=$(echo "$ISSUE" | jq -r '.title // ""')
+DESCRIPTION=$(echo "$ISSUE" | jq -r '.description // ""')
+ISSUE_ID=$(echo "$ISSUE" | jq -r '.id // ""')
+ESTIMATE=$(echo "$ISSUE" | jq -r '.estimate // empty')
 
 WARNINGS=()
 
