@@ -163,7 +163,7 @@ fi
 #   2. a PLAIN prompt (NOT a leading "/pr-review …") → a slash-command as the
 #      initial prompt makes the harness treat it as a skill session, which does
 #      not apply the agent's hooks. The agent's body invokes /pr-review --inline.
-SPAWN_OUT=$(claude --bg --agent pr-reviewer --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL" 2>&1)
+SPAWN_OUT=$(claude --bg --agent pr-reviewer --model default --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL" 2>&1)
 
 # Resolve the id by the NAME we set (robust to --bg stdout wording). Retry a few
 # times for agent-list latency, then fall back to scraping --bg stdout.

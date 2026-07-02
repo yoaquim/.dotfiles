@@ -116,6 +116,7 @@ SESSION_OUTPUT=$(cd "$WORKTREE" && \
     CLAUDE_DISPATCH_STATUS_FILE="$STATUS_FILE" \
     claude --bg \
     --agent runner \
+    --model default \
     --name "$RUNNER_NAME" \
     --permission-mode bypassPermissions \
     --append-system-prompt-file "$RUNTIME_PROMPT" \
