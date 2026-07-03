@@ -34,6 +34,12 @@
 
 set -uo pipefail
 
+# Shared dispatch definitions (session-id resolution). Not a hook — a missing
+# lib is a hard error, never fail-open.
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh" \
+  || { echo "error: cannot source ~/.claude/scripts/lib/dispatch.sh" >&2; exit 1; }
+
 if [[ $# -lt 1 ]]; then
   echo "usage: spawn-reviewer.sh <pr-ref> [gh-args...]" >&2
   exit 1
@@ -107,20 +113,11 @@ if [[ -n "$HEAD_SHA" ]]; then
   fi
 fi
 
-# States a background session can be in that mean "not alive" (finished/gone).
-TERMINAL='["completed","done","failed","stopped","exited","cancelled","canceled"]'
-
-# Short id of a LIVE background session with our name, or "" if none.
-live_reviewer_id() {
-  claude agents --json 2>/dev/null | jq -r --arg n "$REVIEW_NAME" --argjson term "$TERMINAL" '
-    [ .[]
-      | select((.kind // "") == "background")
-      | select((.name // "") == $n)
-      | select(((.state // .status // "") | ascii_downcase) as $s | ($term | index($s) | not))
-      | (.id // .sessionId // "")
-    ] | first // ""
-  ' 2>/dev/null || echo ""
-}
+# Liveness + id resolution come from scripts/lib/dispatch.sh
+# (dispatch_session_id_by_name) — the same name-based, terminal-state-filtered
+# lookup the watchdog and spawn.sh use. (It drops the old kind=="background"
+# filter; harmless — interactive sessions carry no --name, so the deterministic
+# reviewer name can only match a background session.)
 
 # Mutually exclude check-then-spawn so two near-simultaneous callers can't both
 # pass the guard before either reviewer appears in `claude agents` (the old
@@ -138,13 +135,8 @@ done
 
 # A reviewer spawned moments ago (e.g. by a prior Completion turn) may not be in
 # `claude agents` yet; a single missed check would re-introduce the double-review
-# bug. Retry briefly — the same latency tolerance the id-resolution loop uses below.
-EXISTING=""
-for _ in 1 2 3; do
-  EXISTING=$(live_reviewer_id)
-  if [[ -n "$EXISTING" ]]; then break; fi
-  sleep 1
-done
+# bug. Retry briefly — the same latency tolerance the id-resolution below uses.
+EXISTING=$(dispatch_session_id_by_name "$REVIEW_NAME" 3) || EXISTING=""
 if [[ -n "$EXISTING" ]]; then
   echo "reviewer_status:already-running"
   echo "session_id:$EXISTING"
@@ -165,14 +157,9 @@ fi
 #      not apply the agent's hooks. The agent's body invokes /pr-review --inline.
 SPAWN_OUT=$(claude --bg --agent pr-reviewer --model default --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL" 2>&1)
 
-# Resolve the id by the NAME we set (robust to --bg stdout wording). Retry a few
-# times for agent-list latency, then fall back to scraping --bg stdout.
-SESSION_ID=""
-for _ in 1 2 3 4 5; do
-  SESSION_ID=$(live_reviewer_id)
-  if [[ -n "$SESSION_ID" ]]; then break; fi
-  sleep 1
-done
+# Resolve the id by the NAME we set (robust to --bg stdout wording). The lib
+# retries for agent-list latency; then fall back to scraping --bg stdout.
+SESSION_ID=$(dispatch_session_id_by_name "$REVIEW_NAME" 5) || SESSION_ID=""
 if [[ -z "$SESSION_ID" ]]; then
   SESSION_ID=$(grep 'backgrounded' <<<"$SPAWN_OUT" | grep -oE '[a-f0-9]{8}' | head -1)
 fi

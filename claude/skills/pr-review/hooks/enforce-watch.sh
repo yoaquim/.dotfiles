@@ -24,6 +24,14 @@ set -uo pipefail
 # "I can't tell whose session this is" → let the stop happen (fail-open).
 trap 'exit 0' ERR
 
+# Shared dispatch definitions: iso_to_epoch, fail-open logging. This hook fires
+# for EVERY session's Stop (global registration), so a missing lib must fail
+# open — but say so.
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh" 2>/dev/null \
+  || { echo "enforce-watch: fail-open: cannot source scripts/lib/dispatch.sh" >&2; exit 0; }
+trap 'dispatch_fail_open enforce-watch $LINENO' ERR
+
 INPUT=$(cat 2>/dev/null || echo '{}')
 SID=$(jq -r '.session_id // ""' <<<"$INPUT")
 [[ -z "$SID" ]] && exit 0
@@ -97,8 +105,7 @@ fi
 # 8hr wall-clock cap.
 CREATED=$(jq -r '.createdAt // ""' "$STATE")
 if [[ -n "$CREATED" ]]; then
-  EPOCH=$(date -j -f '%Y-%m-%dT%H:%M:%S' "${CREATED%.*}" '+%s' 2>/dev/null \
-       || date -d "$CREATED" +%s 2>/dev/null || echo 0)
+  EPOCH=$(iso_to_epoch "$CREATED")
   if (( EPOCH > 0 )) && (( $(date +%s) - EPOCH > 28800 )); then DECISION="allow-stop(8hr-cap)"; exit 0; fi
 fi
 

@@ -17,6 +17,11 @@
 
 set -eo pipefail
 
+# Shared dispatch definitions (session-id resolution). Not a hook — a missing
+# lib is a hard error (set -e), never fail-open.
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh"
+
 NAME="$1"
 BRANCH="$2"
 ROOT="$3"
@@ -128,24 +133,10 @@ SESSION_OUTPUT=$(cd "$WORKTREE" && \
     "Execute the task described in the system prompt." 2>&1)
 
 # Resolve the session id by the --name we set — robust to --bg stdout wording,
-# which is the one fragile coupling to CLI output. Retry briefly for agent-list
-# latency, then fall back to scraping stdout ("backgrounded · <8-hex>").
-resolve_id_by_name() {
-    claude agents --json 2>/dev/null | jq -r --arg n "$RUNNER_NAME" '
-      ["completed","done","failed","stopped","exited","cancelled","canceled"] as $terminal
-      | [ .[]
-          | select((.name // "") == $n)
-          | select(((.state // .status // "") | ascii_downcase) as $s | ($terminal | index($s) | not))
-          | (.id // .sessionId // "")
-        ] | first // ""
-    ' 2>/dev/null || echo ""
-}
-SESSION_ID=""
-for _ in 1 2 3 4 5; do
-    SESSION_ID=$(resolve_id_by_name)
-    if [[ -n "$SESSION_ID" ]]; then break; fi
-    sleep 1
-done
+# which is the one fragile coupling to CLI output. dispatch_session_id_by_name
+# (scripts/lib/dispatch.sh) retries for agent-list latency; then fall back to
+# scraping stdout ("backgrounded · <8-hex>").
+SESSION_ID=$(dispatch_session_id_by_name "$RUNNER_NAME" 5) || SESSION_ID=""
 if [[ -z "$SESSION_ID" ]]; then
     SESSION_ID=$(echo "$SESSION_OUTPUT" | grep 'backgrounded' | grep -oE '[a-f0-9]{8}' | head -1)
 fi

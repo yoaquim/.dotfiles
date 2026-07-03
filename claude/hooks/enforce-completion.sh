@@ -29,6 +29,13 @@ trap 'exit 0' ERR
 # Drain stdin (Stop hook input is JSON we don't need).
 cat >/dev/null 2>&1 || true
 
+# Shared dispatch definitions: status vocabulary, iso_to_epoch, fail-open
+# logging. A missing lib is a hook bug like any other → fail open, but say so.
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh" 2>/dev/null \
+  || { echo "enforce-completion: fail-open: cannot source scripts/lib/dispatch.sh" >&2; exit 0; }
+trap 'dispatch_fail_open enforce-completion $LINENO' ERR
+
 # Pin to the runner's worktree via the immutable identity spawn.sh injects, so a
 # cwd that has drifted into the shared checkout can't make this look like a
 # non-dispatch session and skip the completion gates. All git/gh checks below
@@ -63,16 +70,12 @@ read_status() {
   ' "$STATUS_FILE"
 }
 
-is_terminal() {
-  case "$1" in
-    completed|needs_review|closed-without-merge|failed) return 0 ;;
-    *) return 1 ;;
-  esac
-}
+# Terminal-status test comes from scripts/lib/dispatch.sh
+# (dispatch_is_terminal_status) — the single source of the status vocabulary.
 
 # Start timestamp from the status file header (`- **started**: <ISO>`).
 read_started() {
-  sed -n 's/^- \*\*started\*\*: //p' "$STATUS_FILE" | head -1
+  dispatch_status_field started "$STATUS_FILE"
 }
 
 # Flip the status line to needs_review in place (macOS sed lacks /I, so awk).
@@ -89,7 +92,7 @@ finalize_needs_review() {
 STATUS=$(read_status)
 
 # Terminal → allow exit immediately. The runner has finalized its work.
-if is_terminal "$STATUS"; then
+if dispatch_is_terminal_status "$STATUS"; then
   exit 0
 fi
 
@@ -98,13 +101,7 @@ fi
 # runner no longer counts its own iterations; the hook owns the limit.
 STARTED=$(read_started)
 if [[ -n "$STARTED" ]]; then
-  # First 19 chars are YYYY-MM-DDTHH:MM:SS regardless of fractional/Z/offset suffix;
-  # normalize a space separator to 'T' so a `2026-06-20 19:57:00` status value parses.
-  STARTED_NORM="${STARTED:0:19}"; STARTED_NORM="${STARTED_NORM/ /T}"
-  # BSD date first, GNU `date -d` fallback (mirrors enforce-watch.sh) so the cap
-  # survives both implementations and minor format drift in the status file.
-  S_EPOCH=$(date -j -f '%Y-%m-%dT%H:%M:%S' "$STARTED_NORM" '+%s' 2>/dev/null \
-         || date -d "$STARTED" +%s 2>/dev/null || echo 0)
+  S_EPOCH=$(iso_to_epoch "$STARTED")
   if [[ "$S_EPOCH" -gt 0 ]] && (( $(date +%s) - S_EPOCH > 28800 )); then
     finalize_needs_review
     echo "enforce-completion: 8hr cap reached; allowing stop with status=needs_review" >&2
