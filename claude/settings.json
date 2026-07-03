@@ -80,8 +80,8 @@
     }
   },
   "effortLevel": "high",
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true,
-  "tui": "fullscreen"
+  "voiceEnabled": true
 }
