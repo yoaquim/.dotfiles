@@ -93,3 +93,65 @@ _completemarks() {
 }
 complete -o default -o nospace -F _completemarks jump unmark
 
+
+# proj/p
+# ───────────────────────────────────────────────────
+
+# jump to a project's tmux window. Convention: one session "main",
+# window 0 = agents view, windows 1+ = one per project (window name =
+# project dir name under ~/Projects — the same key cyberdeck groups on).
+# Selects the window if it exists, creates it (cwd = project) if not;
+# outside tmux it attaches/creates the main session first.
+# No argument: list projects.
+alias p="proj"
+proj() {
+    local name="$1"
+    local projects="$HOME/Projects"
+    if [ -z "$name" ]; then
+        command ls -1 "$projects"
+        return 0
+    fi
+    local dir="$projects/$name"
+    if [ ! -d "$dir" ]; then
+        echo "proj: no such project: $name" >&2
+        return 1
+    fi
+    if [ -n "$TMUX" ]; then
+        tmux select-window -t ":=$name" 2>/dev/null \
+            || tmux new-window -n "$name" -c "$dir"
+    else
+        tmux has-session -t main 2>/dev/null \
+            || tmux new-session -d -s main -c "$HOME"
+        tmux select-window -t "main:=$name" 2>/dev/null \
+            || tmux new-window -t main: -n "$name" -c "$dir"
+        tmux attach -t main
+    fi
+}
+
+
+# projmarks
+# ───────────────────────────────────────────────────
+
+# create a mark for every project under ~/Projects (skips existing),
+# so jump/j works for all of them
+projmarks() {
+    mkdir -p "$MARKPATH"
+    local dir name
+    for dir in "$HOME/Projects"/*/; do
+        name=$(basename "$dir")
+        [ -e "$MARKPATH/$name" ] || ln -s "${dir%/}" "$MARKPATH/$name"
+    done
+    marks
+}
+
+
+# tab completion: proj
+# ───────────────────────────────────────────────────
+
+_completeproj() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    COMPREPLY=($(compgen -W "$(command ls -1 "$HOME/Projects")" -- "$cur"))
+    return 0
+}
+complete -F _completeproj proj p
+
