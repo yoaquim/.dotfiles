@@ -118,6 +118,10 @@ if [[ -n "$NAME" ]]; then
         exit 1
     fi
 
+    if ! VERDICT=$(bash "$HOME/.claude/scripts/validate-status-file.sh" "$FILE" 2>/dev/null); then
+        echo "warning: status file failed validation: $VERDICT" >&2
+    fi
+
     STATUS="$(get_field status "$FILE")"
     SESSION_ID="$(get_field session_id "$FILE")"
     WORKTREE="$(get_field worktree "$FILE")"

@@ -48,9 +48,12 @@ for a in "$@"; do
   esac
 done
 
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh"
+
 STALE_MIN="${DISPATCH_WATCHDOG_STALE_MIN:-10}"
 MAX_AGE_MIN="${DISPATCH_WATCHDOG_MAX_AGE_MIN:-720}"
-RESUMABLE_STATUSES="${DISPATCH_WATCHDOG_STATUSES:-in_progress}"
+RESUMABLE_STATUSES="${DISPATCH_WATCHDOG_STATUSES:-$DISPATCH_RESUMABLE_STATUSES}"
 ROOTS_BASE="${DISPATCH_WATCHDOG_ROOTS_GLOB:-$HOME/Projects}"
 DISPATCH="$HOME/.claude/skills/dispatch"
 
@@ -66,25 +69,10 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
   trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
 fi
 
-get_field() { sed -n "s/^- \*\*${1}\*\*: //p" "$2" 2>/dev/null | head -1; }
-
-# ISO-8601 (optional fractional/Z/offset) → epoch; BSD date first, GNU fallback.
-iso_to_epoch() {
-  local ts="${1:-}"; [[ -z "$ts" ]] && { echo 0; return; }
-  local norm="${ts:0:19}"; norm="${norm/ /T}"
-  date -j -f '%Y-%m-%dT%H:%M:%S' "$norm" '+%s' 2>/dev/null \
-    || date -d "$ts" '+%s' 2>/dev/null || echo 0
-}
-
-# A live (non-terminal) background session named $1 exists?
-name_alive() {
-  claude agents --json 2>/dev/null | jq -e --arg n "$1" '
-    ["completed","done","failed","stopped","exited","cancelled","canceled"] as $t
-    | any(.[]?;
-        ((.name // "") == $n)
-        and (((.state // .status // "") | ascii_downcase) as $s | ($t | index($s) | not)))
-  ' >/dev/null 2>&1
-}
+# get_field / iso_to_epoch / name_alive come from scripts/lib/dispatch.sh —
+# the shared single source of truth (they used to be per-script copies).
+get_field() { dispatch_status_field "$@"; }
+name_alive() { dispatch_name_alive "$@"; }
 
 # Write the new short session id back into the status file (so /dispatch status
 # and `claude attach` resolve the resumed session, not the dead one).
@@ -143,6 +131,13 @@ while IFS= read -r ROOT; do
     PROMPT="$ROOT/.dispatch/prompts/$NAME.md"
     if [[ -z "$BRANCH" || ! -f "$PROMPT" ]]; then
       echo "skip  $RUNNER_NAME — missing branch or prompt file ($PROMPT)"
+      skipped=$((skipped + 1))
+      continue
+    fi
+
+    # Never resume against a mangled status file — surface it instead.
+    if ! VERDICT=$(bash "$HOME/.claude/scripts/validate-status-file.sh" "$FILE" 2>/dev/null); then
+      echo "skip  $RUNNER_NAME — status file failed validation: $VERDICT"
       skipped=$((skipped + 1))
       continue
     fi
