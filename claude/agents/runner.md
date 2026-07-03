@@ -18,6 +18,12 @@ hooks:
         - type: command
           command: "$HOME/.claude/hooks/enforce-completion.sh"
           timeout: 30
+  PostToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "$HOME/.claude/hooks/auto-spawn-reviewer.sh"
+          timeout: 60
   PreToolUse:
     - matcher: "Edit|Write|MultiEdit"
       hooks:
@@ -137,18 +143,20 @@ Example:
 
    Either path ends with a created PR; step 3 then spawns the reviewer the same way
    regardless of which path got you here.
-3. **Spawn the ONE reviewer for this PR (idempotent) — do this exactly once.** The
-   script reuses a live reviewer and reports `already-reviewed` when the HEAD is
-   already covered, so a Stop-hook kickback that lands you here again can't create
-   a second session — but don't deliberately re-run it. This is the only time a
-   reviewer is spawned; the loop in step 4 never spawns another, and the reviewer
-   re-reviews each push on its own.
+3. **The reviewer spawns automatically.** A PostToolUse hook
+   (`auto-spawn-reviewer.sh`) fires on your `gh pr create` and runs
+   `spawn-reviewer.sh` for you — check the tool result for its
+   "auto-spawned reviewer" note. Only if that note is absent, spawn it
+   yourself (the script is idempotent — a duplicate call reuses the live
+   reviewer, but don't deliberately re-run it):
 
    ```bash
    PR=$(gh pr view --json number -q '.number')
    bash ~/.claude/skills/dispatch/spawn-reviewer.sh "$PR"
    ```
 
+   This is the only time a reviewer is spawned; the loop in step 4 never spawns
+   another, and the reviewer re-reviews each push on its own.
    `spawn-reviewer.sh` is the ONLY sanctioned way to start a reviewer. NEVER
    hand-roll a `claude --bg ...` / `claude -p "...please re-review..."` call:
    doing so spawns an off-book agent (wrong permission mode, no idempotency, not
