@@ -1,7 +1,7 @@
 ---
 name: dispatch
 description: Dispatch work to autonomous runners in isolated worktrees. Accepts Linear tickets or sketch specs. Use when assigning work to background Claude runners or checking runner status.
-argument-hint: <ticket-id|sketch-name|search-query|status> [name] [--repo <name|path>]
+argument-hint: <ticket-id|sketch-name|search-query|status> [name] [--repo <name|path>] [--model <model>]
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/resolve-repo.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*, mcp__linear-lul__*, mcp__linear-rimas__*
 ---
 
@@ -38,6 +38,16 @@ worktree, and the `spawn.sh` call all use it; the runner runs in that repo. When
 the target maps to a different Linear workspace (see `~/.claude/scripts/repo-projects.json`),
 fetch the ticket from that workspace's MCP. `/dispatch status` finds the runner when
 the target is the current repo or a sibling under the same parent.
+
+## Model (`--model`, optional)
+
+By default the runner inherits the CLI default model (`~/.claude.json`) —
+`ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker. If
+`--model <model>` is in the arguments (e.g. `opus`, `sonnet`, `claude-opus-4-8`),
+strip it first, then:
+
+- Prefix the spawn call with the env var: `DISPATCH_MODEL=<model> bash ~/.claude/skills/dispatch/spawn.sh ...`
+- Record it in the status file header as `- **model**: <model>` (omit the line when not set).
 
 ## Argument Detection
 
@@ -282,6 +292,8 @@ Commands:
 Flags:
   --repo <name|path>               Dispatch into another repo (name resolved under
                                    ~/Projects, or an explicit path). Default: current repo.
+  --model <model>                  Model for this runner (opus, sonnet, full id).
+                                   Default: the CLI default in ~/.claude.json.
 
 Attach/inspect runners natively:
   claude agents                    TUI of all background sessions

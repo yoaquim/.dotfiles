@@ -6,6 +6,10 @@
 # If target-repo is provided and differs from project-root, the worktree is
 # created in the target repo instead (for cross-repo dispatch).
 #
+# DISPATCH_MODEL (env, optional): model for the runner session (e.g. opus,
+# sonnet, claude-opus-4-8). Defaults to the CLI default — the only other lever,
+# since ANTHROPIC_MODEL does not propagate to a --bg daemon's worker.
+#
 # Output (key:value on stdout):
 #   worktree_status:reused|created-existing-branch|created-new-branch
 #   worktree:<path>
@@ -18,6 +22,7 @@ BRANCH="$2"
 ROOT="$3"
 PROMPT_FILE="$4"
 TARGET_REPO="${5:-$ROOT}"
+MODEL="${DISPATCH_MODEL:-default}"
 
 if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$PROMPT_FILE" ]]; then
     echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [target-repo]" >&2
@@ -116,7 +121,7 @@ SESSION_OUTPUT=$(cd "$WORKTREE" && \
     CLAUDE_DISPATCH_STATUS_FILE="$STATUS_FILE" \
     claude --bg \
     --agent runner \
-    --model default \
+    --model "$MODEL" \
     --name "$RUNNER_NAME" \
     --permission-mode bypassPermissions \
     --append-system-prompt-file "$RUNTIME_PROMPT" \
