@@ -102,6 +102,30 @@ if [[ -n "$CREATED" ]]; then
   if (( EPOCH > 0 )) && (( $(date +%s) - EPOCH > 28800 )); then DECISION="allow-stop(8hr-cap)"; exit 0; fi
 fi
 
+# --- Poll backoff: bound how often we spend a GitHub GraphQL point ---
+# The keep-watching messages below tell the model to `sleep 60` between Stop
+# attempts, but that's advisory — a reviewer that retries Stop immediately re-runs
+# check-pr-state.sh (a GraphQL call) every few seconds and can drain the graphql
+# rate-limit bucket in minutes. Gate the poll on a timestamp so we hit GitHub at
+# most once per POLL_INTERVAL no matter how fast Stop is retried; inside the window
+# we keep watching WITHOUT polling. This is a FLOOR below the model's own ~60s
+# cadence, so a well-behaved reviewer never notices it — only a spinning one gets
+# throttled. The stamp lives in the job dir (daemon-cleaned on kill), so a fresh
+# reviewer always polls immediately.
+POLL_INTERVAL=30
+POLL_STAMP="$JOBDIR/watch.last-poll"
+NOW=$(date +%s)
+LAST_POLL=$(cat "$POLL_STAMP" 2>/dev/null || echo 0)
+if (( NOW - LAST_POLL < POLL_INTERVAL )); then
+  DECISION="keep-watching(backoff)"
+  {
+    echo "Do NOT stop — PR #$PR was polled $((NOW - LAST_POLL))s ago; backing off to spare the GitHub API rate limit."
+    echo "sleep 60, then try to end again. The next state poll runs once ${POLL_INTERVAL}s have elapsed."
+  } >&2
+  exit 2
+fi
+echo "$NOW" > "$POLL_STAMP" 2>/dev/null || true
+
 # One authoritative snapshot — pr_state, review_decision, ci_green, head_sha,
 # reviewed/approved_at_head — all from check-pr-state.sh (repo resolved explicitly
 # from the PR URL), so the reviewer's exit test uses the SAME definitions as the

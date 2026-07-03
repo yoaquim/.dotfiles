@@ -337,7 +337,6 @@ show_final_instructions() {
         printf "   \033[32mnvim\033[0m\n"
         printf "\n\033[1;34m2. Inside Neovim, wait for plugins to install, then:\033[0m\n"
         printf "   \033[32m:Mason\033[0m  # Verify language servers\n"
-        printf "   \033[32m:Copilot auth\033[0m  # (Optional) Set up GitHub Copilot\n"
         printf "\n\033[1;35mYour Neovim configuration is ready!\033[0m\n\n"
     else
         echo ""
@@ -352,7 +351,6 @@ show_final_instructions() {
         echo ""
         echo "2. Inside Neovim, wait for plugins to install, then:"
         echo "   :Mason  # Verify language servers"
-        echo "   :Copilot auth  # (Optional) Set up GitHub Copilot"
         echo ""
         echo "Your Neovim configuration is ready!"
         echo ""

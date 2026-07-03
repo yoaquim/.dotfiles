@@ -268,22 +268,6 @@ return {
     },
   },
 
-  -- AI/Copilot Support
-  -- ───────────────────────────────────────────────────
-  {
-    "github/copilot.vim",
-    config = function()
-      vim.g.copilot_no_tab_map = true
-      vim.keymap.set('i', '<C-g>', 'copilot#Accept("\\<CR>")', {
-        expr = true,
-        replace_keycodes = false
-      })
-      vim.keymap.set('i', '<C-j>', '<Plug>(copilot-next)')
-      vim.keymap.set('i', '<C-k>', '<Plug>(copilot-previous)')
-      vim.keymap.set('i', '<C-o>', '<Plug>(copilot-dismiss)')
-    end,
-  },
-
   -- Neo-tree Configuration
   -- ───────────────────────────────────────────────────
   {

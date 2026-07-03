@@ -82,14 +82,6 @@
 |------------|--------|----------|
 | `gS` | Toggle split/join | user.lua:21 |
 
-### GitHub Copilot
-| Keybinding | Action | Location |
-|------------|--------|----------|
-| `Ctrl + g` | Accept suggestion (insert mode) | user.lua:221 |
-| `Ctrl + j` | Next suggestion (insert mode) | user.lua:225 |
-| `Ctrl + k` | Previous suggestion (insert mode) | user.lua:226 |
-| `Ctrl + o` | Dismiss suggestion (insert mode) | user.lua:227 |
-
 ### Spectre (Search & Replace)
 | Keybinding | Action | Location |
 |------------|--------|----------|

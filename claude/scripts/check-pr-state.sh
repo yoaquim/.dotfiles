@@ -39,31 +39,92 @@ fi
 OWNER="${OWNER_REPO%/*}"
 REPO="${OWNER_REPO#*/}"
 
-# 1. PR-level state: reviewDecision, state, CI rollup, head SHA.
-# -R makes this cwd-independent so the right PR is read even if cwd drifted.
-PR_VIEW=$(gh pr view "$PR" -R "$OWNER_REPO" --json reviewDecision,state,statusCheckRollup,headRefOid 2>/dev/null || echo '{}')
-REVIEW_DECISION=$(jq -r '.reviewDecision // "null"' <<<"$PR_VIEW")
-PR_STATE=$(jq -r '.state // "OPEN"' <<<"$PR_VIEW")
-HEAD_SHA=$(jq -r '.headRefOid // ""' <<<"$PR_VIEW")
+# 1. One GraphQL call for everything GitHub's graph can give in a single request:
+# PR-level state (reviewDecision, state, headRefOid), the CI status rollup, AND the
+# review threads. This replaces the old two-call path — `gh pr view --json` (itself
+# a GraphQL request) plus a separate `gh api graphql` for threads — halving the
+# GraphQL points this script spends per invocation. The reviews list (step 1b) stays
+# on REST on purpose: it draws from the roomier `core` bucket, not the scarce
+# `graphql` one, so there's no reason to spend graphql points on it.
+# `rateLimit { cost remaining resetAt }` rides along as an observability probe
+# (logged to stderr below), so the running GraphQL cost is visible instead of only
+# discoverable once the bucket hits zero.
+# shellcheck disable=SC2016  # $vars are GraphQL variables, not shell
+GRAPHQL_JSON=$(gh api graphql \
+  -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" \
+  -f query='
+    query($owner:String!, $repo:String!, $pr:Int!) {
+      repository(owner:$owner, name:$repo) {
+        pullRequest(number:$pr) {
+          state
+          reviewDecision
+          headRefOid
+          commits(last:1) {
+            nodes {
+              commit {
+                statusCheckRollup {
+                  contexts(first:100) {
+                    nodes {
+                      __typename
+                      ... on CheckRun    { name status conclusion }
+                      ... on StatusContext { context state }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          reviewThreads(first:100) {
+            nodes {
+              id
+              isResolved
+              comments(first:1) {
+                nodes {
+                  path
+                  line
+                  body
+                  author { login }
+                }
+              }
+            }
+          }
+        }
+      }
+      rateLimit { cost remaining resetAt }
+    }
+  ' 2>/dev/null || echo '{}')
+
+# GraphQL enum `state` is OPEN|CLOSED|MERGED — same values the old --json state gave.
+PR_NODE='.data.repository.pullRequest'
+REVIEW_DECISION=$(jq -r "$PR_NODE.reviewDecision // \"null\"" <<<"$GRAPHQL_JSON")
+PR_STATE=$(jq -r "$PR_NODE.state // \"OPEN\"" <<<"$GRAPHQL_JSON")
+HEAD_SHA=$(jq -r "$PR_NODE.headRefOid // \"\"" <<<"$GRAPHQL_JSON")
 
 # CI green = no failing AND no still-running/queued checks.
-# A rollup item is a CHECK_RUN (.status = QUEUED|IN_PROGRESS|COMPLETED, plus
-# .conclusion once COMPLETED) or a STATUS_CONTEXT (.state = SUCCESS|PENDING|...).
-# A running CHECK_RUN has .status=IN_PROGRESS and an empty .conclusion, so we must
+# A rollup node is a CheckRun (.status = QUEUED|IN_PROGRESS|COMPLETED, plus
+# .conclusion once COMPLETED) or a StatusContext (.state = SUCCESS|PENDING|...).
+# A running CheckRun has .status=IN_PROGRESS and an empty .conclusion, so we must
 # look at .status too — otherwise an in-flight check reads as green.
 # Not-green if: status is set and not COMPLETED, OR the conclusion/state is set
-# and not one of SUCCESS/NEUTRAL/SKIPPED.
-CI_GREEN=$(jq -r '
-  ([ .statusCheckRollup // []
+# and not one of SUCCESS/NEUTRAL/SKIPPED. Same logic as before; the rollup array now
+# lives under the last commit instead of a flattened `.statusCheckRollup`.
+CI_GREEN=$(jq -r "
+  ([ ($PR_NODE.commits.nodes[0].commit.statusCheckRollup.contexts.nodes // [])
      | .[]
-     | { st: ((.status // "") | ascii_upcase),
-         cc: ((.conclusion // .state // "") | ascii_upcase) }
+     | { st: ((.status // \"\") | ascii_upcase),
+         cc: ((.conclusion // .state // \"\") | ascii_upcase) }
      | select(
-         (.st != "" and .st != "COMPLETED")
-         or (.cc != "" and .cc != "SUCCESS" and .cc != "NEUTRAL" and .cc != "SKIPPED")
+         (.st != \"\" and .st != \"COMPLETED\")
+         or (.cc != \"\" and .cc != \"SUCCESS\" and .cc != \"NEUTRAL\" and .cc != \"SKIPPED\")
        )
    ] | length) == 0
-' <<<"$PR_VIEW")
+" <<<"$GRAPHQL_JSON")
+
+# Observability probe: surface the GraphQL cost/remaining on stderr (never stdout —
+# stdout is the JSON contract). Silent when the field is absent (e.g. the '{}'
+# fallback on a failed call).
+RL=$(jq -rc "if .data.rateLimit then \"graphql cost=\\(.data.rateLimit.cost) remaining=\\(.data.rateLimit.remaining) resetAt=\\(.data.rateLimit.resetAt)\" else empty end" <<<"$GRAPHQL_JSON" 2>/dev/null || true)
+[[ -n "$RL" ]] && echo "check-pr-state: PR #$PR $RL" >&2
 
 # 1b. Review coverage at the current HEAD — the authoritative dedup/exit signal.
 # GitHub's reviewDecision can never become APPROVED on a self-authored dispatch PR
@@ -94,33 +155,8 @@ if [[ -n "$HEAD_SHA" ]]; then
   fi
 fi
 
-# 2. Unresolved review threads via GraphQL
-# shellcheck disable=SC2016  # $vars are GraphQL variables, not shell
-THREADS_JSON=$(gh api graphql \
-  -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" \
-  -f query='
-    query($owner:String!, $repo:String!, $pr:Int!) {
-      repository(owner:$owner, name:$repo) {
-        pullRequest(number:$pr) {
-          reviewThreads(first:100) {
-            nodes {
-              id
-              isResolved
-              comments(first:1) {
-                nodes {
-                  path
-                  line
-                  body
-                  author { login }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  ' 2>/dev/null || echo '{}')
-
+# 2. Unresolved review threads — already fetched in the combined GraphQL call above,
+# so this is a pure jq reshape of GRAPHQL_JSON, no second round-trip to GitHub.
 UNRESOLVED=$(jq -c '
   [ (.data.repository.pullRequest.reviewThreads.nodes // [])[]
     | select(.isResolved == false)
@@ -134,7 +170,7 @@ UNRESOLVED=$(jq -c '
         author: ($c.author.login // "")
       }
   ]
-' <<<"$THREADS_JSON" 2>/dev/null || echo '[]')
+' <<<"$GRAPHQL_JSON" 2>/dev/null || echo '[]')
 
 jq -n \
   --arg rd "$REVIEW_DECISION" \
