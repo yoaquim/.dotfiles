@@ -6,6 +6,11 @@
       "projects": ["cyberdeck"],
       "description": "Persistent control plane for your agent fleet that happens to have a first-class full terminal in it — tmux in the browser over Tailscale. Bun end-to-end (Bun.serve + native PTY) + React/Vite/xterm.js. Built bit-by-bit, terminal-hardening pillar first. NOTE: lives in the dedicated cyber-deck workspace — use the linear-cyberdeck MCP for Linear calls, not the default workspace."
     },
+    ".dotfiles": {
+      "team": "Cyber Deck",
+      "projects": ["toolkit"],
+      "description": "Dotfiles + the Claude Code agent toolchain (~/.dotfiles/claude): dispatch/issue/spec skills, enforcement hooks, runner + pr-reviewer agents, shared scripts, plus tmux/bash/kitty config. NOTE: lives in the cyber-deck workspace — use the linear-cyberdeck MCP for Linear calls, not the default workspace."
+    },
     "rimas-infrastructure": {
       "team": "Rimas",
       "projects": ["Infrastructure"],
