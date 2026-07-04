@@ -62,6 +62,15 @@ process_index() {
             matched=true
             break
           fi
+          # Bare filename globs (no path) also match up to 3 dirs deep —
+          # `*.tf` under infra/ or terraform/ is the common layout.
+          if [[ "$rule" != */* ]] \
+            && [[ -n $(find "$CWD" -maxdepth 3 -name "$rule" \
+                 -not -path '*/node_modules/*' -not -path '*/.git/*' \
+                 -print -quit 2>/dev/null) ]]; then
+            matched=true
+            break
+          fi
 
         else
           if [ -f "$CWD/$rule" ]; then
@@ -99,8 +108,11 @@ Additional practices available if relevant (not auto-detected):$(echo -e "$FALLB
 Review and apply if they match this project."
 fi
 
+# SessionStart only reads context from hookSpecificOutput.additionalContext —
+# a top-level additionalContext field is silently dropped by the harness.
 if [ -n "$CONTENT" ]; then
-  jq -n --arg ctx "$CONTENT" '{"additionalContext": $ctx}'
+  jq -n --arg ctx "$CONTENT" \
+    '{hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $ctx}}'
 fi
 
 exit 0

@@ -100,6 +100,20 @@ REVIEW_DECISION=$(jq -r "$PR_NODE.reviewDecision // \"null\"" <<<"$GRAPHQL_JSON"
 PR_STATE=$(jq -r "$PR_NODE.state // \"OPEN\"" <<<"$GRAPHQL_JSON")
 HEAD_SHA=$(jq -r "$PR_NODE.headRefOid // \"\"" <<<"$GRAPHQL_JSON")
 
+# Every real PR has a headRefOid — an empty one means the GraphQL call failed
+# (or the PR doesn't exist). Say so explicitly instead of emitting the defaults
+# (OPEN, vacuously-green CI, unreviewed HEAD), which consumers would act on:
+# enforce-watch would kick a duplicate review, the runner would see fake green.
+if [[ -z "$HEAD_SHA" ]]; then
+  jq -n --arg pr "$PR" '{
+    error: ("transient: could not fetch PR #\($pr) state from GitHub"),
+    pr_state: "UNKNOWN", review_decision: null, head_sha: "",
+    ci_green: false, reviewed_at_head: false, approved_at_head: false,
+    unresolved_threads: []
+  }'
+  exit 0
+fi
+
 # CI green = no failing AND no still-running/queued checks.
 # A rollup node is a CheckRun (.status = QUEUED|IN_PROGRESS|COMPLETED, plus
 # .conclusion once COMPLETED) or a StatusContext (.state = SUCCESS|PENDING|...).

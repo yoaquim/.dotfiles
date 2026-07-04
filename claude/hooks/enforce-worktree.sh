@@ -28,11 +28,16 @@
 #                             (covers sed -i, cat >, tee, git -C <main>, etc.,
 #                             which never reach the Edit/Write tools)
 #
-# Runner identity comes from the CLAUDE_DISPATCH_* env vars that spawn.sh injects
-# into the runner process. These are IMMUTABLE — a runner that `cd`s into the
-# main checkout cannot change them, so enforcement holds regardless of cwd.
-# Sessions launched without those vars fall back to cwd-derived detection (best
-# effort: it cannot see a runner that has cd'd away from its worktree).
+# Runner identity resolves in three tiers:
+#   1. CLAUDE_DISPATCH_* env vars (immutable when present — but client env does
+#      NOT reach a `claude --bg` daemon worker, verified 2026-07-04, so for real
+#      dispatched runners these are absent);
+#   2. the bg job's state file (template == "runner", cwd == the worktree
+#      spawn.sh submitted from) — daemon-written, immutable to the runner, and
+#      holds regardless of where the runner has cd'd. THIS is the tier that
+#      actually fires for dispatched runners;
+#   3. cwd-derived detection (best effort: cannot see a runner that has cd'd
+#      away from its worktree).
 #
 # The Bash check covers: the main checkout's absolute path (raw and canonical
 # spellings, so /tmp vs /private/tmp or a symlinked checkout doesn't slip past),
@@ -54,11 +59,38 @@ INPUT=$(cat)
 TOOL=$(jq -r '.tool_name // ""' <<<"$INPUT")
 CWD=$(jq -r '.cwd // ""' <<<"$INPUT")
 
-# --- Resolve runner identity (immutable env, else cwd fallback) ---
+# Shared lib for the job-derived identity tier. Missing lib → the resolver
+# stays empty and the env/cwd tiers still work.
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh" 2>/dev/null || true
+
+JOB_WORKTREE=""
+if [[ -z "${CLAUDE_DISPATCH_WORKTREE:-}" ]] && command -v dispatch_runner_worktree >/dev/null 2>&1; then
+    SID=$(jq -r '.session_id // ""' <<<"$INPUT")
+    JOB_WORKTREE=$(dispatch_runner_worktree "$SID" 2>/dev/null) || JOB_WORKTREE=""
+fi
+
+# --- Resolve runner identity (env, else job state, else cwd fallback) ---
 if [[ -n "${CLAUDE_DISPATCH_WORKTREE:-}" ]]; then
     WORKTREE="$CLAUDE_DISPATCH_WORKTREE"
     DISPATCH_ROOT="${CLAUDE_DISPATCH_ROOT:-$(dirname "$(dirname "$(dirname "$WORKTREE")")")}"
     STATUS_FILE="${CLAUDE_DISPATCH_STATUS_FILE:-$DISPATCH_ROOT/.dispatch/status/$(basename "$WORKTREE").md}"
+elif [[ -n "$JOB_WORKTREE" ]]; then
+    WORKTREE="$JOB_WORKTREE"
+    # Worktrees live at <root>/.claude/worktrees/<name> — derive the root
+    # TEXTUALLY so it keeps the same raw spelling as the worktree path (the
+    # canon() calls below add the symlink-resolved form; the scan must block
+    # BOTH spellings, exactly like the env tier). Fall back to git only when
+    # the layout doesn't hold.
+    DISPATCH_ROOT=$(dirname "$(dirname "$(dirname "$WORKTREE")")")
+    if ! git -C "$DISPATCH_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+        COMMON_GIT_DIR=$(git -C "$WORKTREE" rev-parse --git-common-dir 2>/dev/null) || COMMON_GIT_DIR=""
+        if [[ -n "$COMMON_GIT_DIR" ]]; then
+            COMMON_GIT_DIR=$(cd "$COMMON_GIT_DIR" 2>/dev/null && pwd) || COMMON_GIT_DIR=""
+        fi
+        [[ -n "$COMMON_GIT_DIR" ]] && DISPATCH_ROOT=$(dirname "$COMMON_GIT_DIR")
+    fi
+    STATUS_FILE="$DISPATCH_ROOT/.dispatch/status/$(basename "$WORKTREE").md"
 else
     # Legacy fallback: derive from cwd (same detection as enforce-completion.sh).
     [[ -z "$CWD" ]] && exit 0

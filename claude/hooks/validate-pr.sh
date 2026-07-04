@@ -19,17 +19,23 @@ esac
 
 ERRORS=()
 
-# --- Title ---
-TITLE=$(echo "$COMMAND" | sed -n 's/.*--title[[:space:]]*["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p')
-if [[ -z "$TITLE" ]]; then
+# --- Title (best effort) ---
+# Extract only the double-quoted form — the old character-class sed stopped at
+# the first apostrophe ("Don't reorder" → "Don") and hard-blocked valid titles.
+# Present-but-unextractable titles defer to the Stop hook's authoritative
+# re-validation via `gh pr view`.
+if ! grep -qE -- '--title' <<<"$COMMAND"; then
   ERRORS+=("Missing --title")
 else
-  TITLE_RESULT=$("$HOME/.claude/scripts/validate-title.sh" "$TITLE" 2>/dev/null || true)
-  TITLE_VALID=$(jq -r 'if .valid == false then "false" else "true" end' <<<"$TITLE_RESULT" 2>/dev/null || echo true)
-  if [[ "$TITLE_VALID" == "false" ]]; then
-    while IFS= read -r ERR; do
-      [[ -n "$ERR" ]] && ERRORS+=("Title: $ERR")
-    done < <(jq -r '.errors[]?' <<<"$TITLE_RESULT" 2>/dev/null)
+  TITLE=$(perl -0777 -ne 'if (/--title\s+"((?:[^"\\]|\\.)*)"/s) { print $1; exit }' <<<"$COMMAND")
+  if [[ -n "$TITLE" ]]; then
+    TITLE_RESULT=$("$HOME/.claude/scripts/validate-title.sh" "$TITLE" 2>/dev/null || true)
+    TITLE_VALID=$(jq -r 'if .valid == false then "false" else "true" end' <<<"$TITLE_RESULT" 2>/dev/null || echo true)
+    if [[ "$TITLE_VALID" == "false" ]]; then
+      while IFS= read -r ERR; do
+        [[ -n "$ERR" ]] && ERRORS+=("Title: $ERR")
+      done < <(jq -r '.errors[]?' <<<"$TITLE_RESULT" 2>/dev/null)
+    fi
   fi
 fi
 
@@ -46,7 +52,9 @@ if grep -qE -- '--body' <<<"$COMMAND"; then
   if [[ -n "$BODY" ]]; then
     TICKET_ID=""
     BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
-    if [[ "$BRANCH" =~ ([A-Za-z]+-[0-9]+) ]]; then
+    # Never infer a ticket from sketch branches — `sketch-jwt-auth-2` would
+    # "match" AUTH-2 and demand a bogus Closes line.
+    if [[ "$BRANCH" != sketch-* && "$BRANCH" =~ ([A-Za-z]+-[0-9]+) ]]; then
       TICKET_ID=$(echo "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')
     fi
 

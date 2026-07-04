@@ -132,7 +132,15 @@ Sort findings: Blockers → Concerns → Nits. Within tier, `general` first, the
 
 ## 5. Deliver
 
-Chat first. Then post via `gh api .../reviews`.
+Chat first. Then post via `gh api .../reviews` — in **two separate Bash calls**.
+The PreToolUse hook (`check-post.sh`) validates the payload file named by
+`--input` from the command text at call time: the file must already exist
+(written by a PREVIOUS call), and the path must be spelled out literally —
+the hook cannot expand `$PAYLOAD`-style variables. Building and posting in
+one call is always blocked.
+
+**Call 1 — build the payload.** Write it to the deterministic path
+`/tmp/pr-review-payload-<pr-number>.json`:
 
 ```bash
 # Determine event from finding count
@@ -160,14 +168,18 @@ else
   BODY="${BODY//\{breakdown\}/$BREAKDOWN}"       # e.g. 🔴 2 Blockers · 🟡 3 Concerns
 fi
 
-# Write payload to a tempfile so the hook can read and validate it.
-PAYLOAD=$(mktemp -t review-XXXXXX.json)
 jq -n \
   --arg body "$BODY" \
   --arg event "$EVENT" \
   --argjson comments "$INLINE_COMMENTS_JSON" \
-  '{event: $event, body: $body, comments: $comments}' > "$PAYLOAD"
+  '{event: $event, body: $body, comments: $comments}' \
+  > "/tmp/pr-review-payload-$PR.json"
+```
 
+**Call 2 — post it.** A NEW Bash call, with the payload path written out
+literally (e.g. `/tmp/pr-review-payload-137.json`, not `$PAYLOAD`):
+
+```bash
 # Resolve owner/repo (works for current repo or via -R/URL context)
 OWNER_REPO=$(gh repo view $REPO_FLAG --json nameWithOwner -q .nameWithOwner)
 
@@ -176,10 +188,11 @@ OWNER_REPO=$(gh repo view $REPO_FLAG --json nameWithOwner -q .nameWithOwner)
 # carrying the SAME body+comments. The approved.md sentinel still lands against
 # this commit_id, which is what the loop detects; it does NOT need reviewDecision.
 ERR=$(mktemp)
-if ! gh api "repos/${OWNER_REPO}/pulls/${PR}/reviews" -X POST --input "$PAYLOAD" 2>"$ERR"; then
+if ! gh api "repos/${OWNER_REPO}/pulls/137/reviews" -X POST --input /tmp/pr-review-payload-137.json 2>"$ERR"; then
   if grep -qiE 'on your own pull request|422|unprocessable' "$ERR"; then
-    jq '.event = "COMMENT"' "$PAYLOAD" > "${PAYLOAD}.c" && mv "${PAYLOAD}.c" "$PAYLOAD"
-    gh api "repos/${OWNER_REPO}/pulls/${PR}/reviews" -X POST --input "$PAYLOAD"
+    jq '.event = "COMMENT"' /tmp/pr-review-payload-137.json > /tmp/pr-review-payload-137.c.json \
+      && mv /tmp/pr-review-payload-137.c.json /tmp/pr-review-payload-137.json
+    gh api "repos/${OWNER_REPO}/pulls/137/reviews" -X POST --input /tmp/pr-review-payload-137.json
   else
     cat "$ERR" >&2; exit 1
   fi
@@ -218,4 +231,4 @@ So the loop is: review → try to end → do what the hook says → try to end. 
 - Broaden the primary pass → add to `bug-checklist.md`.
 - New optional gate → drop a file at `criteria/<slug>.md` (What / Why / How to spot / When NOT / Severity).
 - New mechanical check on the posted output → extend `hooks/check-post.sh`.
-- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Two lines in `approved.md` are load-bearing — keep both: the `# 👾 Reviewed by Claude …` header (matched by `^# .*Reviewed by Claude`) and the `# ✅ APPROVED ✅` headline (matched by `^# .*APPROVED`). `scripts/lib/pr-review-markers.sh` reads them back from the template as the single source of truth for `check-post.sh`, `check-pr-state.sh`, and `spawn-reviewer.sh`; reword either line and approval detection silently breaks.
+- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Two lines in `approved.md` are load-bearing — keep both: the `# 👾 Reviewed by Claude …` header (matched by `^# .*Reviewed by Claude`) and the `# ✅ APPROVED ✅` headline (matched by `^# .*APPROVED`). `scripts/lib/pr-review-markers.sh` reads them back from the template as the single source of truth for `check-post.sh` and `check-pr-state.sh`; reword either line and approval detection silently breaks. (`spawn-reviewer.sh`'s reviewed-at-HEAD gate counts any review at HEAD via REST and doesn't use the sentinel.)

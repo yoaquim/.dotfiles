@@ -47,13 +47,56 @@ dispatch_status_field() {
 
 # ── Time ──────────────────────────────────────────────────────────────────────
 # ISO-8601 (optional fractional/Z/offset) → epoch seconds; 0 when unparseable.
+# The offset MUST be honored: status files and jobs/state.json write UTC (`Z`),
+# and truncating the suffix parsed them as local time — skewing every idle
+# window and wall-clock cap by the UTC offset. Bare timestamps (no offset)
+# parse as local time.
 iso_to_epoch() {
   local ts="${1:-}"
   [[ -z "$ts" ]] && { echo 0; return; }
-  local norm="${ts:0:19}"
-  norm="${norm/ /T}"
-  date -j -f '%Y-%m-%dT%H:%M:%S' "$norm" '+%s' 2>/dev/null \
-    || date -d "$ts" '+%s' 2>/dev/null || echo 0
+  local norm="${ts/ /T}"
+  local re='^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]+)?(Z|[+-][0-9]{2}:?[0-9]{2})?$'
+  if [[ "$norm" =~ $re ]]; then
+    local dt="${BASH_REMATCH[1]}" tz="${BASH_REMATCH[3]}"
+    [[ "$tz" == "Z" ]] && tz="+0000"
+    tz="${tz/:/}"
+    if [[ -n "$tz" ]]; then
+      date -j -f '%Y-%m-%dT%H:%M:%S%z' "${dt}${tz}" '+%s' 2>/dev/null && return
+    else
+      date -j -f '%Y-%m-%dT%H:%M:%S' "$dt" '+%s' 2>/dev/null && return
+    fi
+  fi
+  date -d "$ts" '+%s' 2>/dev/null || echo 0
+}
+
+# ── Job-derived runner identity ───────────────────────────────────────────────
+# Client env does NOT reach a `claude --bg` daemon worker (verified 2026-07-04:
+# two concurrent workers both saw CLAUDE_DISPATCH_WORKTREE unset), so hooks can
+# never rely on the CLAUDE_DISPATCH_* vars alone. The channel that DOES survive
+# is the job state file: `template` records the --agent, and `cwd` records the
+# submission cwd — which spawn.sh guarantees is the runner's worktree.
+
+# dispatch_job_state_file <session_id> — path to the bg job's state.json.
+# `claude --bg` names the job dir by the SHORT id (first UUID segment); hooks
+# receive the FULL id. Try full, then short. Prints the path or returns 1.
+dispatch_job_state_file() {
+  local sid="${1:-}"
+  [[ -n "$sid" ]] || return 1
+  local d="$HOME/.claude/jobs/$sid"
+  [[ -f "$d/state.json" ]] || d="$HOME/.claude/jobs/${sid%%-*}"
+  [[ -f "$d/state.json" ]] || return 1
+  printf '%s\n' "$d/state.json"
+}
+
+# dispatch_runner_worktree <session_id> — the worktree of a bg RUNNER session,
+# from its job state. Prints the path or returns 1 (not a bg job / not a runner).
+dispatch_runner_worktree() {
+  local sf wt
+  sf=$(dispatch_job_state_file "${1:-}") || return 1
+  [[ "$(jq -r '.template // ""' "$sf" 2>/dev/null)" == "runner" ]] || return 1
+  wt=$(jq -r '.cwd // ""' "$sf" 2>/dev/null)
+  [[ -n "$wt" ]] || return 1
+  printf '%s\n' "$wt"
 }
 
 # ── Sessions ──────────────────────────────────────────────────────────────────

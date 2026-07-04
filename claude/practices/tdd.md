@@ -38,7 +38,9 @@ Wrote production code without a failing test first? **Delete it. All of it.** Do
 
 ## File Placement
 
-Tests in dedicated `tests/` directory, mirroring `src/` structure:
+Follow the framework/repo convention first — Rails uses `spec/`, Django puts
+tests in-app, an existing repo's layout always wins. Absent a convention,
+default to a dedicated `tests/` directory mirroring `src/`:
 
 ```
 src/utils/jwt.ts      →  tests/utils/jwt.test.ts

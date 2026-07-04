@@ -12,10 +12,11 @@
 # re-review the same SHA and let duplicate reviewers spawn.
 #
 # REGISTRATION: this is registered GLOBALLY in settings.json Stop, NOT in the
-# pr-reviewer agent's frontmatter. Agent-frontmatter hooks are cached at Claude
-# Code startup, so a freshly-added agent's hooks never fire until a restart;
-# settings.json Stop hooks fire for every session (incl. `claude --bg`). The
-# template gate below scopes it to pr-reviewer sessions only.
+# pr-reviewer agent's frontmatter — as defense in depth. Frontmatter hooks DO
+# fire for --bg agent sessions (canary-verified 2026-07-04, CC 2.1.170; the old
+# "cached at startup" claim was wrong), but this hook's whole job is to never
+# silently not-fire, and the global registration is the one an agent-file edit
+# can't drop. The template gate below scopes it to pr-reviewer sessions only.
 
 set -uo pipefail
 
@@ -93,6 +94,10 @@ echo "$ATTEMPTS" > "$ATTEMPT_FILE" 2>/dev/null || true
 # an EXIT trap so every exit path is recorded with the decision it reached. Set
 # here, past the gates, so only confirmed reviewer fires are logged.
 WATCH_LOG="$HOME/.claude/pr-review-watch.log"
+# Bound the log (~480 lines per reviewer per 8h, no other rotation).
+if [[ -f "$WATCH_LOG" ]] && (( $(wc -l < "$WATCH_LOG") > 5000 )); then
+  tail -1000 "$WATCH_LOG" > "$WATCH_LOG.tmp" 2>/dev/null && mv "$WATCH_LOG.tmp" "$WATCH_LOG" 2>/dev/null || true
+fi
 DECISION="keep-watching(transient-err)"
 trap 'echo "$(date "+%Y-%m-%dT%H:%M:%S%z") sid=${SID%%-*} pr=$PR attempt=$ATTEMPTS decision=$DECISION" >> "$WATCH_LOG" 2>/dev/null' EXIT
 
@@ -125,6 +130,10 @@ NOW=$(date +%s)
 LAST_POLL=$(cat "$POLL_STAMP" 2>/dev/null || echo 0)
 if (( NOW - LAST_POLL < POLL_INTERVAL )); then
   DECISION="keep-watching(backoff)"
+  # The "sleep 60" instruction below is advisory and observed reviewers retry
+  # every ~3s — sleep here too, so the hook itself enforces a floor and each
+  # blocked attempt costs one model turn less often.
+  sleep 5
   {
     echo "Do NOT stop — PR #$PR was polled $((NOW - LAST_POLL))s ago; backing off to spare the GitHub API rate limit."
     echo "sleep 60, then try to end again. The next state poll runs once ${POLL_INTERVAL}s have elapsed."
@@ -138,6 +147,20 @@ echo "$NOW" > "$POLL_STAMP" 2>/dev/null || true
 # from the PR URL), so the reviewer's exit test uses the SAME definitions as the
 # runner's "completed" test.
 STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR" "$REPO_SLUG" 2>/dev/null || echo '{}')
+
+# A snapshot with an error (or no head_sha — every real PR has one) is a
+# transient GitHub failure, not PR state. Acting on it would either stop the
+# watch (pr_state UNKNOWN) or kick a duplicate review (reviewed_at_head false).
+STATE_ERR=$(jq -r '.error // ""' <<<"$STATE_JSON")
+STATE_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
+if [[ -n "$STATE_ERR" || -z "$STATE_SHA" ]]; then
+  DECISION="keep-watching(state-fetch-failed)"
+  {
+    echo "Do NOT stop — could not fetch PR #$PR state (transient GitHub error)."
+    echo "sleep 60, then try to end again; the next attempt re-polls."
+  } >&2
+  exit 2
+fi
 
 PR_STATE=$(jq -r '.pr_state // "OPEN"' <<<"$STATE_JSON")
 [[ "$PR_STATE" != "OPEN" ]] && { DECISION="allow-stop(pr-$PR_STATE)"; exit 0; }
@@ -196,6 +219,7 @@ fi
 
 # HEAD already reviewed → nothing new. Idle one beat; do NOT re-review same SHA.
 DECISION="keep-watching(idle,head-reviewed)"
+sleep 5
 {
   echo "Do NOT stop, and do NOT re-review — PR #$PR HEAD (${CUR_SHA:-unknown}) is already reviewed."
   echo

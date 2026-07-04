@@ -113,6 +113,39 @@ if [[ -f "$SCRIPT_DIR/settings.json" ]]; then
     fi
 fi
 
+# Dispatch watchdog LaunchAgent — resumes halted runners every ~10 min.
+# Runs through a login shell so it inherits the real PATH (claude lives under
+# nvm, whose bin dir changes with the node version).
+echo ""
+WATCHDOG_LABEL="com.yoaquim.dispatch-watchdog"
+WATCHDOG_PLIST="$HOME/Library/LaunchAgents/$WATCHDOG_LABEL.plist"
+mkdir -p "$HOME/Library/LaunchAgents"
+cat > "$WATCHDOG_PLIST" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>$WATCHDOG_LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>exec "\$HOME/.claude/skills/dispatch/watchdog.sh"</string>
+  </array>
+  <key>StartInterval</key><integer>600</integer>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>$HOME/.claude/dispatch-watchdog.log</string>
+  <key>StandardErrorPath</key><string>$HOME/.claude/dispatch-watchdog.log</string>
+</dict>
+</plist>
+EOF
+launchctl unload "$WATCHDOG_PLIST" 2>/dev/null || true
+if launchctl load "$WATCHDOG_PLIST" 2>/dev/null; then
+    success "dispatch watchdog LaunchAgent (every 10 min)"
+else
+    warning "dispatch watchdog LaunchAgent written but failed to load: $WATCHDOG_PLIST"
+fi
+
 # Remove stale symlinks from deprecated directories
 for stale in adapters guides scaffolds; do
     if [[ -L "$HOME/.claude/$stale" ]]; then

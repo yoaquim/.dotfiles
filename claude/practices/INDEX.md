@@ -9,10 +9,10 @@ Coding practices and preferences. Used by `inject-practices.sh` to auto-detect a
 | Receiving Review | `receiving-review.md` | **MANDATORY** — evaluate review feedback technically | always |
 | Verification | `verification.md` | **MANDATORY** — show command output before claiming done | always |
 | Django | `django.md` | Django projects: views, models, templates, forms | manage.py |
-| Tailwind | `tailwind.md` | UI/CSS work, frontend styling | tailwind.config.* |
+| Tailwind | `tailwind.md` | UI/CSS work, frontend styling | tailwind.config.*,package.json:tailwindcss |
 | React | `react.md` | React projects: components, hooks, state, data fetching | package.json:react |
 | npm Pinning | `npm-pinning.md` | **MANDATORY** for npm projects — lockfile, integrity hashes, immutable installs | package.json |
-| Docker | `docker.md` | Dockerized projects, Dockerfiles, compose services | Dockerfile,compose.yml |
+| Docker | `docker.md` | Dockerized projects, Dockerfiles, compose services | Dockerfile,compose.yml,compose.yaml,docker-compose.yml,docker-compose.yaml |
 | Rails | `rails.md` | Rails apps: models, controllers, migrations, jobs | Gemfile:rails |
 | Cloudflare Workers | `cloudflare-workers.md` | Workers, Hono, D1/Drizzle, Durable Objects | wrangler.toml,wrangler.jsonc |
 | Terraform | `terraform.md` | Terraform/Terragrunt IaC | *.tf,terragrunt.hcl |

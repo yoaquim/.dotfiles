@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# watchdog.sh — Resume dispatch runners that halted mid-loop.
+# watchdog.sh — Resume dispatch runners that halted mid-loop, and revive dead
+# reviewers for live runners' open PRs (reviewers have no status files and the
+# runner is forbidden from re-spawning one, so a reviewer death is otherwise
+# unrecoverable — the runner idles to its 8hr cap).
 #
 # The dispatch loop is driven by Stop hooks (enforce-completion / enforce-watch):
 # they keep a LIVE runner from quitting, but they cannot wake one that has already
@@ -8,7 +11,8 @@
 # status and nothing to restart it. status.sh already DETECTS this; spawn.sh
 # already RESUMES (reuses the worktree; runner.md "Re-dispatched sessions" reads
 # the status file + git and continues only the remaining work). This script is the
-# missing trigger between the two — run it on a timer (cron, ~10 min).
+# missing trigger between the two — run on a timer: claude/setup.sh installs a
+# LaunchAgent (com.yoaquim.dispatch-watchdog) that ticks every 10 min.
 #
 # Conservative + idempotent, so it can run unattended without spawning duplicates:
 #   - ALLOWLIST, not blocklist: resumes only statuses that mean "runner actively
@@ -27,13 +31,15 @@
 # A resumed runner reloads runner.md fresh, so this also upgrades old-code runners.
 #
 # Usage: watchdog.sh [--dry-run] [root ...]
-#   With no roots, discovers every dir under ~/Projects holding a .dispatch/status.
+#   With no roots, discovers every dir holding a .dispatch/status under each
+#   base in DISPATCH_WATCHDOG_ROOTS (colon-separated).
 #   --dry-run reports what it WOULD resume without spawning anything.
 #
 # Env: DISPATCH_WATCHDOG_STALE_MIN  (default 10)    — lower idle bound (grace)
 #      DISPATCH_WATCHDOG_MAX_AGE_MIN (default 720)   — upper idle bound (abandon)
 #      DISPATCH_WATCHDOG_STATUSES    (default "in_progress")
-#      DISPATCH_WATCHDOG_ROOTS_GLOB  (default "$HOME/Projects")
+#      DISPATCH_WATCHDOG_ROOTS       (default "$HOME/Projects:$HOME/.dotfiles",
+#        colon-separated base dirs; legacy DISPATCH_WATCHDOG_ROOTS_GLOB honored)
 #
 # Exit 0 always — a watchdog must never wedge its scheduler.
 
@@ -54,10 +60,16 @@ done
 STALE_MIN="${DISPATCH_WATCHDOG_STALE_MIN:-10}"
 MAX_AGE_MIN="${DISPATCH_WATCHDOG_MAX_AGE_MIN:-720}"
 RESUMABLE_STATUSES="${DISPATCH_WATCHDOG_STATUSES:-$DISPATCH_RESUMABLE_STATUSES}"
-ROOTS_BASE="${DISPATCH_WATCHDOG_ROOTS_GLOB:-$HOME/Projects}"
+ROOTS_BASE="${DISPATCH_WATCHDOG_ROOTS:-${DISPATCH_WATCHDOG_ROOTS_GLOB:-$HOME/Projects:$HOME/.dotfiles}}"
 DISPATCH="$HOME/.claude/skills/dispatch"
 
 now_epoch=$(date +%s)
+
+# Bound the LaunchAgent log (launchd appends forever; ~6 lines per tick).
+WD_LOG="$HOME/.claude/dispatch-watchdog.log"
+if [[ -f "$WD_LOG" ]] && (( $(wc -l < "$WD_LOG") > 5000 )); then
+  tail -1000 "$WD_LOG" > "$WD_LOG.tmp" 2>/dev/null && mv "$WD_LOG.tmp" "$WD_LOG" 2>/dev/null || true
+fi
 
 # Single-flight: don't let an overlapping tick resume the same runner twice.
 if [[ "$DRY_RUN" -eq 0 ]]; then
@@ -87,11 +99,15 @@ stamp_session_id() {
 
 discover_roots() {
   if [[ ${#ROOTS[@]} -gt 0 ]]; then printf '%s\n' "${ROOTS[@]}"; return; fi
-  find "$ROOTS_BASE" -maxdepth 3 -type d -path '*/.dispatch/status' 2>/dev/null \
-    | sed 's#/.dispatch/status$##'
+  local base
+  while IFS= read -r -d: base || [[ -n "$base" ]]; do
+    [[ -d "$base" ]] || continue
+    find "$base" -maxdepth 3 -type d -path '*/.dispatch/status' 2>/dev/null \
+      | sed 's#/.dispatch/status$##'
+  done <<<"$ROOTS_BASE:"
 }
 
-checked=0; resumed=0; skipped=0
+checked=0; resumed=0; skipped=0; revived=0
 while IFS= read -r ROOT; do
   [[ -d "$ROOT/.dispatch/status" ]] || continue
   PROJECT=$(basename "$ROOT")
@@ -108,7 +124,31 @@ while IFS= read -r ROOT; do
 
     RUNNER_NAME="dispatch-$PROJECT-$NAME"
     if name_alive "$RUNNER_NAME"; then
-      continue                      # still running → nothing to do
+      # Runner healthy — but its REVIEWER can die with nothing to restart it:
+      # reviewers have no status files, and the runner is explicitly forbidden
+      # from re-spawning one (enforce-completion). If this runner's PR is open,
+      # route through spawn-reviewer.sh — the single idempotent entry point,
+      # whose reviewed-at-HEAD and name-liveness gates make a no-op call safe —
+      # and only count/report the calls that actually spawned something.
+      BRANCH=$(get_field branch "$FILE")
+      PR_URL=""
+      if [[ -n "$BRANCH" ]]; then
+        PR_URL=$(cd "$ROOT" 2>/dev/null \
+          && gh pr view "$BRANCH" --json url,state -q 'select(.state == "OPEN") | .url' 2>/dev/null) || PR_URL=""
+      fi
+      if [[ -n "$PR_URL" ]]; then
+        if [[ "$DRY_RUN" -eq 1 ]]; then
+          echo "WOULD ensure a live reviewer for $RUNNER_NAME's PR ($PR_URL)"
+        elif ROUT=$(bash "$DISPATCH/spawn-reviewer.sh" "$PR_URL" 2>&1); then
+          if grep -q '^reviewer_status:spawned$' <<<"$ROUT"; then
+            echo "revive $(sed -n 's/^name://p' <<<"$ROUT" | head -1) — reviewer was dead for open PR $PR_URL"
+            revived=$((revived + 1))
+          fi
+        else
+          echo "warn  $RUNNER_NAME — spawn-reviewer failed for $PR_URL:"; sed 's/^/    /' <<<"$ROUT"
+        fi
+      fi
+      continue                      # runner itself is running → nothing to resume
     fi
 
     # Halted (resumable status, no live session). Window the idle time: past the
@@ -162,5 +202,5 @@ while IFS= read -r ROOT; do
 done < <(discover_roots)
 
 VERB="resumed"; [[ "$DRY_RUN" -eq 1 ]] && VERB="would-resume"
-echo "watchdog: checked $checked runner(s), $VERB $resumed, skipped $skipped"
+echo "watchdog: checked $checked runner(s), $VERB $resumed, skipped $skipped, revived $revived reviewer(s)"
 exit 0

@@ -8,7 +8,7 @@ Before bug-checklist, verify the diff matches the spec it claims to implement. T
 
 Spec context must be resolvable. Try in order:
 
-1. Linear ticket parsed from PR branch/title (same parse as SKILL.md step 0) → `mcp__claude_ai_Linear__get_issue` for body, plus any attached spec doc
+1. Linear ticket parsed from PR branch/title (same parse as SKILL.md step 0) → fetch via the connected Linear MCP server's get-issue tool (`mcp__linear-<workspace>__*`; pick the workspace matching the ticket prefix). No Linear tools in this session → fall back to the ticket context quoted in the PR body.
 2. Sketch file at `.dispatch/sketches/<name>.md` matching the branch name
 3. Neither → drop this criterion (don't include in `Criteria applied`)
 

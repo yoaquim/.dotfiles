@@ -4,7 +4,8 @@
 # Sourced by every site that has to recognize a posted review:
 #   - skills/pr-review/hooks/check-post.sh   (enforce a conforming post)
 #   - scripts/check-pr-state.sh              (approved_at_head for the runner)
-#   - skills/dispatch/spawn-reviewer.sh      (SHA-gate: don't re-spawn an approved HEAD)
+# (spawn-reviewer.sh's reviewed-at-HEAD gate counts ANY review at HEAD via REST
+# and does not need the sentinel.)
 #
 # The literal strings live in the posted templates (approved.md /
 # changes-requested.md) — that text IS what lands on GitHub. We read the

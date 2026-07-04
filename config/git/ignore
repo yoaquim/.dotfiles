@@ -9,3 +9,6 @@
 
 # Runner worktrees created by /dispatch.
 .claude/worktrees/
+
+# Playwright MCP session artifacts (console logs, snapshots).
+.playwright-mcp/

@@ -16,12 +16,18 @@ case "$COMMAND" in
   *) exit 0 ;;
 esac
 
-# Extract commit message from -m flag
-MSG=$(echo "$COMMAND" | sed -n 's/.*-m[[:space:]]*["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p')
-[[ -z "$MSG" ]] && exit 0
+# Don't parse the message out of the command string — the default heredoc form
+# (`git commit -m "$(cat <<'EOF' ...)"`) is unextractable. This is PostToolUse:
+# the commit exists, so read the real subject line from git.
+CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
+[[ -n "$CWD" ]] || exit 0
+MSG=$(git -C "$CWD" log -1 --format='%s' 2>/dev/null) || exit 0
+[[ -n "$MSG" ]] || exit 0
 
-# If heredoc/cat style, grab first line
-MSG=$(echo "$MSG" | head -1)
+# Only validate a commit this call actually created — if the command failed,
+# HEAD is an older commit that was already validated when it was made.
+C_TIME=$(git -C "$CWD" log -1 --format='%ct' 2>/dev/null || echo 0)
+(( $(date +%s) - C_TIME < 60 )) || exit 0
 
 WARNINGS=()
 
@@ -50,11 +56,16 @@ case "$FIRST_WORD" in
     ;;
 esac
 
+# Plain stdout on exit-0 PostToolUse goes to transcript mode only — the model
+# never sees it. hookSpecificOutput.additionalContext is the visible channel.
 if (( ${#WARNINGS[@]} > 0 )); then
-  echo "Commit message warnings:"
+  TEXT="Commit message warnings for \"$MSG\":"
   for W in "${WARNINGS[@]}"; do
-    echo "  - $W"
+    TEXT+=$'\n'"  - $W"
   done
+  TEXT+=$'\n'"Fix with: git commit --amend -m \"...\" (style: 50-75 chars, imperative, capitalized, no period)"
+  jq -n --arg ctx "$TEXT" \
+    '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
 fi
 
 exit 0

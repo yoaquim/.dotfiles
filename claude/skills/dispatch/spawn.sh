@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # spawn.sh — Create worktree (if needed) and spawn runner agent
 #
-# Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [target-repo]
+# Usage: spawn.sh <name> <branch> <project-root> <prompt-file>
 #
-# If target-repo is provided and differs from project-root, the worktree is
-# created in the target repo instead (for cross-repo dispatch).
+# Cross-repo dispatch passes the resolved target repo AS project-root
+# (the /dispatch skill resolves --repo before calling).
 #
 # DISPATCH_MODEL (env, optional): model for the runner session (e.g. opus,
 # sonnet, claude-opus-4-8). Defaults to the CLI default — the only other lever,
@@ -26,11 +26,11 @@ NAME="$1"
 BRANCH="$2"
 ROOT="$3"
 PROMPT_FILE="$4"
-TARGET_REPO="${5:-$ROOT}"
+TARGET_REPO="$ROOT"
 MODEL="${DISPATCH_MODEL:-default}"
 
 if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$PROMPT_FILE" ]]; then
-    echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [target-repo]" >&2
+    echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file>" >&2
     exit 1
 fi
 
@@ -57,9 +57,8 @@ fi
 
 # Worktree and dispatch artifacts live in the target repo
 WORKTREE="$TARGET_REPO/.claude/worktrees/$NAME"
-LOG_DIR="$TARGET_REPO/.dispatch/logs"
 
-mkdir -p "$LOG_DIR" "$TARGET_REPO/.dispatch/status"
+mkdir -p "$TARGET_REPO/.dispatch/status"
 
 # Reset the Stop-hook attempt counter from any prior run of this name —
 # a stale count >8 would let a re-dispatched runner exit immediately.
@@ -67,6 +66,13 @@ rm -f "$TARGET_REPO/.dispatch/state/$NAME.attempts"
 
 # --- Worktree ---
 if [[ -d "$WORKTREE/.git" || -f "$WORKTREE/.git" ]]; then
+    # Never reuse a worktree that sits on a different branch — the runner would
+    # silently commit its work to the wrong branch.
+    WT_BRANCH=$(git -C "$WORKTREE" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    if [[ -n "$WT_BRANCH" && "$WT_BRANCH" != "$BRANCH" ]]; then
+        echo "error: worktree $WORKTREE is on branch '$WT_BRANCH', expected '$BRANCH' — remove it or dispatch under a different name" >&2
+        exit 1
+    fi
     echo "worktree_status:reused"
 else
     WT_ERR="$(mktemp)"
@@ -83,11 +89,24 @@ else
         fi
         echo "worktree_status:created-existing-branch"
     else
-        if ! git -C "$TARGET_REPO" worktree add "$WORKTREE" -b "$BRANCH" 2>"$WT_ERR"; then
+        # Base new branches on the remote default branch, never on whatever the
+        # main checkout happens to have checked out — an operator sitting on a
+        # feature branch would otherwise silently become the runner's base.
+        BASE_REF=$(git -C "$TARGET_REPO" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || echo "")
+        if [[ -z "$BASE_REF" ]]; then
+            for CAND in origin/main origin/master; do
+                if git -C "$TARGET_REPO" rev-parse --verify --quiet "$CAND" >/dev/null 2>&1; then
+                    BASE_REF="$CAND"
+                    break
+                fi
+            done
+        fi
+        if ! git -C "$TARGET_REPO" worktree add "$WORKTREE" -b "$BRANCH" ${BASE_REF:+"$BASE_REF"} 2>"$WT_ERR"; then
             cat "$WT_ERR" >&2
             exit 1
         fi
         echo "worktree_status:created-new-branch"
+        [[ -n "$BASE_REF" ]] && echo "base_ref:$BASE_REF"
     fi
 fi
 
@@ -99,6 +118,16 @@ echo "worktree:$WORKTREE"
 # (from discovery); without this it can edit/commit there instead of its worktree.
 STATUS_FILE="$TARGET_REPO/.dispatch/status/$NAME.md"
 RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
+
+# Resume path (watchdog / manual re-dispatch) doesn't set DISPATCH_MODEL — fall
+# back to the model the status file recorded at first dispatch, so an
+# `--model opus` runner doesn't silently resume on the default model.
+if [[ "$MODEL" == "default" ]]; then
+    RECORDED_MODEL=$(dispatch_status_field model "$STATUS_FILE" || true)
+    if [[ -n "$RECORDED_MODEL" && "$RECORDED_MODEL" != "default" ]]; then
+        MODEL="$RECORDED_MODEL"
+    fi
+fi
 # shellcheck disable=SC2016  # backticked code spans in prose, not expansions
 {
     printf '## WORKTREE ISOLATION — read first, non-negotiable\n\n'

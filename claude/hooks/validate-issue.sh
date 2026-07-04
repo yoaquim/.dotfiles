@@ -34,6 +34,10 @@ DESCRIPTION=$(echo "$ISSUE" | jq -r '.description // ""')
 ISSUE_ID=$(echo "$ISSUE" | jq -r '.id // ""')
 ESTIMATE=$(echo "$ISSUE" | jq -r '.estimate // empty')
 
+# Nothing recognizable came back (failed call, unexpected shape) → nothing to
+# validate; a bare "no estimate" warning against a non-issue is just noise.
+[[ -z "$TITLE" && -z "$ISSUE_ID" ]] && exit 0
+
 WARNINGS=()
 
 # Title: word count 2-7
@@ -52,8 +56,14 @@ if [[ -n "$TITLE" ]]; then
   esac
 fi
 
-# Description: no code references
-if [[ -n "$DESCRIPTION" ]]; then
+# Sub-issues (parentId set) are dispatch-ready implementation slices: /spec
+# deliberately puts discovered code paths in their ## Context, so the
+# no-implementation-details rules apply only to top-level issues.
+PARENT_ID=$(echo "$INPUT" | jq -r '.tool_input.parentId // ""' 2>/dev/null || echo "")
+[[ -z "$PARENT_ID" ]] && PARENT_ID=$(echo "$ISSUE" | jq -r '.parentId // .parent.id // ""' 2>/dev/null || echo "")
+
+# Description: no code references (top-level issues only)
+if [[ -n "$DESCRIPTION" && -z "$PARENT_ID" ]]; then
   # Check for common code patterns (file paths, class references, backtick code blocks)
   if echo "$DESCRIPTION" | grep -qE '\.(rb|py|ts|tsx|js|jsx|go|rs|java|sh)[:)]?'; then
     WARNINGS+=("Description may contain file path references — implementation details belong in PRs, not issues")
@@ -61,6 +71,8 @@ if [[ -n "$DESCRIPTION" ]]; then
   if echo "$DESCRIPTION" | grep -qE '```'; then
     WARNINGS+=("Description contains code blocks — implementation details belong in PRs, not issues")
   fi
+fi
+if [[ -n "$DESCRIPTION" ]]; then
   # Check for checklist items
   if echo "$DESCRIPTION" | grep -qE '^\s*-\s*\[[ x]\]'; then
     WARNINGS+=("Description contains checklists — use sub-issues instead")
@@ -72,14 +84,16 @@ if [[ -z "$ESTIMATE" ]]; then
   WARNINGS+=("No estimate set — consider adding a fibonacci estimate (1, 2, 3, 5, 8)")
 fi
 
-# Output warnings
+# Plain stdout on exit-0 PostToolUse goes to transcript mode only — the model
+# never sees it. hookSpecificOutput.additionalContext is the visible channel.
 if (( ${#WARNINGS[@]} > 0 )); then
-  echo "Issue $ISSUE_ID created with style warnings:"
+  TEXT="Issue $ISSUE_ID created with style warnings:"
   for W in "${WARNINGS[@]}"; do
-    echo "  - $W"
+    TEXT+=$'\n'"  - $W"
   done
-  echo ""
-  echo "Correct directly in Linear if needed."
+  TEXT+=$'\n'"Fix via the Linear MCP update tool (or leave if deliberate)."
+  jq -n --arg ctx "$TEXT" \
+    '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
 fi
 
 # Always exit 0 — warnings only, never block

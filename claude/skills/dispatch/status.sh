@@ -8,6 +8,11 @@
 
 set -eo pipefail
 
+# Shared dispatch definitions — field access and the terminal-states list come
+# from the lib so this script can't drift from the hooks' vocabulary again.
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh"
+
 ROOT="$1"
 NAME="$2"
 STATUS_DIR="$ROOT/.dispatch/status"
@@ -20,8 +25,7 @@ fi
 # --- Helpers ---
 
 get_field() {
-    local field="$1" file="$2"
-    sed -n "s/^- \*\*${field}\*\*: //p" "$file" 2>/dev/null
+    dispatch_status_field "$@"
 }
 
 # Fetch the agents list once per script run — the summary view calls
@@ -50,9 +54,8 @@ check_alive() {
     # a legitimate re-dispatch isn't blocked.
     local agents
     if agents=$(get_agents) && [[ -n "$agents" ]]; then
-        if jq -e --arg id "$session_id" '
-            ["completed","done","failed","stopped","exited","cancelled","canceled"] as $terminal
-            | [ .[]
+        if jq -e --arg id "$session_id" --argjson terminal "$DISPATCH_TERMINAL_SESSION_STATES" '
+            [ .[]
                 | select(((.id // "") | startswith($id)) or ((.sessionId // "") | startswith($id)))
                 | select(((.state // .status // "") | ascii_downcase) as $s | ($terminal | index($s) | not))
               ] | length > 0

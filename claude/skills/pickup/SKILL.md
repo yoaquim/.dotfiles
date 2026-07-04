@@ -13,8 +13,8 @@ Orient from three sources, then state where we are and continue. Bare `/pickup` 
 
 ## 1. Handoff
 
-Use `$handoff_file` if given, else the newest:
-`ls -1 "$(git rev-parse --show-toplevel)/.claude/handoffs/"*.md 2>/dev/null | tail -1`.
+Use `$handoff_file` if given, else the newest by modification time:
+`ls -1t "$(git rev-parse --show-toplevel)/.claude/handoffs/"*.md 2>/dev/null | head -1`.
 
 Read **only that one** — it's a self-sufficient snapshot. Never walk the chain unless asked. None found → skip; orient from sources 2–3.
 

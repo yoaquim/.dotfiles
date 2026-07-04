@@ -46,8 +46,11 @@ if grep -qE '(^|[[:space:]]|;|&&|\|\||\||\(|`|\$\()gh[[:space:]]+api[[:space:]]+
   if [[ -z "$PAYLOAD_FILE" || ! -f "$PAYLOAD_FILE" ]]; then
     {
       echo "❌ /pr-review post blocked:"
-      echo "  - Could not locate payload file via --input."
-      echo "  - The skill must write the review JSON to a tempfile and pass --input <file>."
+      echo "  - Could not read the payload file named by --input (got: '${PAYLOAD_FILE:-none}')."
+      echo "  - The payload must be written in a PREVIOUS Bash call, and --input must be a"
+      echo "    literal path (e.g. /tmp/pr-review-payload-<pr>.json) — this hook validates the"
+      echo "    file at call time and cannot expand \$VARIABLES or see files created in the"
+      echo "    same call. Split it: call 1 writes the JSON, call 2 posts it."
     } >&2
     exit 2
   fi

@@ -1,6 +1,6 @@
 ---
 name: pr-reviewer
-description: Background PR watcher. Reviews ONE pull request and re-reviews each new commit until it's approved + CI green, merged, or closed. Spawned by spawn-reviewer.sh. The watch-loop Stop hook (enforce-watch.sh) is registered GLOBALLY in settings.json — NOT here — because agent-frontmatter hooks are cached at Claude Code startup and never fire for an agent added mid-session. enforce-watch gates on this agent's `template` tag, so it only engages for pr-reviewer sessions.
+description: Background PR watcher. Reviews ONE pull request and re-reviews each new commit until it's approved + CI green, merged, or closed. Spawned by spawn-reviewer.sh. The watch-loop Stop hook (enforce-watch.sh) is registered GLOBALLY in settings.json — NOT here — as defense in depth. (Verified 2026-07-04 on CC 2.1.170 with a canary — agent-frontmatter hooks DO fire for --bg agent sessions, even when the agent file was edited mid-daemon-lifetime; the old "cached at startup" claim was wrong. Global registration stays anyway — this hook's whole job is to never silently not-fire, and settings.json is the registration that can't be dropped by an agent-file edit. enforce-watch gates on this agent's `template` tag, so it only engages for pr-reviewer sessions.)
 ---
 
 # PR Reviewer

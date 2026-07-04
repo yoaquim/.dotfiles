@@ -49,6 +49,11 @@ strip it first, then:
 - Prefix the spawn call with the env var: `DISPATCH_MODEL=<model> bash ~/.claude/skills/dispatch/spawn.sh ...`
 - Record it in the status file header as `- **model**: <model>` (omit the line when not set).
 
+Note: the global default model is pinned to the 1M-context variant
+(`claude-fable-5[1m]`), which long-running review loops pay for on every poll.
+For routine tickets that don't need a huge context, `--model claude-fable-5`
+(standard context) is the cheaper choice.
+
 ## Argument Detection
 
 1. `status` → subcommand
@@ -70,7 +75,7 @@ Check prior runs: `bash ~/.claude/skills/dispatch/status.sh <project-root> <name
   ```bash
   bash ~/.claude/skills/dispatch/spawn.sh <name> <branch> <project-root> <project-root>/.dispatch/prompts/<name>.md
   ```
-  Update `session_id` in the status file from spawn.sh output. (The watchdog cron does exactly this automatically every ~10 min for fresh halts; this is the on-demand path.)
+  Update `session_id` in the status file from spawn.sh output. (The watchdog LaunchAgent — installed by `claude/setup.sh` — does exactly this automatically every ~10 min for fresh halts; this is the on-demand path.)
 - `completed` or `failed` → ask: "Previously dispatched (status: <status>). Re-dispatch?" → "Yes" / "No"
 - No status file → proceed
 
@@ -253,13 +258,15 @@ bash ~/.claude/skills/dispatch/status.sh <project-root> [name]
 
 **With name** — output:
 ```
-state:alive|dead|completed|failed
+state:alive|dead|completed|failed|blocked|needs_review
 worktree:<path>
 ---
 <full status file>
 ```
 
-If `state:dead` → warn: "Runner exited without completing. Check `.dispatch/logs/<name>.log`. Re-dispatch with `/dispatch <ticket-id>`."
+If `state:dead` → warn: "Runner exited without completing. Check `claude logs <session_id>` (id from the status file). Re-dispatch with `/dispatch <ticket-id>`."
+If `state:blocked` → the runner deliberately stopped for a human decision: surface the status file's Notes section and ask the operator how to proceed (the watchdog never auto-resumes `blocked`).
+If `state:needs_review` → the runner hit its loop cap/timeout with the PR unmerged: link the PR and suggest taking over or re-dispatching.
 
 **Without name** — summary table. Display script output directly.
 
@@ -271,7 +278,7 @@ When a runner's PR receives `/pr-review` feedback (inline comments + `reviewDeci
 
 1. Runner detects unresolved threads via `gh pr view <pr> --json reviews,reviewThreads`.
 2. Apply `receiving-review` practice gates to each thread (already injected at SessionStart via `inject-practices.sh`).
-3. Fix → commit → push. Don't resolve threads manually — the next `/pr-review` pass will approve and the reviewer's resolve closes them.
+3. Fix → commit → push → resolve each addressed thread with `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>` (the reviewer never resolves threads — runner.md "Completion" owns this).
 4. `/pr-review` watch loop detects the new commit and re-reviews automatically.
 
 Cycle ends when `/pr-review` posts `APPROVE` (`reviewDecision: APPROVED`) and the runner's Stop hook lets it exit.

@@ -4,7 +4,7 @@ Preferred patterns for Tailwind CSS.
 
 ## Core Rule
 
-**No custom CSS. Ever.** No `<style>` blocks, no custom classes, no CSS files. Tailwind utilities directly in markup. If you think you need custom CSS, you don't — Tailwind can do it.
+**No custom CSS for styling.** No `<style>` blocks, no custom classes — Tailwind utilities directly in markup. If you think you need custom CSS, you don't — Tailwind can do it. The only CSS file that may exist is Tailwind's own entry point: in v4 that file IS the config (`@import "tailwindcss"`, `@theme` tokens, CSS variables) — configuration lives there, styling still lives in markup.
 
 ## Approach
 

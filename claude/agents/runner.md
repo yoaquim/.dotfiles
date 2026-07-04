@@ -138,8 +138,9 @@ Example:
       skip this entirely. It's additive — the Claude reviewer in step 3 is still the
       real gate.
    b. `git push -u origin <branch>`, then `/pr` to review and create the PR.
-      Required — `gh pr create` is hook-blocked unless it conforms to the same
-      rules, so there is no manual fallback.
+      Required — a hand-rolled `gh pr create` isn't pre-blocked here, but the
+      Stop hook re-validates the created PR against the same rules and traps
+      the session until it conforms, so there is no useful manual fallback.
 
    Either path ends with a created PR; step 3 then spawns the reviewer the same way
    regardless of which path got you here.
@@ -199,7 +200,7 @@ Example:
       time you push, it re-reviews the new commit. Pushing your fix IS the handoff.
       Never call `spawn-reviewer.sh` again, and never hand-roll a `claude --bg`/`-p`
       review agent. (If the reviewer genuinely died — e.g. the machine slept — the
-      operator re-kicks `/pr-review $PR`; that's not your job.)
+      watchdog revives it within ~10 min; that's not your job.)
 
       If nothing above applied (no threads, CI green), there's nothing to do this
       turn — just try to end; pushing already handed any new commit to the reviewer.

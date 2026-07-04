@@ -88,10 +88,11 @@ Four scripts, run in order (see [Quick Start](#-quick-start)):
 │   ├── nvim/                     # AstroNvim polish.lua + user.lua
 │   ├── hammerspoon/              # hotkeys & automation
 │   ├── mountainduck/             # S3 (Cave) bookmark
+│   ├── cmux/  ghostty/           # cmux + Ghostty terminal configs
 │   └── ssh/  git/  gitconfig     # ssh + git config (git/config.local not in git)
 └── claude/                       # Claude Code config — see Claude Code Workflow below
     ├── setup.sh  settings.json
-    └── agents/  scripts/  hooks/  practices/  skills/
+    └── agents/  scripts/  hooks/  practices/  skills/  statusline/
 ```
 
 Each `config/<tool>/` has its own README — see [Resources](#-resources).
@@ -109,8 +110,12 @@ Each `config/<tool>/` has its own README — see [Resources](#-resources).
 | `config/nvim/user.lua` | `~/.config/nvim/lua/plugins/user.lua` |
 | `config/hammerspoon/` | `~/.hammerspoon/` |
 | `config/ssh/config` | `~/.ssh/config` |
-| `claude/{skills,agents,hooks,scripts,practices}/` | `~/.claude/…` (via `claude/setup.sh`) |
+| `config/cmux/` | `~/.config/cmux/` |
+| `config/ghostty/` | `~/.config/ghostty/` |
+| `claude/{skills,agents,hooks,scripts,practices,statusline}/` | `~/.claude/…` (via `claude/setup.sh`) |
 | `claude/settings.json` | `~/.claude/settings.json` |
+
+`claude/setup.sh` also installs the `com.yoaquim.dispatch-watchdog` LaunchAgent (resumes halted dispatch runners every ~10 min).
 
 ---
 
@@ -131,6 +136,8 @@ Custom Claude Code configuration: skills, agents, hooks, and practices. Install 
 | `/pr-review` | Bug-focused PR review with watch loop |
 | `/debug` | Systematic root-cause debugging |
 | `/gh-stack` | Stacked branches and PRs |
+| `/handoff` | Distill the session into a handoff doc (alternative to lossy compaction) |
+| `/pickup` | Resume a fresh session from the latest handoff + Linear + code |
 
 ### Workflows
 
@@ -152,7 +159,10 @@ Linear:  /spec → /dispatch ENG-142 → runner → /pr
 | `enforce-worktree.sh` | Runner Edit/Write | Block writes outside the runner's worktree |
 | `enforce-completion.sh` | Runner Stop | Gate exit on PR + terminal status |
 | `lint-shell.sh` | Edit/Write on shell files | shellcheck findings fed back to the agent |
-| `notify-done.sh` | Stop | macOS notification when a session ends |
+| `notify-done.sh` | Stop | macOS notification when an interactive session ends |
+| `enforce-created-summary.sh` | Stop | Require the standardized closing block after Linear creates |
+| `auto-spawn-reviewer.sh` | Runner PostToolUse | Auto-spawn the PR watcher after `gh pr create` |
+| `enforce-watch.sh` | Stop (pr-reviewer only) | Keep the PR watch loop alive until approved + CI green |
 
 ### Agent & Practices
 

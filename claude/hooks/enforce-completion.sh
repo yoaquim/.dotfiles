@@ -26,22 +26,28 @@ set -uo pipefail
 # because of a bug in the hook itself.
 trap 'exit 0' ERR
 
-# Drain stdin (Stop hook input is JSON we don't need).
-cat >/dev/null 2>&1 || true
+# Stop-hook input carries the session id (needed for job-derived identity).
+INPUT=$(cat 2>/dev/null || echo '{}')
 
-# Shared dispatch definitions: status vocabulary, iso_to_epoch, fail-open
-# logging. A missing lib is a hook bug like any other → fail open, but say so.
+# Shared dispatch definitions: status vocabulary, iso_to_epoch, job identity,
+# fail-open logging. A missing lib is a hook bug like any other → fail open,
+# but say so.
 # shellcheck disable=SC1091
 . "$HOME/.claude/scripts/lib/dispatch.sh" 2>/dev/null \
   || { echo "enforce-completion: fail-open: cannot source scripts/lib/dispatch.sh" >&2; exit 0; }
 trap 'dispatch_fail_open enforce-completion $LINENO' ERR
 
-# Pin to the runner's worktree via the immutable identity spawn.sh injects, so a
-# cwd that has drifted into the shared checkout can't make this look like a
-# non-dispatch session and skip the completion gates. All git/gh checks below
-# then run against the worktree regardless of where the runner's cwd ended up.
-if [[ -n "${CLAUDE_DISPATCH_WORKTREE:-}" ]]; then
-  cd "$CLAUDE_DISPATCH_WORKTREE" 2>/dev/null || true
+# Pin to the runner's worktree so a cwd that has drifted into the shared
+# checkout can't make this look like a non-dispatch session and skip the
+# completion gates. Env vars when present (they don't survive the --bg daemon
+# hop), else the job state file's cwd — the worktree spawn.sh submitted from.
+PIN="${CLAUDE_DISPATCH_WORKTREE:-}"
+if [[ -z "$PIN" ]]; then
+  SID=$(jq -r '.session_id // ""' <<<"$INPUT" 2>/dev/null) || SID=""
+  PIN=$(dispatch_runner_worktree "$SID" 2>/dev/null) || PIN=""
+fi
+if [[ -n "$PIN" ]]; then
+  cd "$PIN" 2>/dev/null || true
 fi
 
 # --- Identify dispatch session ---
@@ -166,8 +172,12 @@ if [[ -n "$PR_TITLE" ]]; then
   fi
 fi
 
-TICKET_ID=""
-if [[ "$BRANCH" =~ ([A-Za-z]+-[0-9]+) ]]; then
+# Ticket from the status file (`- **ticket**: <id>`); sketch dispatches have no
+# ticket line → empty → validate-pr-body skips the Closes gate. Branch-name
+# inference is only a fallback for legacy status files, and never on sketch
+# branches — `sketch-jwt-auth-2` would otherwise "match" ticket AUTH-2.
+TICKET_ID=$(dispatch_status_field ticket "$STATUS_FILE" | tr '[:lower:]' '[:upper:]')
+if [[ -z "$TICKET_ID" && "$BRANCH" != sketch-* && "$BRANCH" =~ ([A-Za-z]+-[0-9]+) ]]; then
   TICKET_ID=$(echo "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')
 fi
 

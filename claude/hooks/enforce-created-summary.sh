@@ -29,11 +29,18 @@ trap 'exit 0' ERR
 # Skip dispatch runner sessions. A runner has its own Stop hook
 # (enforce-completion.sh) and its own completion summary — two blocking Stop
 # hooks must not fight — and a runner that files an incidental follow-up ticket
-# via /issue shouldn't be forced into the created-summary format. spawn.sh
-# exports these into the runner's environment, so every hook there inherits them.
+# via /issue shouldn't be forced into the created-summary format. Env vars when
+# present, else the bg job's template (env doesn't survive the --bg daemon hop).
 [[ -n "${CLAUDE_DISPATCH_WORKTREE:-}${CLAUDE_DISPATCH_STATUS_FILE:-}" ]] && exit 0
 
 INPUT=$(cat)
+
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh" 2>/dev/null || true
+if command -v dispatch_runner_worktree >/dev/null 2>&1; then
+  SESSION_ID=$(jq -r '.session_id // ""' <<<"$INPUT" 2>/dev/null) || SESSION_ID=""
+  dispatch_runner_worktree "$SESSION_ID" >/dev/null 2>&1 && exit 0
+fi
 
 TRANSCRIPT=$(jq -r '.transcript_path // ""' <<<"$INPUT" 2>/dev/null) || exit 0
 [[ -n "$TRANSCRIPT" && -f "$TRANSCRIPT" ]] || exit 0
@@ -50,7 +57,10 @@ TRANSCRIPT=$(jq -r '.transcript_path // ""' <<<"$INPUT" 2>/dev/null) || exit 0
 #             .input.id → a create not an update, not answered by an is_error)
 #   - $text = the closing prose: text blocks AFTER the turn's last tool_use,
 #             which is where the summary lands (after the create + the `open`)
-RESULT=$(jq -s '
+# Bound the slurp: only the current turn matters, and it lives at the end of
+# the transcript. 2000 JSONL lines is far more than any /issue//spec turn; on a
+# very long session this keeps the most expensive always-on hook cheap.
+RESULT=$(tail -n 2000 "$TRANSCRIPT" 2>/dev/null | jq -s '
   [ .[] | select(.isSidechain != true) ] as $main
   | ( [ range(0; ($main | length)) as $i
         | select(
@@ -75,7 +85,7 @@ RESULT=$(jq -s '
       else [ $ablocks[ ($lastTU + 1): ][] | select(.type == "text") | .text ]
       end ) as $tail
   | { ok: $ok, text: ( $tail | join("\n") ) }
-' "$TRANSCRIPT" 2>/dev/null) || exit 0
+' 2>/dev/null) || exit 0
 
 OK=$(jq -r '.ok // 0' <<<"$RESULT" 2>/dev/null) || exit 0
 TEXT=$(jq -r '.text // ""' <<<"$RESULT" 2>/dev/null) || exit 0
@@ -88,6 +98,16 @@ TEXT=$(jq -r '.text // ""' <<<"$RESULT" 2>/dev/null) || exit 0
 if grep -qiE 'what it does' <<<"$TEXT" \
    && grep -qiE 'what was (issued|specced|created)' <<<"$TEXT"; then
   exit 0
+fi
+
+# Bounded blocking: convergence otherwise relies entirely on the model
+# complying — cap at 3 blocks per session, then let the stop through.
+SID=$(jq -r '.session_id // ""' <<<"$INPUT" 2>/dev/null) || SID=""
+if [[ -n "$SID" ]]; then
+  CAP_FILE="${TMPDIR:-/tmp}/created-summary.$SID.attempts"
+  N=$(( $(cat "$CAP_FILE" 2>/dev/null || echo 0) + 1 ))
+  echo "$N" > "$CAP_FILE" 2>/dev/null || true
+  (( N > 3 )) && exit 0
 fi
 
 # Created something but didn't close with the contract → block and instruct.
