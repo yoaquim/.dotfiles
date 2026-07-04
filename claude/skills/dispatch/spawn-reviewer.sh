@@ -98,13 +98,23 @@ fi
 # fixing findings and pushing; that moves HEAD, the commit_id no longer matches,
 # and this gate reopens for the genuinely-new SHA. (Approve vs findings doesn't
 # matter for spawning — either way this exact HEAD has been reviewed.)
+#
+# One class of review object does NOT count: replying to an inline review
+# thread (POST /pulls/:n/comments/:id/replies) makes GitHub synthesize an
+# EMPTY body COMMENTED review at the reply's HEAD. Counting those broke the
+# fix-then-respawn loop (NUL-147): author pushes a fix, replies to the
+# findings, and the reply artifact convinces this gate the new HEAD was
+# already reviewed. A review only counts as a verdict if it is a non-COMMENTED
+# state or a COMMENTED with an actual body.
 HEAD_SHA=$(jq -r '.headRefOid // empty' <<<"$PR_JSON")
 # owner/repo from the canonical url, host-agnostic (handles GHE too).
 NO_SCHEME=${REPO_PART#*://}   # <host>/<owner>/<repo>
 OWNER_REPO=${NO_SCHEME#*/}    # <owner>/<repo>
 if [[ -n "$HEAD_SHA" ]]; then
   REVIEWED_AT_HEAD=$(gh api --paginate "repos/$OWNER_REPO/pulls/$PR/reviews" 2>/dev/null \
-    | jq -s --arg sha "$HEAD_SHA" '[ (add // [])[] | select((.commit_id // "") == $sha) ] | (length > 0)' \
+    | jq -s --arg sha "$HEAD_SHA" '[ (add // [])[]
+        | select((.commit_id // "") == $sha)
+        | select((.state // "") != "COMMENTED" or (((.body // "") | length) > 0)) ] | (length > 0)' \
       2>/dev/null || echo false)
   if [[ "$REVIEWED_AT_HEAD" == "true" ]]; then
     echo "reviewer_status:already-reviewed"
