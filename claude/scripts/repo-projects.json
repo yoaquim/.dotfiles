@@ -1,6 +1,11 @@
 {
   "_comment": "Maps git repo names to Linear project(s), team, and description. Used by resolve-project.sh (placement) and /spec (discovery).",
   "repos": {
+    "amparo": {
+      "team": "Amparo",
+      "projects": ["Amparo v1"],
+      "description": "CRM + case management + document engine for the ANCLA/FRAPE church insurance program in PR. Captures/routes/stores/outputs only — never rates, quotes, binds, or collects (regulatory guardrail). RR v7 + Drizzle/Postgres + Tailwind 4 + Better Auth; AWS ECS Fargate/RDS/S3 via Terraform later. Solo project. NOTE: lives in the dedicated amparo-app workspace — use the linear-amparo MCP for Linear calls, not the default workspace."
+    },
     "cyberdeck": {
       "team": "Cyber Deck",
       "projects": ["cyberdeck"],
