@@ -128,6 +128,18 @@ Example:
    separate CodeRabbit pre-flight — `engineering:pr` already covers it; doing both
    double-runs CodeRabbit.
 
+   Because `engineering:pr` has already reviewed this PR, no reviewer watcher
+   should spawn for it. Drop the opt-out marker **before** invoking the skill so
+   the `auto-spawn-reviewer.sh` hook stands down when `engineering:pr` runs
+   `gh pr create`:
+
+   ```bash
+   touch "$(git rev-parse --git-dir)/dispatch-no-auto-reviewer"
+   ```
+
+   Then invoke `/engineering:pr`. This is the preferred path; step 3 below has no
+   reviewer to spawn on it.
+
    **Otherwise, fall back:**
    a. **Local CodeRabbit pre-flight.** If — and only if — the CodeRabbit CLI is
       present and authed (`which coderabbit && coderabbit auth status` both
@@ -142,10 +154,20 @@ Example:
       Stop hook re-validates the created PR against the same rules and traps
       the session until it conforms, so there is no useful manual fallback.
 
-   Either path ends with a created PR; step 3 then spawns the reviewer the same way
-   regardless of which path got you here.
-3. **The reviewer spawns automatically.** A PostToolUse hook
-   (`auto-spawn-reviewer.sh`) fires on your `gh pr create` and runs
+   Either path ends with a created PR. **Which path you took decides step 3.**
+3. **Spawn the reviewer — fallback `/pr` path only.**
+
+   **If you created the PR with `/engineering:pr`: skip this entire step.** The
+   opt-out marker you dropped in step 2 makes `auto-spawn-reviewer.sh` stand down,
+   so no watcher exists — and you must NOT hand-spawn one either (that CodeRabbit
+   pass already covered the PR; a watcher would just double-review). With no
+   watcher, `approved_at_head` never flips true — your terminal signal is
+   `pr_state == MERGED` or a human `review_decision == APPROVED` (+ CI green). You
+   still keep CI green and address any CodeRabbit/human threads in step 4, and the
+   8hr cap → `needs_review` is the backstop if no human merges. Go straight to step 4.
+
+   **On the fallback `/pr` path, the reviewer spawns automatically.** A PostToolUse
+   hook (`auto-spawn-reviewer.sh`) fires on your `gh pr create` and runs
    `spawn-reviewer.sh` for you — check the tool result for its
    "auto-spawned reviewer" note. Only if that note is absent, spawn it
    yourself (the script is idempotent — a duplicate call reuses the live
@@ -181,9 +203,12 @@ Example:
         own PR, so do NOT wait on it.)
       - `review_decision == APPROVED` AND `ci_green` → `completed`
         (covers an external/non-author reviewer, when there is one)
-   3. **Otherwise — advance the PR.** You and the ONE reviewer spawned in step 3
-      ping-pong until the PR is approved AND CI is green; you never wait for a human
-      to tell you to re-review or address comments. Each turn, in order:
+   3. **Otherwise — advance the PR.** On the fallback `/pr` path, you and the ONE
+      reviewer from step 3 ping-pong until the PR is approved AND CI is green. On the
+      `engineering:pr` path there is no watcher — you just keep CI green and resolve
+      any CodeRabbit/human threads until a human merges or approves. Either way you
+      never wait for a human to tell you to re-review or address comments. Each turn,
+      in order:
 
       a. **Unresolved threads** (`unresolved_threads` non-empty) → fix each in
          place, commit, `git push`, then

@@ -274,6 +274,8 @@ If `state:needs_review` → the runner hit its loop cap/timeout with the PR unme
 
 ## Review feedback loop
 
+**Fallback `/pr` path only** — the loop below assumes a spawned `pr-reviewer` watcher. On the preferred `/engineering:pr` path there is none: `/engineering:pr` runs CodeRabbit (`/ar:pr-review`) at creation time, the runner drops the `dispatch-no-auto-reviewer` marker so `auto-spawn-reviewer.sh` stands down, and the runner just keeps CI green + resolves CodeRabbit/human threads until a human merges or approves.
+
 When a runner's PR receives `/pr-review` feedback (inline comments + `reviewDecision: CHANGES_REQUESTED`):
 
 1. Runner detects unresolved threads via `gh pr view <pr> --json reviews,reviewThreads`.

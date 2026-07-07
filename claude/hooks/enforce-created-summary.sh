@@ -84,11 +84,12 @@ RESULT=$(tail -n 2000 "$TRANSCRIPT" 2>/dev/null | jq -s '
       then [ $ablocks[] | select(.type == "text") | .text ]
       else [ $ablocks[ ($lastTU + 1): ][] | select(.type == "text") | .text ]
       end ) as $tail
-  | { ok: $ok, text: ( $tail | join("\n") ) }
+  | { ok: $ok, start: $start, text: ( $tail | join("\n") ) }
 ' 2>/dev/null) || exit 0
 
 OK=$(jq -r '.ok // 0' <<<"$RESULT" 2>/dev/null) || exit 0
 TEXT=$(jq -r '.text // ""' <<<"$RESULT" 2>/dev/null) || exit 0
+START=$(jq -r '.start // 0' <<<"$RESULT" 2>/dev/null) || exit 0
 
 # Nothing created this turn → not our business.
 [[ "$OK" =~ ^[0-9]+$ ]] || exit 0
@@ -99,6 +100,16 @@ if grep -qiE 'what it does' <<<"$TEXT" \
    && grep -qiE 'what was (issued|specced|created)' <<<"$TEXT"; then
   exit 0
 fi
+
+# One-shot per turn: block at most once per turn, then let the stop through. A
+# transcript flush/rotation race can hide the just-written summary from the copy
+# we read here; without this the agent re-appends a summary that is already there
+# and the hook re-blocks forever. Stamp on transcript + turn boundary so a
+# genuine miss still gets ONE reminder, but a stuck read can't loop. Cheaper and
+# more turn-precise than the session cap below, which stays as the hard backstop.
+STAMP="${TMPDIR:-/tmp}/created-summary.$(printf '%s' "${TRANSCRIPT}:${START}" | cksum | tr -d ' ')"
+[[ -f "$STAMP" ]] && exit 0
+touch "$STAMP" 2>/dev/null || true
 
 # Bounded blocking: convergence otherwise relies entirely on the model
 # complying — cap at 3 blocks per session, then let the stop through.
