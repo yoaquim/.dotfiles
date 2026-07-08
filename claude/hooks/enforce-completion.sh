@@ -12,6 +12,11 @@
 #   - closed-without-merge  — PR was closed without merging
 #   - failed                — runner gave up on the work itself
 #
+# blocked (allow exit, but keep the session ALIVE):
+#   - the runner needs an OPERATOR DECISION no runner action can produce. Allow
+#     the Stop so the --bg session parks (idle/needs_input) and stays attachable
+#     via `claude agents`, instead of dying on a terminal status. Exempt from caps.
+#
 # Anything else (in_progress, addressing_reviews, etc.) → exit 2, runner
 # re-engages and continues the unified review loop in runner.md.
 #
@@ -99,6 +104,20 @@ STATUS=$(read_status)
 
 # Terminal → allow exit immediately. The runner has finalized its work.
 if dispatch_is_terminal_status "$STATUS"; then
+  exit 0
+fi
+
+# --- Operator-decision park: keep the session ALIVE and attachable ---
+# `blocked` means the runner has done everything it can and now needs an OPERATOR
+# DECISION no runner action can produce — a card-by-card ruling, a visual
+# ratification, an ambiguous-spec choice. This is NOT a terminal exit: writing a
+# terminal status here would leave a `done` --bg session the operator can't tab
+# into. Allow the Stop so the session PARKS (idle / needs_input) and stays
+# attachable via `claude agents`; the runner asks its question with SendUserMessage
+# (runner.md) so it surfaces as "waiting on you". Exempt from the 8hr cap and the
+# spin guard below — an operator gate may sit for days, and that is not a runaway.
+if [[ "$STATUS" == "blocked" ]]; then
+  echo "enforce-completion: status=blocked — parking session alive for an operator decision; attach via \`claude agents\`. Not counted against the 8hr cap / spin guard." >&2
   exit 0
 fi
 
@@ -218,7 +237,8 @@ STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR_NUMBER" 2>/dev/
   echo "  - Unresolved threads → fix → commit → push → ~/.claude/skills/dispatch/resolve-thread.sh <id>"
   echo "  - ci_green==false → fix the failing check (gh pr checks $PR_NUMBER; gh run view <run-id> --log-failed) → commit → push. In scope; don't wait for a human."
   echo "  - The ONE reviewer from Completion watches HEAD and re-reviews each push on its own. Do NOT spawn or re-spawn a reviewer; never hand-roll a claude --bg review agent."
-  echo "  - Terminal when approved_at_head==true AND ci_green (self-authored PRs never reach reviewDecision==APPROVED), or on merge/close."
+  echo "  - Terminal when approved_at_head==true AND ci_green AND codex_state != \"pending\" (self-authored PRs never reach reviewDecision==APPROVED), or on merge/close."
+  echo "  - codex_state==pending → Codex's latest signal is a findings review: address its threads and push until it reacts 👍 (clean). absent → Codex inactive/out of credits; the reviewer is the final say."
   echo "  - Sleep 60s if idle, then re-check"
   echo
   echo "Write a terminal status (completed | needs_review | closed-without-merge | failed)"

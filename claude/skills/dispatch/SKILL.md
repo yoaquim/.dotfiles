@@ -274,7 +274,7 @@ If `state:needs_review` → the runner hit its loop cap/timeout with the PR unme
 
 ## Review feedback loop
 
-**Fallback `/pr` path only** — the loop below assumes a spawned `pr-reviewer` watcher. On the preferred `/engineering:pr` path there is none: `/engineering:pr` runs CodeRabbit (`/ar:pr-review`) at creation time, the runner drops the `dispatch-no-auto-reviewer` marker so `auto-spawn-reviewer.sh` stands down, and the runner just keeps CI green + resolves CodeRabbit/human threads until a human merges or approves.
+**Personal machine only** — the loop below assumes a spawned `pr-reviewer` watcher. On a work machine (the `augment-risk/engineering` plugin installed) there is none: `spawn-reviewer.sh` itself stands down (plugin gate), `/engineering:pr` runs CodeRabbit at creation time, and the runner ping-pongs with CodeRabbit SaaS — keeps CI green + resolves its threads until a human merges or approves.
 
 When a runner's PR receives `/pr-review` feedback (inline comments + `reviewDecision: CHANGES_REQUESTED`):
 
@@ -283,7 +283,7 @@ When a runner's PR receives `/pr-review` feedback (inline comments + `reviewDeci
 3. Fix → commit → push → resolve each addressed thread with `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>` (the reviewer never resolves threads — runner.md "Completion" owns this).
 4. `/pr-review` watch loop detects the new commit and re-reviews automatically.
 
-Cycle ends when `/pr-review` posts `APPROVE` (`reviewDecision: APPROVED`) and the runner's Stop hook lets it exit.
+Cycle ends when the reviewer posts its approved.md at HEAD (`approved_at_head`) with CI green — AND Codex isn't `pending` (`check-pr-state.sh` → `codex_state`): if Codex reviewed with findings, the runner keeps addressing them until Codex reacts 👍 on the PR body (`clean`); if Codex never engaged or is out of credits (`absent`), the reviewer is the final say.
 
 ---
 

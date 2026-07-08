@@ -147,6 +147,11 @@ fi
 # The CLAUDE_DISPATCH_* vars give the worktree-isolation hook an IMMUTABLE
 # runner identity — it enforces against these, not the session cwd, so a runner
 # that cd's into the main checkout still can't write there.
+# `--brief` enables the SendUserMessage tool: the ONLY way a --bg runner can hand
+# an operator-decision back and PARK alive. Without it a runner that hits a gate it
+# can't resolve (a ruling, a visual ratification) has no way to ask — it writes a
+# terminal status and exits, leaving a `done` session the operator can't tab into.
+# With it, the runner asks and parks in `blocked` (attachable via `claude agents`).
 PROJECT_NAME="$(basename "$TARGET_REPO")"
 RUNNER_NAME="dispatch-$PROJECT_NAME-$NAME"
 SESSION_OUTPUT=$(cd "$WORKTREE" && \
@@ -158,6 +163,7 @@ SESSION_OUTPUT=$(cd "$WORKTREE" && \
     --model "$MODEL" \
     --name "$RUNNER_NAME" \
     --permission-mode bypassPermissions \
+    --brief \
     --append-system-prompt-file "$RUNTIME_PROMPT" \
     "Execute the task described in the system prompt." 2>&1)
 

@@ -9,6 +9,7 @@
 #     ci_green:        true|false,
 #     reviewed_at_head: true|false,   # ANY review exists for THIS HEAD (approve or findings)
 #     approved_at_head: true|false,   # a review at THIS HEAD carries the approved.md sentinel
+#     codex_state:      clean|pending|absent,  # Codex bot verdict (see 1c below)
 #     unresolved_threads: [
 #       { id, path, line, body, author }
 #     ] }
@@ -109,7 +110,7 @@ if [[ -z "$HEAD_SHA" ]]; then
     error: ("transient: could not fetch PR #\($pr) state from GitHub"),
     pr_state: "UNKNOWN", review_decision: null, head_sha: "",
     ci_green: false, reviewed_at_head: false, approved_at_head: false,
-    unresolved_threads: []
+    codex_state: "absent", unresolved_threads: []
   }'
   exit 0
 fi
@@ -157,15 +158,60 @@ APPROVED_MARKER=""
 source "$HOME/.claude/scripts/lib/pr-review-markers.sh" 2>/dev/null && APPROVED_MARKER=$(pr_review_approved_marker)
 REVIEWED_AT_HEAD=false
 APPROVED_AT_HEAD=false
+ALL_REVIEWS=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR/reviews" 2>/dev/null \
+  | jq -sc 'add // []' 2>/dev/null || echo '[]')
+[[ -n "$ALL_REVIEWS" ]] || ALL_REVIEWS='[]'
 if [[ -n "$HEAD_SHA" ]]; then
-  REVIEWS_AT_HEAD=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR/reviews" 2>/dev/null \
-    | jq -sc --arg sha "$HEAD_SHA" '[ (add // [])[] | select((.commit_id // "") == $sha) ]' 2>/dev/null || echo '[]')
+  REVIEWS_AT_HEAD=$(jq -c --arg sha "$HEAD_SHA" \
+    '[ .[] | select((.commit_id // "") == $sha) ]' <<<"$ALL_REVIEWS" 2>/dev/null || echo '[]')
   [[ -n "$REVIEWS_AT_HEAD" ]] || REVIEWS_AT_HEAD='[]'
   [[ "$(jq 'length' <<<"$REVIEWS_AT_HEAD" 2>/dev/null || echo 0)" -gt 0 ]] && REVIEWED_AT_HEAD=true
   if [[ -n "$APPROVED_MARKER" ]]; then
     APPROVED_AT_HEAD=$(jq --arg marker "$APPROVED_MARKER" \
       '[ .[] | select((.body // "") | contains($marker)) ] | (length > 0)' <<<"$REVIEWS_AT_HEAD" 2>/dev/null || echo false)
     [[ "$APPROVED_AT_HEAD" == "true" || "$APPROVED_AT_HEAD" == "false" ]] || APPROVED_AT_HEAD=false
+  fi
+fi
+
+# 1c. Codex (chatgpt-codex-connector[bot]) verdict — the second reviewer on
+# personal-machine dispatches. Its signals, observed on real PRs 2026-07-07:
+#   clean       → a 👍 (+1) reaction on the PR BODY (no review is posted)
+#   findings    → a COMMENTED "Codex Review" review with inline threads
+#   out of credits → an issue comment "You have reached your Codex usage limits…"
+# The verdict is whichever signal is NEWEST (ISO timestamps compare lexically):
+#   codex_state: "clean"   — thumbs-up is the latest signal → Codex is satisfied
+#                "pending" — a findings review is the latest signal → address its
+#                            threads and push until it thumbs-ups
+#                "absent"  — Codex never engaged, or its latest signal is the
+#                            usage-limits comment (no credits): Codex cannot rule,
+#                            so the Claude reviewer is the final say
+# Empty-body COMMENTED reviews are excluded — replying to an inline thread makes
+# GitHub synthesize one (same artifact spawn-reviewer.sh's gate filters).
+CODEX_LOGIN="chatgpt-codex-connector[bot]"
+CODEX_LAST_REVIEW=$(jq -r --arg u "$CODEX_LOGIN" '
+  [ .[] | select((.user.login // "") == $u)
+    | select((.state // "") != "COMMENTED" or (((.body // "") | length) > 0))
+    | .submitted_at // empty
+  ] | max // ""' <<<"$ALL_REVIEWS" 2>/dev/null || echo "")
+CODEX_LAST_THUMB=$(gh api --paginate "repos/$OWNER/$REPO/issues/$PR/reactions" 2>/dev/null \
+  | jq -sr --arg u "$CODEX_LOGIN" '
+    [ (add // [])[] | select((.user.login // "") == $u and .content == "+1")
+      | .created_at // empty
+    ] | max // ""' 2>/dev/null || echo "")
+CODEX_LAST_QUOTA=$(gh api --paginate "repos/$OWNER/$REPO/issues/$PR/comments" 2>/dev/null \
+  | jq -sr --arg u "$CODEX_LOGIN" '
+    [ (add // [])[] | select((.user.login // "") == $u)
+      | select((.body // "") | test("usage limits"; "i"))
+      | .created_at // empty
+    ] | max // ""' 2>/dev/null || echo "")
+CODEX_STATE="absent"
+if [[ -n "$CODEX_LAST_REVIEW" || -n "$CODEX_LAST_THUMB" ]]; then
+  if [[ "$CODEX_LAST_THUMB" > "$CODEX_LAST_REVIEW" || "$CODEX_LAST_THUMB" == "$CODEX_LAST_REVIEW" ]]; then
+    CODEX_STATE="clean"
+  elif [[ -n "$CODEX_LAST_QUOTA" && "$CODEX_LAST_QUOTA" > "$CODEX_LAST_REVIEW" ]]; then
+    CODEX_STATE="absent"   # findings exist but Codex ran out of credits after — it can never thumbs-up
+  else
+    CODEX_STATE="pending"
   fi
 fi
 
@@ -190,6 +236,7 @@ jq -n \
   --arg rd "$REVIEW_DECISION" \
   --arg ps "$PR_STATE" \
   --arg sha "$HEAD_SHA" \
+  --arg codex "$CODEX_STATE" \
   --argjson green "$CI_GREEN" \
   --argjson reviewed "$REVIEWED_AT_HEAD" \
   --argjson approved "$APPROVED_AT_HEAD" \
@@ -201,5 +248,6 @@ jq -n \
      ci_green: $green,
      reviewed_at_head: $reviewed,
      approved_at_head: $approved,
+     codex_state: $codex,
      unresolved_threads: $threads
    }'

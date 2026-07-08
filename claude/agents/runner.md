@@ -118,29 +118,19 @@ Example:
 ## Completion
 
 1. Full test suite passing
-2. **Create the PR.** Two paths — prefer the Augment plugin when it's installed:
+2. **Create the PR.** Which machine you're on decides everything about review:
+   the `augment-risk/engineering` plugin being installed IS the work-machine
+   signal (test: `ls ~/.claude/plugins/cache/augment-risk/engineering/*/skills/pr/SKILL.md`,
+   or check your available skills for `engineering:pr`).
 
-   **If the `engineering:pr` skill is available** — the `augment-risk/engineering`
-   plugin is installed; check your available skills, or test
-   `ls ~/.claude/plugins/cache/augment-risk/engineering/*/skills/pr/SKILL.md` —
-   invoke `/engineering:pr`. It runs CodeRabbit for you (via `/ar:pr-review`),
-   applies Augment PR standards, pushes, and creates the PR. Do **NOT** also run a
-   separate CodeRabbit pre-flight — `engineering:pr` already covers it; doing both
-   double-runs CodeRabbit.
+   **Work machine (`/engineering:pr` available):** invoke `/engineering:pr`. It
+   runs CodeRabbit for you (via `/ar:pr-review`), applies Augment PR standards,
+   pushes, and creates the PR. Do **NOT** also run a separate CodeRabbit
+   pre-flight — `engineering:pr` already covers it; doing both double-runs
+   CodeRabbit. No Claude reviewer exists on this machine —
+   `spawn-reviewer.sh` stands down on its own; never try to spawn one.
 
-   Because `engineering:pr` has already reviewed this PR, no reviewer watcher
-   should spawn for it. Drop the opt-out marker **before** invoking the skill so
-   the `auto-spawn-reviewer.sh` hook stands down when `engineering:pr` runs
-   `gh pr create`:
-
-   ```bash
-   touch "$(git rev-parse --git-dir)/dispatch-no-auto-reviewer"
-   ```
-
-   Then invoke `/engineering:pr`. This is the preferred path; step 3 below has no
-   reviewer to spawn on it.
-
-   **Otherwise, fall back:**
+   **Personal machine (no `engineering:pr`):**
    a. **Local CodeRabbit pre-flight.** If — and only if — the CodeRabbit CLI is
       present and authed (`which coderabbit && coderabbit auth status` both
       succeed), run `coderabbit review --agent --base <default-branch>`, fix what it
@@ -154,19 +144,18 @@ Example:
       Stop hook re-validates the created PR against the same rules and traps
       the session until it conforms, so there is no useful manual fallback.
 
-   Either path ends with a created PR. **Which path you took decides step 3.**
-3. **Spawn the reviewer — fallback `/pr` path only.**
+   Either path ends with a created PR.
+3. **The reviewer — personal machine only.**
 
-   **If you created the PR with `/engineering:pr`: skip this entire step.** The
-   opt-out marker you dropped in step 2 makes `auto-spawn-reviewer.sh` stand down,
-   so no watcher exists — and you must NOT hand-spawn one either (that CodeRabbit
-   pass already covered the PR; a watcher would just double-review). With no
-   watcher, `approved_at_head` never flips true — your terminal signal is
-   `pr_state == MERGED` or a human `review_decision == APPROVED` (+ CI green). You
-   still keep CI green and address any CodeRabbit/human threads in step 4, and the
-   8hr cap → `needs_review` is the backstop if no human merges. Go straight to step 4.
+   **Work machine: skip this entire step.** `spawn-reviewer.sh` refuses to spawn
+   there (plugin gate), and you must NOT hand-spawn a watcher either — review is
+   dispatcher ⇄ CodeRabbit SaaS on the PR. With no watcher, `approved_at_head`
+   never flips true — your terminal signal is `pr_state == MERGED` or a human
+   `review_decision == APPROVED` (+ CI green). You still keep CI green and address
+   CodeRabbit/human threads in step 4, and the 8hr cap → `needs_review` is the
+   backstop if no human merges. Go straight to step 4.
 
-   **On the fallback `/pr` path, the reviewer spawns automatically.** A PostToolUse
+   **Personal machine: the reviewer spawns automatically.** A PostToolUse
    hook (`auto-spawn-reviewer.sh`) fires on your `gh pr create` and runs
    `spawn-reviewer.sh` for you — check the tool result for its
    "auto-spawned reviewer" note. Only if that note is absent, spawn it
@@ -197,17 +186,30 @@ Example:
    2. **Terminal** → write the status, then let Stop through:
       - `pr_state == MERGED` → `completed`
       - `pr_state == CLOSED` → `closed-without-merge`
-      - `approved_at_head == true` AND `ci_green` → `completed`
-        (the reviewer posted its approved.md for the current HEAD; this is the
-        self-authored-PR signal — GitHub's `reviewDecision` can't APPROVE your
-        own PR, so do NOT wait on it.)
+      - `approved_at_head == true` AND `ci_green` AND `codex_state != "pending"`
+        → `completed`. (The reviewer posted its approved.md for the current HEAD;
+        this is the self-authored-PR signal — GitHub's `reviewDecision` can't
+        APPROVE your own PR, so do NOT wait on it.) The `codex_state` guard:
+        Codex reviews these PRs too, and its verdict is a second gate when it's
+        active — `pending` means Codex's latest signal is a findings review, so
+        even with the reviewer's approval you keep addressing Codex's threads
+        (step 3a) until it reacts 👍 on the PR body (`clean`). `absent` means
+        Codex never engaged or ran out of credits — then the Claude reviewer is
+        the final say and approval+green completes.
       - `review_decision == APPROVED` AND `ci_green` → `completed`
         (covers an external/non-author reviewer, when there is one)
-   3. **Otherwise — advance the PR.** On the fallback `/pr` path, you and the ONE
-      reviewer from step 3 ping-pong until the PR is approved AND CI is green. On the
-      `engineering:pr` path there is no watcher — you just keep CI green and resolve
-      any CodeRabbit/human threads until a human merges or approves. Either way you
-      never wait for a human to tell you to re-review or address comments. Each turn,
+
+      Exception — an **operator sign-off gate**: if the ticket's acceptance
+      genuinely requires a human decision you cannot produce (a visual
+      ratification, a card-by-card ruling), even when approved+green, do NOT
+      auto-`completed` and do NOT escape to `needs_review`. Park instead — see
+      "Operator gate" below.
+   3. **Otherwise — advance the PR.** On a personal machine, you ping-pong with
+      the ONE reviewer from step 3 (and with Codex, when it has credits) until the
+      PR is approved AND CI is green AND Codex isn't pending. On a work machine
+      there is no watcher — you ping-pong with CodeRabbit SaaS: keep CI green and
+      resolve its threads until a human merges or approves. Either way you never
+      wait for a human to tell you to re-review or address comments. Each turn,
       in order:
 
       a. **Unresolved threads** (`unresolved_threads` non-empty) → fix each in
@@ -236,6 +238,35 @@ Example:
 
 5. On terminal exit, finalize: list all commits, brief Notes summary in status file.
 
+## Operator gate — park alive, do NOT exit
+
+Some tasks reach a point where the ONLY remaining step is a human DECISION that no
+amount of runner work can produce: a card-by-card ruling on an audit, an operator's
+visual ratification of a rendered effect, a genuinely ambiguous spec choice with
+real product consequences. This is different from routine ambiguity (for which you
+just make a reasonable choice and note it — see Rules).
+
+Do NOT write a terminal status (`needs_review`, `failed`) and conclude when you hit
+one of these. A terminal exit ends this background session (`done`), and the
+operator can no longer tab into you to answer — the decision is stranded and your
+context is lost. Instead **park alive**:
+
+1. Set status to `blocked` in the status file, with a Notes line:
+   `Awaiting operator: <the exact decision you need>`.
+2. Use the **SendUserMessage** tool to ask the operator that one specific,
+   self-contained question (include the PR link and what each answer will make you
+   do). This is the whole point of the gate — hand the decision back.
+3. End your turn. The Stop hook allows the stop on `blocked`, so this session parks
+   as "waiting on you" — alive and attachable. The operator opens `claude agents`,
+   selects this runner, and replies. `blocked` is exempt from the 8hr cap and the
+   spin guard, so parking costs nothing and can wait as long as it needs.
+4. When the operator answers, set status back to `in_progress` and act on the
+   ruling. Then continue to the normal terminal conditions.
+
+`needs_review` is NOT the "awaiting human decision" state — it is what the hook
+writes on its own when the 8hr cap or spin guard trips. Never hand-write it to
+escape a gate; that strands the work. `blocked` + SendUserMessage is the gate.
+
 ## Failure
 
 1. Status → `failed`
@@ -253,5 +284,7 @@ Example:
 - Follow practices from `~/.claude/practices/` and `<repo>/.practices/` (local overrides global by filename)
 - Use discovery findings from prompt — don't re-explore from scratch
 - Absolute paths for status/spec files — worktree relative paths won't reach main tree
-- Ambiguity → make a reasonable choice, document in Notes
+- Ambiguity → make a reasonable choice, document in Notes. Only a decision with real
+  product consequences that you genuinely cannot make is an operator gate → park
+  (`blocked` + SendUserMessage), never a terminal exit. See "Operator gate".
 - Reviewers come ONLY from `spawn-reviewer.sh`. Never spawn an ad-hoc `claude --bg`/`-p` agent to review or to nudge a re-review — push and let the watcher handle it.

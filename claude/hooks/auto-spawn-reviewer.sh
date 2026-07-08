@@ -28,23 +28,11 @@ fi
 PR=$(gh pr view --json number -q '.number' 2>/dev/null) || exit 0
 [[ -n "$PR" ]] || exit 0
 
-# Per-run opt-out for the `/engineering:pr` path. That skill runs CodeRabbit
-# (via `/ar:pr-review`) + Augment PR standards at creation time, so a watcher
-# here would just double-review. The runner drops this marker before invoking
-# `/engineering:pr` (runner.md step 2). It lives INSIDE the worktree's git dir —
-# per-worktree, invisible to `git status`, and resolvable by both sides via
-# `git rev-parse --git-dir` from the worktree cwd — because client env does NOT
-# survive the `--bg` daemon hop (see scripts/lib/dispatch.sh), so an env var
-# couldn't carry the signal here. Consume it (rm) so it can't suppress a later
-# genuine spawn if the worktree is reused. The fallback `/pr` path never drops
-# it, so that path auto-spawns exactly as before.
-GITDIR=$(git rev-parse --git-dir 2>/dev/null) || GITDIR=""
-if [[ -n "$GITDIR" && -f "$GITDIR/dispatch-no-auto-reviewer" ]]; then
-  rm -f "$GITDIR/dispatch-no-auto-reviewer" 2>/dev/null || true
-  echo "reviewer auto-spawn skipped for PR #$PR: /engineering:pr path already ran CodeRabbit at creation." >&2
-  exit 0
-fi
-
+# No work-machine / engineering:pr special-casing here: spawn-reviewer.sh itself
+# stands down on work machines (the augment-risk/engineering plugin gate), so this
+# hook can fire unconditionally. The old per-run marker-file opt-out
+# (dispatch-no-auto-reviewer) is gone — machine identity, not per-run state,
+# decides who reviews.
 if OUT=$(bash "$HOME/.claude/skills/dispatch/spawn-reviewer.sh" "$PR" 2>&1); then
   echo "auto-spawned reviewer for PR #$PR:" >&2
 else

@@ -18,8 +18,13 @@ DISPATCH_TERMINAL_STATUSES="completed needs_review closed-without-merge failed"
 # Statuses that mean "runner actively working" — the ONLY ones a watchdog/janitor
 # may resume (allowlist; the historical vocabulary drifted, blocklists lie).
 DISPATCH_RESUMABLE_STATUSES="in_progress"
-# Full current vocabulary, for validation. `blocked` is a deliberate stop that a
-# human must decide on: neither terminal-exitable nor auto-resumable.
+# Full current vocabulary, for validation. `blocked` is the operator-decision
+# PARK: not terminal (the runner resumes once the operator answers) and not
+# auto-resumable (operator-owned — the watchdog leaves it alone). enforce-completion
+# ALLOWS the Stop on it so the --bg session parks ALIVE and attachable
+# (`claude agents`) rather than dying; the runner asks its question via
+# SendUserMessage (spawned with `--brief`). Distinct from a terminal exit, which
+# yields a `done` session the operator cannot tab into.
 DISPATCH_KNOWN_STATUSES="$DISPATCH_RESUMABLE_STATUSES blocked $DISPATCH_TERMINAL_STATUSES"
 
 # Session states in `claude agents --json` that mean "not alive" (jq array).

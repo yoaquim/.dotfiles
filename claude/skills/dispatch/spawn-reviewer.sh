@@ -57,6 +57,19 @@ if [[ -n "${DISPATCH_NO_REVIEWER:-}" ]]; then
   exit 0
 fi
 
+# Work-machine gate. The augment-risk/engineering plugin being installed IS the
+# work-machine signal (it provides /engineering:pr, which runs CodeRabbit): there,
+# PR review is dispatcher ⇄ CodeRabbit SaaS on the PR — never a Claude reviewer.
+# Enforced HERE, at the single chokepoint, so every caller stands down: the
+# auto-spawn hook, the runner's fallback call, /pr-review's background dispatch,
+# AND the watchdog's reviewer-revive (which would otherwise resurrect a reviewer
+# no one meant to exist). Same availability test runner.md uses for the skill.
+if compgen -G "$HOME/.claude/plugins/cache/augment-risk/engineering/*/skills/pr/SKILL.md" >/dev/null 2>&1; then
+  echo "reviewer_status:disabled"
+  echo "name:(work machine — /engineering:pr + CodeRabbit reviews PRs here; no Claude reviewer)"
+  exit 0
+fi
+
 # Resolve EVERYTHING the name depends on from the PR itself (not from cwd or the
 # local branch), so the name is identical no matter who calls this or from where.
 PR_JSON=$(gh pr view "$@" --json number,headRefName,title,url,headRefOid 2>/dev/null)
