@@ -29,13 +29,16 @@
 #                             which never reach the Edit/Write tools)
 #
 # Runner identity resolves in three tiers:
-#   1. CLAUDE_DISPATCH_* env vars (immutable when present — but client env does
-#      NOT reach a `claude --bg` daemon worker, verified 2026-07-04, so for real
-#      dispatched runners these are absent);
-#   2. the bg job's state file (template == "runner", cwd == the worktree
-#      spawn.sh submitted from) — daemon-written, immutable to the runner, and
-#      holds regardless of where the runner has cd'd. THIS is the tier that
-#      actually fires for dispatched runners;
+#   1. the bg job's state file (template == "runner", cwd == the worktree
+#      spawn.sh submitted from), keyed by this hook call's session_id —
+#      daemon-written, immutable to the runner, PER-SESSION, and holds regardless
+#      of where the runner has cd'd. AUTHORITATIVE, tried first: it is the only
+#      source that can't be wrong for a real dispatched runner;
+#   2. CLAUDE_DISPATCH_* env vars — a fallback for env-based dispatch, but NOT
+#      trusted over tier 1. A reused `claude --bg` daemon leaks the FIRST
+#      dispatch's CLAUDE_DISPATCH_WORKTREE to every later worker via inherited
+#      process env (observed 2026-07-07: amp-16/amp-17 both resolved to amp-15),
+#      so trusting env first locked concurrent runners out of their own worktrees;
 #   3. cwd-derived detection (best effort: cannot see a runner that has cd'd
 #      away from its worktree).
 #
@@ -64,24 +67,28 @@ CWD=$(jq -r '.cwd // ""' <<<"$INPUT")
 # shellcheck disable=SC1091
 . "$HOME/.claude/scripts/lib/dispatch.sh" 2>/dev/null || true
 
+# Per-session identity from the bg job state (session_id-keyed, daemon-written,
+# immutable to the runner). Computed FIRST and preferred over the env tier below.
+# Rationale: CLAUDE_DISPATCH_WORKTREE can be a STALE LEAK. A reused `claude --bg`
+# daemon keeps the FIRST dispatch's CLAUDE_DISPATCH_* in its process env, so every
+# later worker inherits it — the env then resolves ALL concurrent runners to the
+# first one's worktree, locking them out of their own (observed 2026-07-07:
+# amp-16 and amp-17 both resolved to amp-15). Job state is per-session and cannot
+# leak, and it is the same source enforce-completion.sh trusts — so preferring it
+# both fixes the lockout and keeps the two hooks agreeing on runner identity.
 JOB_WORKTREE=""
-if [[ -z "${CLAUDE_DISPATCH_WORKTREE:-}" ]] && command -v dispatch_runner_worktree >/dev/null 2>&1; then
+if command -v dispatch_runner_worktree >/dev/null 2>&1; then
     SID=$(jq -r '.session_id // ""' <<<"$INPUT")
     JOB_WORKTREE=$(dispatch_runner_worktree "$SID" 2>/dev/null) || JOB_WORKTREE=""
 fi
 
-# --- Resolve runner identity (env, else job state, else cwd fallback) ---
-if [[ -n "${CLAUDE_DISPATCH_WORKTREE:-}" ]]; then
-    WORKTREE="$CLAUDE_DISPATCH_WORKTREE"
-    DISPATCH_ROOT="${CLAUDE_DISPATCH_ROOT:-$(dirname "$(dirname "$(dirname "$WORKTREE")")")}"
-    STATUS_FILE="${CLAUDE_DISPATCH_STATUS_FILE:-$DISPATCH_ROOT/.dispatch/status/$(basename "$WORKTREE").md}"
-elif [[ -n "$JOB_WORKTREE" ]]; then
+# --- Resolve runner identity (job state, else env, else cwd fallback) ---
+if [[ -n "$JOB_WORKTREE" ]]; then
     WORKTREE="$JOB_WORKTREE"
     # Worktrees live at <root>/.claude/worktrees/<name> — derive the root
     # TEXTUALLY so it keeps the same raw spelling as the worktree path (the
     # canon() calls below add the symlink-resolved form; the scan must block
-    # BOTH spellings, exactly like the env tier). Fall back to git only when
-    # the layout doesn't hold.
+    # BOTH spellings). Fall back to git only when the layout doesn't hold.
     DISPATCH_ROOT=$(dirname "$(dirname "$(dirname "$WORKTREE")")")
     if ! git -C "$DISPATCH_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
         COMMON_GIT_DIR=$(git -C "$WORKTREE" rev-parse --git-common-dir 2>/dev/null) || COMMON_GIT_DIR=""
@@ -91,6 +98,10 @@ elif [[ -n "$JOB_WORKTREE" ]]; then
         [[ -n "$COMMON_GIT_DIR" ]] && DISPATCH_ROOT=$(dirname "$COMMON_GIT_DIR")
     fi
     STATUS_FILE="$DISPATCH_ROOT/.dispatch/status/$(basename "$WORKTREE").md"
+elif [[ -n "${CLAUDE_DISPATCH_WORKTREE:-}" ]]; then
+    WORKTREE="$CLAUDE_DISPATCH_WORKTREE"
+    DISPATCH_ROOT="${CLAUDE_DISPATCH_ROOT:-$(dirname "$(dirname "$(dirname "$WORKTREE")")")}"
+    STATUS_FILE="${CLAUDE_DISPATCH_STATUS_FILE:-$DISPATCH_ROOT/.dispatch/status/$(basename "$WORKTREE").md}"
 else
     # Legacy fallback: derive from cwd (same detection as enforce-completion.sh).
     [[ -z "$CWD" ]] && exit 0
