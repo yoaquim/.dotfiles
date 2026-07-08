@@ -283,7 +283,7 @@ When a runner's PR receives `/pr-review` feedback (inline comments + `reviewDeci
 3. Fix → commit → push → resolve each addressed thread with `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>` (the reviewer never resolves threads — runner.md "Completion" owns this).
 4. `/pr-review` watch loop detects the new commit and re-reviews automatically.
 
-Cycle ends when the reviewer posts its approved.md at HEAD (`approved_at_head`) with CI green — AND Codex isn't `pending` (`check-pr-state.sh` → `codex_state`): if Codex reviewed with findings, the runner keeps addressing them until Codex reacts 👍 on the PR body (`clean`); if Codex never engaged or is out of credits (`absent`), the reviewer is the final say.
+Cycle ends when the reviewer posts its approved.md at HEAD (`approved_at_head`) with CI green — AND `codex_state` (`check-pr-state.sh`) is `clean` or `absent`: if Codex reviewed with findings (`pending`), the runner keeps addressing them — pushing, then commenting `@codex review` (Codex doesn't re-review pushes on its own) — until Codex reacts 👍 on the PR body (`clean`); `waiting` (fresh head, first verdict may be in flight) holds the loop open; if Codex never engaged or is out of credits (`absent`), the reviewer is the final say.
 
 ---
 

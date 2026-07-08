@@ -186,16 +186,21 @@ Example:
    2. **Terminal** → write the status, then let Stop through:
       - `pr_state == MERGED` → `completed`
       - `pr_state == CLOSED` → `closed-without-merge`
-      - `approved_at_head == true` AND `ci_green` AND `codex_state != "pending"`
-        → `completed`. (The reviewer posted its approved.md for the current HEAD;
-        this is the self-authored-PR signal — GitHub's `reviewDecision` can't
-        APPROVE your own PR, so do NOT wait on it.) The `codex_state` guard:
-        Codex reviews these PRs too, and its verdict is a second gate when it's
-        active — `pending` means Codex's latest signal is a findings review, so
-        even with the reviewer's approval you keep addressing Codex's threads
-        (step 3a) until it reacts 👍 on the PR body (`clean`). `absent` means
-        Codex never engaged or ran out of credits — then the Claude reviewer is
-        the final say and approval+green completes.
+      - `approved_at_head == true` AND `ci_green` AND `codex_state` is `"clean"`
+        or `"absent"` → `completed`. (The reviewer posted its approved.md for the
+        current HEAD; this is the self-authored-PR signal — GitHub's
+        `reviewDecision` can't APPROVE your own PR, so do NOT wait on it.) The
+        `codex_state` guard: Codex reviews these PRs too, and its verdict is a
+        second gate when it's active —
+        - `pending`: Codex's latest signal is a findings review — even with the
+          reviewer's approval, keep addressing Codex's threads (step 3a) until it
+          reacts 👍 on the PR body (`clean`).
+        - `waiting`: Codex hasn't spoken yet but the head is fresh — its first
+          verdict lags the PR by minutes (a runner once completed 13 SECONDS
+          before Codex's findings landed). Not terminal: nothing to do this turn,
+          just try to end and let the loop re-check.
+        - `absent`: Codex never engaged or ran out of credits — the Claude
+          reviewer is the final say; approval+green completes.
       - `review_decision == APPROVED` AND `ci_green` → `completed`
         (covers an external/non-author reviewer, when there is one)
 
@@ -215,6 +220,11 @@ Example:
       a. **Unresolved threads** (`unresolved_threads` non-empty) → fix each in
          place, commit, `git push`, then
          `~/.claude/skills/dispatch/resolve-thread.sh <thread-id>` for each addressed.
+         If any addressed thread was Codex's (`author: chatgpt-codex-connector`),
+         also comment `gh pr comment "$PR" --body "@codex review"` after the push —
+         Codex does NOT re-review pushes on its own (it only triggers on PR open,
+         draft-ready, or that comment), so without it `codex_state` stays `pending`
+         forever. The Claude reviewer needs no such nudge; pushing is its handoff.
       b. **Red/failing CI** (`ci_green == false`) → the merge is blocked by a
          check, not a comment, and fixing it is in scope — don't wait for a human.
          `gh pr checks "$PR"` to see which check failed, then read its logs

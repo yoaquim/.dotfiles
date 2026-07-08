@@ -9,7 +9,7 @@
 #     ci_green:        true|false,
 #     reviewed_at_head: true|false,   # ANY review exists for THIS HEAD (approve or findings)
 #     approved_at_head: true|false,   # a review at THIS HEAD carries the approved.md sentinel
-#     codex_state:      clean|pending|absent,  # Codex bot verdict (see 1c below)
+#     codex_state:      clean|pending|waiting|absent,  # Codex bot verdict (see 1c below)
 #     unresolved_threads: [
 #       { id, path, line, body, author }
 #     ] }
@@ -22,6 +22,10 @@
 # Exit 0 always (errors are reported in JSON when possible).
 
 set -uo pipefail
+
+# iso_to_epoch (BSD/GNU date portable) for the codex "waiting" freshness window.
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/dispatch.sh" 2>/dev/null || true
 
 PR="${1:-}"
 if [[ -z "$PR" ]]; then
@@ -63,6 +67,7 @@ GRAPHQL_JSON=$(gh api graphql \
           commits(last:1) {
             nodes {
               commit {
+                committedDate
                 statusCheckRollup {
                   contexts(first:100) {
                     nodes {
@@ -182,9 +187,14 @@ fi
 #   codex_state: "clean"   — thumbs-up is the latest signal → Codex is satisfied
 #                "pending" — a findings review is the latest signal → address its
 #                            threads and push until it thumbs-ups
-#                "absent"  — Codex never engaged, or its latest signal is the
-#                            usage-limits comment (no credits): Codex cannot rule,
-#                            so the Claude reviewer is the final say
+#                "waiting" — no Codex signal yet AND the head commit is < 15 min
+#                            old: its first verdict may still be in flight (it
+#                            lags PR creation by minutes) — don't complete into
+#                            the race window; keep looping
+#                "absent"  — Codex never engaged (head is old, still silent), or
+#                            its latest signal is the usage-limits comment (no
+#                            credits): Codex cannot rule, so the Claude reviewer
+#                            is the final say
 # Empty-body COMMENTED reviews are excluded — replying to an inline thread makes
 # GitHub synthesize one (same artifact spawn-reviewer.sh's gate filters).
 CODEX_LOGIN="chatgpt-codex-connector[bot]"
@@ -212,6 +222,19 @@ if [[ -n "$CODEX_LAST_REVIEW" || -n "$CODEX_LAST_THUMB" ]]; then
     CODEX_STATE="absent"   # findings exist but Codex ran out of credits after — it can never thumbs-up
   else
     CODEX_STATE="pending"
+  fi
+elif [[ -z "$CODEX_LAST_QUOTA" ]]; then
+  # No Codex signal at all — but its first verdict LAGS the PR by minutes
+  # (observed: runner exited terminal 13s before Codex's findings landed on
+  # PR parcha#186). While the head commit is fresh, report "waiting" so the
+  # runner keeps looping instead of completing into the race window; once the
+  # head is old and Codex stayed silent, it isn't installed / isn't coming →
+  # absent, the Claude reviewer is the final say. A quota comment (elif guard)
+  # means Codex can't ever answer → absent immediately, no pointless wait.
+  HEAD_COMMITTED=$(jq -r "$PR_NODE.commits.nodes[0].commit.committedDate // \"\"" <<<"$GRAPHQL_JSON")
+  HEAD_EPOCH=$(iso_to_epoch "$HEAD_COMMITTED")
+  if [[ "$HEAD_EPOCH" -gt 0 ]] && (( $(date +%s) - HEAD_EPOCH < 900 )); then
+    CODEX_STATE="waiting"
   fi
 fi
 

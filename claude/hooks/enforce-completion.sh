@@ -237,8 +237,9 @@ STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR_NUMBER" 2>/dev/
   echo "  - Unresolved threads → fix → commit → push → ~/.claude/skills/dispatch/resolve-thread.sh <id>"
   echo "  - ci_green==false → fix the failing check (gh pr checks $PR_NUMBER; gh run view <run-id> --log-failed) → commit → push. In scope; don't wait for a human."
   echo "  - The ONE reviewer from Completion watches HEAD and re-reviews each push on its own. Do NOT spawn or re-spawn a reviewer; never hand-roll a claude --bg review agent."
-  echo "  - Terminal when approved_at_head==true AND ci_green AND codex_state != \"pending\" (self-authored PRs never reach reviewDecision==APPROVED), or on merge/close."
-  echo "  - codex_state==pending → Codex's latest signal is a findings review: address its threads and push until it reacts 👍 (clean). absent → Codex inactive/out of credits; the reviewer is the final say."
+  echo "  - Terminal when approved_at_head==true AND ci_green AND codex_state is clean|absent (self-authored PRs never reach reviewDecision==APPROVED), or on merge/close."
+  echo "  - codex_state==pending → Codex's latest signal is a findings review: address its threads, push, then comment '@codex review' on the PR (Codex does not re-review pushes on its own) until it reacts 👍 (clean)."
+  echo "  - codex_state==waiting → Codex's first verdict may still be in flight (fresh head): not terminal, sleep 60 and re-check. absent → Codex inactive/out of credits; the reviewer is the final say."
   echo "  - Sleep 60s if idle, then re-check"
   echo
   echo "Write a terminal status (completed | needs_review | closed-without-merge | failed)"
