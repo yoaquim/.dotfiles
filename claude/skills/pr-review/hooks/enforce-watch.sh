@@ -205,11 +205,13 @@ if [[ "$REVIEWED_AT_HEAD" != "true" ]]; then
   {
     echo "Do NOT stop — PR #$PR HEAD ($CUR_SHA) has not been reviewed yet."
     echo
-    echo "Review the diff now (SKILL.md steps 1-5):"
-    echo "  1. gh pr diff $PR                     — read the diff end to end"
-    echo "  2. Apply bug-checklist.md + criteria/"
-    echo "  3. Fill templates/ (approved.md or changes-requested.md) + finding.md per finding"
-    echo "  4. Post: gh api .../pulls/$PR/reviews --input <payload.json>"
+    echo "Review the diff now (SKILL.md steps 1-6):"
+    echo "  1. bash ~/.claude/skills/pr-review/ensure-review-checkout.sh $PR   — sync review checkout to the new HEAD"
+    echo "     gh pr diff $PR                     — read the diff end to end, then Read the real files around each hunk"
+    echo "  2. Apply bug-checklist.md + detected criteria (resolve-criteria.sh <checkout>)"
+    echo "  3. Verify each candidate finding against the checkout — try to refute it; drop what doesn't survive"
+    echo "  4. Fill templates/ (approved.md or changes-requested.md) + finding.md per finding"
+    echo "  5. Post: gh api .../pulls/$PR/reviews --input <payload.json>"
     echo "           (APPROVE if zero findings, else REQUEST_CHANGES; on a self-authored 422, re-post as COMMENT)"
     echo
     echo "Then try to end again — this hook re-evaluates every turn."

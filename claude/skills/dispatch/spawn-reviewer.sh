@@ -167,6 +167,16 @@ if [[ -n "$EXISTING" ]]; then
   exit 0
 fi
 
+# Give the reviewer a REAL checkout before spawning: a detached worktree at the
+# PR HEAD (ensure-review-checkout.sh), so it reviews files — guards, callers —
+# not just diff hunks. Best effort: if no local clone exists and cloning fails,
+# spawn from the caller's cwd as before and the skill degrades to diff-only
+# (and says so). The skill re-runs the same script each pass to re-sync HEAD.
+CHECKOUT=""
+CO_OUT=$(bash "$HOME/.claude/skills/pr-review/ensure-review-checkout.sh" "$PR_URL" 2>&1) \
+  && CHECKOUT=$(grep '^checkout:' <<<"$CO_OUT" | cut -d: -f2-)
+SPAWN_DIR="${CHECKOUT:-$PWD}"
+
 # Spawn the watcher with the PR url so the child always has repo context,
 # regardless of the cwd it lands in.
 # Spawn as the `pr-reviewer` AGENT with a PLAIN prompt — this is what makes the
@@ -178,7 +188,7 @@ fi
 #   2. a PLAIN prompt (NOT a leading "/pr-review …") → a slash-command as the
 #      initial prompt makes the harness treat it as a skill session, which does
 #      not apply the agent's hooks. The agent's body invokes /pr-review --inline.
-SPAWN_OUT=$(claude --bg --agent pr-reviewer --model default --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL" 2>&1)
+SPAWN_OUT=$(cd "$SPAWN_DIR" && claude --bg --agent pr-reviewer --model default --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL${CHECKOUT:+ (review checkout, already synced to HEAD: $CHECKOUT)}" 2>&1)
 
 # Resolve the id by the NAME we set (robust to --bg stdout wording). The lib
 # retries for agent-list latency; then fall back to scraping --bg stdout.

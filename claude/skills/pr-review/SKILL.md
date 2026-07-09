@@ -1,9 +1,9 @@
 ---
 name: pr-review
 description: Review a GitHub PR or current branch primarily for bugs (correctness, null/undefined, async/race, error handling, security, resource leaks, test rigor). Posts findings as resolvable inline review comments. Auto-APPROVES when nothing's wrong. House-rules criteria run as additive extras.
-version: 3.1.0
+version: 3.2.0
 argument-hint: "[--inline] [--once] [<PR-number-or-URL>]"
-allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Bash(jq*), Bash(mktemp*), Bash(*check-pr-state.sh*), Bash(*spawn-reviewer.sh*), Bash(sleep*), Bash(date*), Read, Glob, Grep
+allowed-tools: Bash(gh*), Bash(git*), Bash(claude*), Bash(jq*), Bash(mktemp*), Bash(*check-pr-state.sh*), Bash(*spawn-reviewer.sh*), Bash(*ensure-review-checkout.sh*), Bash(*resolve-criteria.sh*), Bash(sleep*), Bash(date*), Read, Glob, Grep
 hooks:
   PreToolUse:
     - matcher: "Bash"
@@ -34,8 +34,8 @@ hooks:
 
 Parse `$ARGUMENTS` for these in order:
 
-1. **`--inline` flag** (alias: `--fg`) anywhere → strip it and review in THIS session instead of dispatching a *new* background watcher. This is exactly how the dispatch reviewer is launched (`claude --bg "/pr-review --inline <url>"`): the background session already exists, so `--inline` means only "don't dispatch another one." It does **NOT** make this a one-shot — proceed to step 1, and the watch loop (step 6) still runs unless `--once` is also set. Done.
-2. **`--once` flag** → strip it and remember; passed to step 6 to skip the watch loop after delivery. This is the ONLY flag that disables watching.
+1. **`--inline` flag** (alias: `--fg`) anywhere → strip it and review in THIS session instead of dispatching a *new* background watcher. This is exactly how the dispatch reviewer is launched (`claude --bg "/pr-review --inline <url>"`): the background session already exists, so `--inline` means only "don't dispatch another one." It does **NOT** make this a one-shot — proceed to step 1, and the watch loop (step 7) still runs unless `--once` is also set. Done.
+2. **`--once` flag** → strip it and remember; passed to step 7 to skip the watch loop after delivery. This is the ONLY flag that disables watching.
 3. **PR identifier**, accepting any of:
    - Bare integer (e.g. `18`) — current repo
    - Full URL (e.g. `https://github.com/owner/repo/pull/18`) — extracts `owner/repo` and PR number
@@ -77,19 +77,55 @@ or merged/closed.
 
 If `SESSION_ID` is empty AND `reviewer_status` is neither `already-reviewed` nor `already-running`, the dispatch failed. **Surface `SESSION_OUTPUT` verbatim to the user and stop.** Do not paraphrase. Do not invent reasons (e.g. "the --bg flag isn't available"). The `--bg` flag DOES exist on Claude Code; it is hidden from `claude --help` but valid. If the literal bash output says something else, report exactly what it says. **Do not fall back to running in foreground.** The user can re-run with `--inline` if they want that.
 
-## 1. Read the diff
+## 1. Check out the code, then read the diff
 
-`gh pr diff <n>` (or `git diff main...HEAD`). End-to-end. >3k lines → one Explore subagent per logical module, synthesize.
+**You review real files, not diff hunks.** The guard three lines above a hunk and the caller two files over are invisible in `gh pr diff` — they are exactly where false positives and misses come from.
+
+PR mode — sync a local checkout to the PR HEAD (idempotent; run it at the START of EVERY pass, including each re-review the watch loop sends you back for):
+
+```bash
+CO_OUT=$(bash ~/.claude/skills/pr-review/ensure-review-checkout.sh $PR_ARG 2>&1)
+CHECKOUT=$(grep '^checkout:' <<<"$CO_OUT" | cut -d: -f2-)
+```
+
+- Branch mode (no PR): skip the script — the current checkout IS the code; `CHECKOUT=$(git rev-parse --show-toplevel)`.
+- Script fails (no local clone and clone failed): say so in chat and continue diff-only — but then every finding whose refutation would need surrounding code is capped at `**Confidence:** Low`.
+- The checkout is detached at the PR HEAD and dedicated to review. Read from it; never commit or edit in it.
+
+Read the diff end-to-end: `gh pr diff <n>` (or `git diff main...HEAD`). >3k lines → one Explore subagent per logical module, synthesize.
+
+**Then, for every hunk you might comment on, Read the enclosing file in `$CHECKOUT`** — the whole function at minimum, plus callers (Grep) when behavior or signatures change. A finding based only on hunk text is not yet a finding; it's a candidate for step 4.
 
 ## 2. Apply `bug-checklist.md` (primary)
 
 Read the sibling file `bug-checklist.md`. Apply every section to every changed file. Every concrete bug → finding with `file:line`. Uncertain → `**Confidence:** Low`. Do not silently skip.
 
-## 3. Apply criteria (additive)
+## 3. Apply criteria (additive, detected per-repo)
 
-Read every file in `criteria/`. Apply each. If a criterion doesn't apply, omit it from the `Criteria applied` header line. Citation goes on the relevant finding(s).
+Criteria are selected by `criteria/INDEX.md` detect rules, not all-loaded:
 
-## 4. Compose output — templates only, no freehand
+```bash
+bash ~/.claude/skills/pr-review/resolve-criteria.sh "$CHECKOUT"
+```
+
+Read every file it prints and apply it. House-rules criteria (`spec-compliance`, `doc-audit`, `slice-size`, `rules-source-of-truth`) are `always`; stack criteria (Django, React, shell, …) load only when the checkout matches their Detect rule — they extend the bug pass with stack-specific failure modes the generic checklist can't cover. If a selected criterion doesn't apply to this particular diff, omit it from the `Criteria applied` header line. Citation goes on the relevant finding(s).
+
+## 4. Verify every finding — refute before you post
+
+Steps 2–3 produce *candidates*. Nothing posts unverified. For EACH candidate:
+
+1. **Re-read the real code** at the cited `file:line` in `$CHECKOUT` (Read, not the hunk) — the enclosing function, its guards and early returns, and (for contract changes) its callers via Grep.
+2. **Actively try to refute it**: ask "what would make this NOT a bug?" — an upstream null check, a caller that can't pass the bad input, a test that pins the behavior, an intentional-and-documented choice. Check that thing; don't assume it.
+3. **Verdict**:
+   - Refuted → drop it. Silently — a refuted candidate is not a Nit.
+   - Survives cleanly (you looked for the refutation and it isn't there) → keep, confidence High/Med.
+   - Couldn't refute but couldn't confirm either (missing context, can't run it) → keep with `**Confidence:** Low`.
+
+Also dedupe here: candidates from the checklist and a criterion describing the same defect merge into one finding (criterion citation wins).
+
+`$FINDING_COUNT` for steps 5–6 is the count AFTER this pass.
+
+## 5. Compose output — templates only, no freehand
 
 Every surface is a fixed template in `templates/`. Fill the placeholders; never restyle, reorder, or improvise wording. This is what stops reviews from drifting.
 
@@ -130,7 +166,7 @@ Zero findings → post `templates/approved.md` verbatim. It carries the `👾 Re
 
 Sort findings: Blockers → Concerns → Nits. Within tier, `general` first, then criteria.
 
-## 5. Deliver
+## 6. Deliver
 
 Chat first. Then post via `gh api .../reviews` — in **two separate Bash calls**.
 The PreToolUse hook (`check-post.sh`) validates the payload file named by
@@ -213,15 +249,15 @@ Event semantics — choose by finding count, but expect the self-authored fallba
 
 The hook (`hooks/check-post.sh`) reads the payload file and blocks on: missing header in body, or zero engagement (empty `comments[]` AND the body is not an approve per `templates/approved.md`). Fix the body/comments and retry — do not bypass.
 
-## 6. Watch loop (default; `--once` skips)
+## 7. Watch loop (default; `--once` skips)
 
-**You do not run the loop — the Stop hook (`enforce-watch.sh`) does.** Never spin a `while true` bash loop: bash can `sleep` but it can't re-review (steps 1–5 are model turns, not shell), so an infinite loop just wedges the session on a single pass. That's the old bug.
+**You do not run the loop — the Stop hook (`enforce-watch.sh`) does.** Never spin a `while true` bash loop: bash can `sleep` but it can't re-review (steps 1–6 are model turns, not shell), so an infinite loop just wedges the session on a single pass. That's the old bug.
 
 The model is dead simple: after delivering, **just try to end.** Every time you do, the hook decides:
 
 - **Stop allowed** — PR is MERGED/CLOSED; OR the current HEAD is approved (your `approved.md` review is on it, or an external `reviewDecision == APPROVED`) *and* all GitHub checks are green; OR `--once` was set; OR the 8hr cap passed. (You can't APPROVE your own PR, so the hook detects approval from your posted `approved.md` review at the current commit — not a GitHub APPROVE event. Approved but CI pending/red → keep watching; a failing check may push a fix to re-review.)
 - **Stop blocked** — the hook reads from GitHub whether the **current HEAD has been reviewed** (`check-pr-state.sh` → `reviewed_at_head`, by `commit_id`) and injects one next action:
-  - **HEAD unreviewed** (a new commit was pushed) → redo steps 1–5 on the fresh diff, post, then try to end again.
+  - **HEAD unreviewed** (a new commit was pushed) → redo steps 1–6 on the fresh diff (step 1's checkout sync picks up the new HEAD), post, then try to end again.
   - **HEAD already reviewed** → `sleep 60`, re-poll, then try to end again.
 
 So the loop is: review → try to end → do what the hook says → try to end. Repeat. Coverage is read from GitHub (a review whose `commit_id` is the current HEAD), not a local stamp — so you don't track SHAs yourself, and you must not re-review a commit that's already reviewed. Terminal exit is always the hook's call, never yours.
@@ -229,6 +265,6 @@ So the loop is: review → try to end → do what the hook says → try to end. 
 ## Extending
 
 - Broaden the primary pass → add to `bug-checklist.md`.
-- New optional gate → drop a file at `criteria/<slug>.md` (What / Why / How to spot / When NOT / Severity).
+- New optional gate → drop a file at `criteria/<slug>.md` (What / How to spot / When NOT / Severity) AND add a row to `criteria/INDEX.md` — Detect `always` for house rules, or a detect rule (file / `file:string` / glob) for stack criteria. A criteria file without an INDEX row is never loaded.
 - New mechanical check on the posted output → extend `hooks/check-post.sh`.
 - Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Two lines in `approved.md` are load-bearing — keep both: the `# 👾 Reviewed by Claude …` header (matched by `^# .*Reviewed by Claude`) and the `# ✅ APPROVED ✅` headline (matched by `^# .*APPROVED`). `scripts/lib/pr-review-markers.sh` reads them back from the template as the single source of truth for `check-post.sh` and `check-pr-state.sh`; reword either line and approval detection silently breaks. (`spawn-reviewer.sh`'s reviewed-at-HEAD gate counts any review at HEAD via REST and doesn't use the sentinel.)
