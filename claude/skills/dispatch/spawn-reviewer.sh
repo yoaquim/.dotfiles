@@ -72,8 +72,51 @@ fi
 
 # Resolve EVERYTHING the name depends on from the PR itself (not from cwd or the
 # local branch), so the name is identical no matter who calls this or from where.
-PR_JSON=$(gh pr view "$@" --json number,headRefName,title,url,headRefOid 2>/dev/null)
-if [[ -z "$PR_JSON" ]]; then
+#
+# Resolution is pure REST (`gh api repos/...`), NOT `gh pr view` (GraphQL): the
+# two draw from separate rate-limit buckets, and the scarce graphql one being
+# empty must never block reviewer spawning (observed: dispatchers idling ~30 min
+# for the graphql window while core sat well under half used). Accepts the same
+# refs callers pass: a PR url, a bare number, a number/branch with -R owner/repo.
+resolve_pr_json() {
+  local ref="${1#\#}"; shift
+  local repo_arg="" owner_repo="" number=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -R|--repo) repo_arg="${2:-}"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+
+  if [[ "$ref" =~ ^https?://[^/]+/([^/]+/[^/]+)/pull/([0-9]+) ]]; then
+    owner_repo="${BASH_REMATCH[1]}"
+    number="${BASH_REMATCH[2]}"
+  else
+    owner_repo="$repo_arg"
+    if [[ -z "$owner_repo" ]]; then
+      # owner/repo from the cwd's origin remote — plain git, zero API cost.
+      local url
+      url=$(git remote get-url origin 2>/dev/null) || return 1
+      url="${url%/}"; url="${url%.git}"
+      [[ "$url" =~ ([^/:]+)/([^/]+)$ ]] || return 1
+      owner_repo="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+    fi
+    if [[ "$ref" =~ ^[0-9]+$ ]]; then
+      number="$ref"
+    else
+      # Branch ref: newest matching PR, open preferred — same pick gh pr view makes.
+      number=$(gh api "repos/$owner_repo/pulls?head=${owner_repo%%/*}:$ref&state=all&sort=created&direction=desc" 2>/dev/null \
+        | jq -r '(map(select(.state == "open")) + .) | .[0].number // empty' 2>/dev/null)
+      [[ -n "$number" ]] || return 1
+    fi
+  fi
+
+  gh api "repos/$owner_repo/pulls/$number" 2>/dev/null \
+    | jq -c '{number, url: .html_url, headRefName: .head.ref, title, headRefOid: .head.sha}' 2>/dev/null
+}
+
+PR_JSON=$(resolve_pr_json "$@")
+if [[ -z "$PR_JSON" || "$PR_JSON" == "null" ]]; then
   echo "error: could not resolve PR from: $*" >&2
   exit 1
 fi
