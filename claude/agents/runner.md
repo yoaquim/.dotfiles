@@ -119,8 +119,10 @@ Example:
 
 1. Full test suite passing
 2. **Create the PR.** First — both machine paths, before anything is pushed —
-   run a pre-PR bug review: invoke the `code-review` skill on the working diff
-   and fix every confirmed finding (same TDD/commit rules as regular work).
+   run a pre-PR bug review: invoke the `code-review` skill (built into Claude
+   Code itself — it is NOT in this repo's skills dir, and that's expected) on
+   the working diff and fix every confirmed finding (same TDD/commit rules as
+   regular work).
    Re-run once after fixing; a finding you judge not-real goes to the status
    Notes instead of a grind loop. Findings are cheap here — no push, no Codex
    round-trip, no reviewer rework round. The post-PR reviewers below are the
