@@ -197,7 +197,10 @@ You cannot end this session yet. Status is "$STATUS" (non-terminal) and no PR ex
 
 Complete the ship sequence:
 
-1. Run a final self-review of the diff. Fix anything obvious.
+1. Run the code-review skill on the full branch diff against the base branch
+   (runner.md "Completion" step 2 — the working tree is typically clean by now,
+   so review \`git diff <default-branch>...HEAD\`) and fix every confirmed
+   finding. Skill unavailable → rigorous line-by-line self-review of that diff.
 2. Run \`/pr\` to create the pull request for branch \`$BRANCH\`.
 3. After the PR is open, spawn the reviewer and enter the unified review loop
    per runner.md "Completion". The runner is responsible for writing a terminal

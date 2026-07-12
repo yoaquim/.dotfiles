@@ -124,7 +124,21 @@ Example:
 ## Completion
 
 1. Full test suite passing
-2. **Create the PR.** Which machine you're on decides everything about review:
+2. **Create the PR.** First — both machine paths, before anything is pushed —
+   run a pre-PR bug review: invoke the `code-review` skill (built into Claude
+   Code itself — it is NOT in this repo's skills dir, and that's expected) on
+   the FULL BRANCH DIFF against the base branch (`git diff <default-branch>...HEAD`
+   — everything the PR will contain). By this point the implementation loop has
+   committed each task, so the working tree is typically clean; reviewing only
+   uncommitted changes would review nothing. Fix every confirmed finding (same
+   TDD/commit rules as regular work).
+   Re-run once after fixing; a finding you judge not-real goes to the status
+   Notes instead of a grind loop. Findings are cheap here — no push, no Codex
+   round-trip, no reviewer rework round. The post-PR reviewers below are the
+   safety net, not the first line. (Skill unavailable → do a rigorous
+   line-by-line self-review of the same branch diff instead; don't skip the pass.)
+
+   Which machine you're on decides everything about review:
    the `augment-risk/engineering` plugin being installed IS the work-machine
    signal (test: `ls ~/.claude/plugins/cache/augment-risk/engineering/*/skills/pr/SKILL.md`,
    or check your available skills for `engineering:pr`).
