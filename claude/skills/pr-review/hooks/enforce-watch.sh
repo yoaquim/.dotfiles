@@ -153,6 +153,34 @@ STATE_JSON=$(bash "$HOME/.claude/scripts/check-pr-state.sh" "$PR" "$REPO_SLUG" 2
 # watch (pr_state UNKNOWN) or kick a duplicate review (reviewed_at_head false).
 STATE_ERR=$(jq -r '.error // ""' <<<"$STATE_JSON")
 STATE_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
+
+# Rate-limit exhaustion is NOT a transient blip: check-pr-state only reports it
+# when the graphql bucket is dry AND its REST fallback failed too. Re-polling
+# before the reset is pure waste — ~100 failed polls and model turns over a
+# 49-minute window, each saying only "transient error". Advance the poll stamp
+# to the reset time so the poll gate above enforces zero GitHub calls until the
+# bucket refills (clamped to 90min against a garbage reset), and say exactly
+# what is happening and when it ends.
+if [[ "$STATE_ERR" == "rate_limited" ]]; then
+  RESET_EPOCH=$(jq -r '.rate_reset_epoch // 0' <<<"$STATE_JSON")
+  [[ "$RESET_EPOCH" =~ ^[0-9]+$ ]] || RESET_EPOCH=0
+  NOW=$(date +%s)
+  RESET_HUMAN="soon"
+  if (( RESET_EPOCH > NOW )); then
+    (( RESET_EPOCH > NOW + 5400 )) && RESET_EPOCH=$(( NOW + 5400 ))
+    echo $(( RESET_EPOCH - POLL_INTERVAL )) > "$POLL_STAMP" 2>/dev/null || true
+    RESET_HUMAN=$(date -r "$RESET_EPOCH" "+%H:%M:%S" 2>/dev/null \
+      || date -d "@$RESET_EPOCH" "+%H:%M:%S" 2>/dev/null || echo "epoch $RESET_EPOCH")
+  fi
+  DECISION="keep-watching(rate-limited)"
+  {
+    echo "Do NOT stop — the GitHub API rate limit is exhausted; PR #$PR state cannot be polled."
+    echo "The quota resets at $RESET_HUMAN. This hook blocks further GitHub polls until then —"
+    echo "do not run check-pr-state.sh or any gh command yourself. sleep 300, then try to end again."
+  } >&2
+  exit 2
+fi
+
 if [[ -n "$STATE_ERR" || -z "$STATE_SHA" ]]; then
   DECISION="keep-watching(state-fetch-failed)"
   {

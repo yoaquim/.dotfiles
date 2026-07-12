@@ -54,6 +54,10 @@ REPO="${OWNER_REPO#*/}"
 # `rateLimit { cost remaining resetAt }` rides along as an observability probe
 # (logged to stderr below), so the running GraphQL cost is visible instead of only
 # discoverable once the bucket hits zero.
+# The call's stderr is captured (not discarded): it's the only way to tell
+# "graphql bucket exhausted" apart from any other failure, and the two need
+# different handling downstream (REST fallback vs. plain transient retry).
+_gqlerr=$(mktemp)
 # shellcheck disable=SC2016  # $vars are GraphQL variables, not shell
 GRAPHQL_JSON=$(gh api graphql \
   -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" \
@@ -98,7 +102,8 @@ GRAPHQL_JSON=$(gh api graphql \
       }
       rateLimit { cost remaining resetAt }
     }
-  ' 2>/dev/null || echo '{}')
+  ' 2>"$_gqlerr" || echo '{}')
+GH_ERR=$(cat "$_gqlerr" 2>/dev/null || true); rm -f "$_gqlerr"
 
 # GraphQL enum `state` is OPEN|CLOSED|MERGED — same values the old --json state gave.
 PR_NODE='.data.repository.pullRequest'
@@ -107,10 +112,50 @@ PR_STATE=$(jq -r "$PR_NODE.state // \"OPEN\"" <<<"$GRAPHQL_JSON")
 HEAD_SHA=$(jq -r "$PR_NODE.headRefOid // \"\"" <<<"$GRAPHQL_JSON")
 
 # Every real PR has a headRefOid — an empty one means the GraphQL call failed
-# (or the PR doesn't exist). Say so explicitly instead of emitting the defaults
-# (OPEN, vacuously-green CI, unreviewed HEAD), which consumers would act on:
-# enforce-watch would kick a duplicate review, the runner would see fake green.
+# (or the PR doesn't exist). Rate-limit exhaustion gets its own two-step path:
+# the graphql and core (REST) buckets are SEPARATE quotas, and everything the
+# watch loop decides on — pr_state, head_sha, ci_green, review coverage — is
+# also reachable over REST. Thread resolution is the one GraphQL-only field, so
+# the fallback serves a degraded snapshot (threads_unavailable) instead of
+# stalling the whole loop for the reset window. Any other failure keeps the
+# explicit transient error: emitting the defaults (OPEN, vacuously-green CI,
+# unreviewed HEAD) would make enforce-watch kick a duplicate review and show
+# the runner fake green.
+MODE=graphql
+RATE_LIMITED=false
+grep -qiE 'rate.?limit|RATE_LIMITED' <<<"$GH_ERR" && RATE_LIMITED=true
+if [[ -z "$HEAD_SHA" && "$RATE_LIMITED" == "true" ]]; then
+  PR_REST=$(gh api "repos/$OWNER/$REPO/pulls/$PR" 2>/dev/null || echo '{}')
+  HEAD_SHA=$(jq -r '.head.sha // ""' <<<"$PR_REST" 2>/dev/null || echo "")
+  if [[ -n "$HEAD_SHA" ]]; then
+    MODE=rest
+    echo "check-pr-state: PR #$PR graphql rate-limited — serving REST fallback (threads unavailable)" >&2
+    # reviewDecision is GraphQL-only; approved_at_head (computed from the REST
+    # reviews list below) is the primary approval signal anyway.
+    REVIEW_DECISION="null"
+    if [[ "$(jq -r '.merged // false' <<<"$PR_REST")" == "true" ]]; then
+      PR_STATE="MERGED"
+    else
+      PR_STATE=$(jq -r '.state // "open"' <<<"$PR_REST" | tr '[:lower:]' '[:upper:]')
+    fi
+  fi
+fi
 if [[ -z "$HEAD_SHA" ]]; then
+  if [[ "$RATE_LIMITED" == "true" ]]; then
+    # Both buckets dry (or REST failing too). /rate_limit is exempt from rate
+    # limiting, so the reset time is always fetchable — emit it so consumers
+    # can back off until the bucket refills instead of burning attempts.
+    RESET_EPOCH=$(gh api rate_limit --jq '.resources.graphql.reset' 2>/dev/null || echo 0)
+    [[ "$RESET_EPOCH" =~ ^[0-9]+$ ]] || RESET_EPOCH=0
+    jq -n --arg pr "$PR" --argjson reset "$RESET_EPOCH" '{
+      error: "rate_limited",
+      rate_reset_epoch: $reset,
+      pr_state: "UNKNOWN", review_decision: null, head_sha: "",
+      ci_green: false, reviewed_at_head: false, approved_at_head: false,
+      codex_state: "absent", unresolved_threads: []
+    }'
+    exit 0
+  fi
   jq -n --arg pr "$PR" '{
     error: ("transient: could not fetch PR #\($pr) state from GitHub"),
     pr_state: "UNKNOWN", review_decision: null, head_sha: "",
@@ -128,6 +173,29 @@ fi
 # Not-green if: status is set and not COMPLETED, OR the conclusion/state is set
 # and not one of SUCCESS/NEUTRAL/SKIPPED. Same logic as before; the rollup array now
 # lives under the last commit instead of a flattened `.statusCheckRollup`.
+if [[ "$MODE" == "rest" ]]; then
+  # Same green definition as the GraphQL rollup, from two REST sources:
+  # check-runs (Actions etc.) and the combined commit status (legacy contexts).
+  # The combined status reports "pending" when there are ZERO statuses, so an
+  # empty statuses list must read as green, not pending.
+  CHECK_RUNS=$(gh api --paginate "repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" 2>/dev/null \
+    | jq -s '[ .[].check_runs // [] ] | add // []' 2>/dev/null || echo '[]')
+  [[ -n "$CHECK_RUNS" ]] || CHECK_RUNS='[]'
+  COMBINED_STATUS=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA/status" 2>/dev/null || echo '{}')
+  CI_GREEN=$(jq -n --argjson runs "$CHECK_RUNS" --argjson combined "$COMBINED_STATUS" '
+    ([ $runs[]
+       | { st: ((.status // "") | ascii_upcase),
+           cc: ((.conclusion // "") | ascii_upcase) }
+       | select(
+           (.st != "" and .st != "COMPLETED")
+           or (.cc != "" and .cc != "SUCCESS" and .cc != "NEUTRAL" and .cc != "SKIPPED")
+         )
+     ] | length) == 0
+    and (
+      ((($combined.statuses // []) | length) == 0)
+      or (($combined.state // "") == "success")
+    )' 2>/dev/null || echo false)
+else
 CI_GREEN=$(jq -r "
   ([ ($PR_NODE.commits.nodes[0].commit.statusCheckRollup.contexts.nodes // [])
      | .[]
@@ -139,6 +207,8 @@ CI_GREEN=$(jq -r "
        )
    ] | length) == 0
 " <<<"$GRAPHQL_JSON")
+fi
+[[ "$CI_GREEN" == "true" || "$CI_GREEN" == "false" ]] || CI_GREEN=false
 
 # Observability probe: surface the GraphQL cost/remaining on stderr (never stdout —
 # stdout is the JSON contract). Silent when the field is absent (e.g. the '{}'
@@ -231,7 +301,12 @@ elif [[ -z "$CODEX_LAST_QUOTA" ]]; then
   # head is old and Codex stayed silent, it isn't installed / isn't coming →
   # absent, the Claude reviewer is the final say. A quota comment (elif guard)
   # means Codex can't ever answer → absent immediately, no pointless wait.
-  HEAD_COMMITTED=$(jq -r "$PR_NODE.commits.nodes[0].commit.committedDate // \"\"" <<<"$GRAPHQL_JSON")
+  if [[ "$MODE" == "rest" ]]; then
+    HEAD_COMMITTED=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA" \
+      --jq '.commit.committer.date // ""' 2>/dev/null || echo "")
+  else
+    HEAD_COMMITTED=$(jq -r "$PR_NODE.commits.nodes[0].commit.committedDate // \"\"" <<<"$GRAPHQL_JSON")
+  fi
   HEAD_EPOCH=$(iso_to_epoch "$HEAD_COMMITTED")
   if [[ "$HEAD_EPOCH" -gt 0 ]] && (( $(date +%s) - HEAD_EPOCH < 900 )); then
     CODEX_STATE="waiting"
@@ -240,6 +315,11 @@ fi
 
 # 2. Unresolved review threads — already fetched in the combined GraphQL call above,
 # so this is a pure jq reshape of GRAPHQL_JSON, no second round-trip to GitHub.
+# REST fallback: thread resolution is GraphQL-only — report none, flagged as
+# unavailable in the output so consumers don't mistake it for "all resolved".
+if [[ "$MODE" == "rest" ]]; then
+  UNRESOLVED='[]'
+else
 UNRESOLVED=$(jq -c '
   [ (.data.repository.pullRequest.reviewThreads.nodes // [])[]
     | select(.isResolved == false)
@@ -254,12 +334,14 @@ UNRESOLVED=$(jq -c '
       }
   ]
 ' <<<"$GRAPHQL_JSON" 2>/dev/null || echo '[]')
+fi
 
 jq -n \
   --arg rd "$REVIEW_DECISION" \
   --arg ps "$PR_STATE" \
   --arg sha "$HEAD_SHA" \
   --arg codex "$CODEX_STATE" \
+  --arg mode "$MODE" \
   --argjson green "$CI_GREEN" \
   --argjson reviewed "$REVIEWED_AT_HEAD" \
   --argjson approved "$APPROVED_AT_HEAD" \
@@ -273,4 +355,7 @@ jq -n \
      approved_at_head: $approved,
      codex_state: $codex,
      unresolved_threads: $threads
-   }'
+   }
+   + (if $mode == "rest"
+      then { degraded: "rest-fallback", threads_unavailable: true }
+      else {} end)'
