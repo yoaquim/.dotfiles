@@ -66,19 +66,16 @@ STATUS_FILE="$DISPATCH_ROOT/.dispatch/status/$NAME.md"
 # Not a dispatch runner — let normal Stop happen.
 [[ -f "$STATUS_FILE" ]] || exit 0
 
-# Helper: extract current status value from the status file.
-# Status file format: `- **status**: <value>`. Returns lowercase value, trimmed.
+# Helper: extract current status value from the status file. Delegates to
+# dispatch_status_field — the SAME strict parser every other dispatch tool
+# uses — so a near-miss line this hook would tolerate but /dispatch status
+# can't parse (`- **status**:completed`, an indented bullet) can never slip
+# through the terminal/blocked early-exits; it lands in Gate 0's corrective
+# message instead. Lowercase + trim on top for the comparisons below.
 read_status() {
-  awk -F':' '
-    tolower($0) ~ /^[[:space:]]*-[[:space:]]*\*\*status\*\*[[:space:]]*:/ {
-      # Everything after the first colon
-      sub(/^[^:]*:/, "", $0)
-      # Trim
-      gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0)
-      print tolower($0)
-      exit
-    }
-  ' "$STATUS_FILE"
+  dispatch_status_field status "$STATUS_FILE" \
+    | tr '[:upper:]' '[:lower:]' \
+    | sed -E 's/^[[:space:]]+|[[:space:]]+$//g'
 }
 
 # Terminal-status test comes from scripts/lib/dispatch.sh
