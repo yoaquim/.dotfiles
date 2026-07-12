@@ -135,8 +135,15 @@ if (( NOW - LAST_POLL < POLL_INTERVAL )); then
   # blocked attempt costs one model turn less often.
   sleep 5
   {
-    echo "Do NOT stop — PR #$PR was polled $((NOW - LAST_POLL))s ago; backing off to spare the GitHub API rate limit."
-    echo "sleep 60, then try to end again. The next state poll runs once ${POLL_INTERVAL}s have elapsed."
+    if (( LAST_POLL > NOW )); then
+      # The rate-limited branch below parks the stamp in the FUTURE (quota
+      # reset time) — "polled -540s ago" would only confuse the reviewer.
+      echo "Do NOT stop — GitHub polling for PR #$PR is deferred until the rate-limit quota resets (~$((LAST_POLL - NOW + POLL_INTERVAL))s from now)."
+      echo "sleep 300, then try to end again. Do not run gh commands in the meantime."
+    else
+      echo "Do NOT stop — PR #$PR was polled $((NOW - LAST_POLL))s ago; backing off to spare the GitHub API rate limit."
+      echo "sleep 60, then try to end again. The next state poll runs once ${POLL_INTERVAL}s have elapsed."
+    fi
   } >&2
   exit 2
 fi
