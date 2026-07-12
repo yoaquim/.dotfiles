@@ -117,7 +117,7 @@ You run unattended — you can't ask. If any of these hit, do NOT push through:
 - Same test failing 3+ times with different fixes (the architecture is probably wrong)
 - Required dependency / resource is missing or inaccessible
 
-On stop: commit WIP with `WIP: <one-line reason>`, update the status file with `status: blocked` and a paragraph explaining what you need, then exit. Faking progress wastes the operator's debugging time.
+On stop: commit WIP with `WIP: <one-line reason>`, set the status file's header line to `- **status**: blocked` (edit the bullet in place — the header is markdown bullets, never YAML frontmatter) and add a paragraph explaining what you need, then exit. Faking progress wastes the operator's debugging time.
 ```
 
 Branch: Linear issue's branch name if set, else `dispatch/<name>`.
@@ -209,7 +209,7 @@ You run unattended — you can't ask. If any of these hit, do NOT push through:
 - Same test failing 3+ times with different fixes (the architecture is probably wrong)
 - Required dependency / resource is missing or inaccessible
 
-On stop: commit WIP with `WIP: <one-line reason>`, update the status file with `status: blocked` and a paragraph explaining what you need, then exit. Faking progress wastes the operator's debugging time.
+On stop: commit WIP with `WIP: <one-line reason>`, set the status file's header line to `- **status**: blocked` (edit the bullet in place — the header is markdown bullets, never YAML frontmatter) and add a paragraph explaining what you need, then exit. Faking progress wastes the operator's debugging time.
 ```
 
 ### 5. Status File

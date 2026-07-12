@@ -102,6 +102,12 @@ Absolute path from prompt. Update after every task. Only update:
 
 Never overwrite `ticket`, `title`, `session_id`, `branch`, `worktree`, `started`.
 
+The header is markdown bullets and that is the ONLY format the Stop hook and
+`/dispatch status` parse. Update status by editing the value in the existing
+line — `- **status**: <value>` — in place. NEVER rewrite the header as YAML
+frontmatter (`status: value`); it is invisible to every parser and will trap
+the session in the Stop hook.
+
 **Progress** mirrors your `TaskCreate` list as one checkbox per task — `- [x]`
 done, `- [ ]` pending — rewritten on every `TaskUpdate`. The Task tool's state
 is not readable outside this session, so this checkbox list is the ONLY external
@@ -261,7 +267,7 @@ one of these. A terminal exit ends this background session (`done`), and the
 operator can no longer tab into you to answer — the decision is stranded and your
 context is lost. Instead **park alive**:
 
-1. Set status to `blocked` in the status file, with a Notes line:
+1. Set the status file's header line to `- **status**: blocked`, with a Notes line:
    `Awaiting operator: <the exact decision you need>`.
 2. Use the **SendUserMessage** tool to ask the operator that one specific,
    self-contained question (include the PR link and what each answer will make you
