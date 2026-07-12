@@ -90,6 +90,10 @@ read_started() {
 }
 
 # Flip the status line to needs_review in place (macOS sed lacks /I, so awk).
+# A malformed header (e.g. YAML frontmatter) has no bullet to flip — append a
+# canonical one so the cap/spin-guard exits below always leave a terminal
+# status that /dispatch status and the resume path can parse, instead of
+# releasing the session with an unreadable state.
 finalize_needs_review() {
   awk '
     !done && tolower($0) ~ /^[[:space:]]*-[[:space:]]*\*\*status\*\*[[:space:]]*:/ {
@@ -97,6 +101,7 @@ finalize_needs_review() {
       done = 1
     }
     { print }
+    END { if (!done) print "- **status**: needs_review" }
   ' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
 }
 
@@ -152,6 +157,37 @@ if [[ $ATTEMPTS -gt 1000 ]]; then
 fi
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "<unknown>")
+
+# --- Gate 0: status line must exist in the canonical format ---
+# The ONLY parsed format is the markdown bullet `- **status**: <value>`. Runners
+# have rewritten the header as YAML frontmatter (`status: value`), which is
+# invisible to read_status/dispatch_status_field — the session then looped on a
+# generic non-terminal message that never named the real problem. Enforce the
+# spec with an exact correction so the first bounce self-heals. Sits AFTER the
+# 8hr cap and spin guard so those backstops still release a runner that never
+# fixes its file.
+if [[ -z "$STATUS" ]]; then
+  {
+    echo "You cannot end this session yet. Your status file has NO parseable status line."
+    echo
+    echo "Status file: $STATUS_FILE"
+    echo
+    echo "The ONLY format the dispatch tooling parses is the markdown bullet:"
+    echo
+    echo "  - **status**: <in_progress|blocked|completed|needs_review|closed-without-merge|failed>"
+    echo
+    if grep -qiE '^[[:space:]]*status[[:space:]]*:' "$STATUS_FILE" 2>/dev/null; then
+      echo "Your file has a plain \`status:\` line — YAML frontmatter is NOT parsed."
+      echo "Rewrite the header as markdown bullets per the template in dispatch SKILL.md §6,"
+      echo "preserving the existing field values."
+    else
+      echo "Restore the header bullet per the template in dispatch SKILL.md §6."
+    fi
+    echo
+    echo "Fix the status file, then try to end again. This hook will re-evaluate."
+  } >&2
+  exit 2
+fi
 
 # --- Gate 1: PR must exist ---
 PR_NUMBER=$(gh pr view --json number -q '.number' 2>/dev/null || true)
