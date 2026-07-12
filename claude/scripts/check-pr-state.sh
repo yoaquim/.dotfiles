@@ -124,6 +124,16 @@ HEAD_SHA=$(jq -r "$PR_NODE.headRefOid // \"\"" <<<"$GRAPHQL_JSON")
 MODE=graphql
 RATE_LIMITED=false
 grep -qiE 'rate.?limit|RATE_LIMITED' <<<"$GH_ERR" && RATE_LIMITED=true
+# GraphQL rate-limit errors can also arrive as HTTP 200 with the error in the
+# RESPONSE BODY (errors[].type == RATE_LIMITED) — stderr stays empty in that
+# case, so the body must be inspected too or exhaustion reads as transient.
+if [[ "$RATE_LIMITED" == "false" ]]; then
+  BODY_RL=$(jq -r '[.errors[]?
+    | select((.type // "") == "RATE_LIMITED"
+             or ((.message // "") | test("rate limit"; "i")))
+  ] | length > 0' <<<"$GRAPHQL_JSON" 2>/dev/null || echo false)
+  [[ "$BODY_RL" == "true" ]] && RATE_LIMITED=true
+fi
 if [[ -z "$HEAD_SHA" && "$RATE_LIMITED" == "true" ]]; then
   PR_REST=$(gh api "repos/$OWNER/$REPO/pulls/$PR" 2>/dev/null || echo '{}')
   HEAD_SHA=$(jq -r '.head.sha // ""' <<<"$PR_REST" 2>/dev/null || echo "")
