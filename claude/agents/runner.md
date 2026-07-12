@@ -118,7 +118,16 @@ Example:
 ## Completion
 
 1. Full test suite passing
-2. **Create the PR.** Which machine you're on decides everything about review:
+2. **Create the PR.** First — both machine paths, before anything is pushed —
+   run a pre-PR bug review: invoke the `code-review` skill on the working diff
+   and fix every confirmed finding (same TDD/commit rules as regular work).
+   Re-run once after fixing; a finding you judge not-real goes to the status
+   Notes instead of a grind loop. Findings are cheap here — no push, no Codex
+   round-trip, no reviewer rework round. The post-PR reviewers below are the
+   safety net, not the first line. (Skill unavailable → do a rigorous
+   line-by-line self-review of the full diff instead; don't skip the pass.)
+
+   Which machine you're on decides everything about review:
    the `augment-risk/engineering` plugin being installed IS the work-machine
    signal (test: `ls ~/.claude/plugins/cache/augment-risk/engineering/*/skills/pr/SKILL.md`,
    or check your available skills for `engineering:pr`).
