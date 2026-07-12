@@ -187,24 +187,32 @@ if [[ "$MODE" == "rest" ]]; then
   # Same green definition as the GraphQL rollup, from two REST sources:
   # check-runs (Actions etc.) and the combined commit status (legacy contexts).
   # The combined status reports "pending" when there are ZERO statuses, so an
-  # empty statuses list must read as green, not pending.
-  CHECK_RUNS=$(gh api --paginate "repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" 2>/dev/null \
-    | jq -s '[ .[].check_runs // [] ] | add // []' 2>/dev/null || echo '[]')
-  [[ -n "$CHECK_RUNS" ]] || CHECK_RUNS='[]'
-  COMBINED_STATUS=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA/status" 2>/dev/null || echo '{}')
-  CI_GREEN=$(jq -n --argjson runs "$CHECK_RUNS" --argjson combined "$COMBINED_STATUS" '
-    ([ $runs[]
-       | { st: ((.status // "") | ascii_upcase),
-           cc: ((.conclusion // "") | ascii_upcase) }
-       | select(
-           (.st != "" and .st != "COMPLETED")
-           or (.cc != "" and .cc != "SUCCESS" and .cc != "NEUTRAL" and .cc != "SKIPPED")
-         )
-     ] | length) == 0
-    and (
-      ((($combined.statuses // []) | length) == 0)
-      or (($combined.state // "") == "success")
-    )' 2>/dev/null || echo false)
+  # empty statuses list must read as green, not pending. Both fetches must
+  # SUCCEED to report green: a failed call (403/transient/core also dry) is
+  # "CI unknown", never "CI green" — a successful call always yields non-empty
+  # JSON, so an empty capture means the fetch itself failed.
+  CHECK_RUNS_RAW=$(gh api --paginate "repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" 2>/dev/null) || CHECK_RUNS_RAW=""
+  COMBINED_STATUS=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA/status" 2>/dev/null) || COMBINED_STATUS=""
+  if [[ -z "$CHECK_RUNS_RAW" || -z "$COMBINED_STATUS" ]]; then
+    echo "check-pr-state: PR #$PR REST CI fetch failed — reporting ci_green=false (unknown is not green)" >&2
+    CI_GREEN=false
+  else
+    CHECK_RUNS=$(jq -s '[ .[].check_runs // [] ] | add // []' <<<"$CHECK_RUNS_RAW" 2>/dev/null || echo '[]')
+    [[ -n "$CHECK_RUNS" ]] || CHECK_RUNS='[]'
+    CI_GREEN=$(jq -n --argjson runs "$CHECK_RUNS" --argjson combined "$COMBINED_STATUS" '
+      ([ $runs[]
+         | { st: ((.status // "") | ascii_upcase),
+             cc: ((.conclusion // "") | ascii_upcase) }
+         | select(
+             (.st != "" and .st != "COMPLETED")
+             or (.cc != "" and .cc != "SUCCESS" and .cc != "NEUTRAL" and .cc != "SKIPPED")
+           )
+       ] | length) == 0
+      and (
+        ((($combined.statuses // []) | length) == 0)
+        or (($combined.state // "") == "success")
+      )' 2>/dev/null || echo false)
+  fi
 else
 CI_GREEN=$(jq -r "
   ([ ($PR_NODE.commits.nodes[0].commit.statusCheckRollup.contexts.nodes // [])
