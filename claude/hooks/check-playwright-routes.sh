@@ -21,9 +21,13 @@ trap 'exit 0' ERR
 INPUT=$(cat 2>/dev/null || echo '{}')
 FILE=$(jq -r '.tool_input.file_path // ""' <<<"$INPUT")
 
-# Only test files register Playwright routes worth guarding.
+# Only test files register Playwright routes worth guarding. The Vite
+# interception problem is extension-independent, so JS/JSX/MJS/CJS specs
+# count the same as TS ones.
 case "$FILE" in
-  *.spec.ts|*.spec.tsx|*.test.ts|*.test.tsx|*/e2e/*|*/playwright/*) ;;
+  *.spec.ts|*.spec.tsx|*.spec.js|*.spec.jsx|*.spec.mjs|*.spec.cjs) ;;
+  *.test.ts|*.test.tsx|*.test.js|*.test.jsx|*.test.mjs|*.test.cjs) ;;
+  */e2e/*|*/playwright/*) ;;
   *) exit 0 ;;
 esac
 
