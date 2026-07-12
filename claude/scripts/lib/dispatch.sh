@@ -46,8 +46,16 @@ dispatch_is_known_status()     { _dispatch_in_list "${1:-}" "$DISPATCH_KNOWN_STA
 # ── Status file access ────────────────────────────────────────────────────────
 # dispatch_status_field <field> <file> — first value of a `- **field**: value`
 # header line. This regex is the de-facto status-file format spec.
+# Always returns 0: with duplicate field lines, `head -1` exits early and sed
+# can die with SIGPIPE (141) — under a caller's `set -o pipefail` + ERR trap
+# (every enforcement hook), that nonzero would trip the trap's fail-open and
+# skip the caller's gates entirely. head has consumed the full first line
+# before exiting, so the captured value is intact; only the exit status needs
+# absorbing.
 dispatch_status_field() {
-  sed -n "s/^- \*\*${1}\*\*: //p" "$2" 2>/dev/null | head -1
+  local out
+  out=$(sed -n "s/^- \*\*${1}\*\*: //p" "$2" 2>/dev/null | head -1) || true
+  printf '%s\n' "$out"
 }
 
 # ── Time ──────────────────────────────────────────────────────────────────────
