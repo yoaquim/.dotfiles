@@ -90,6 +90,10 @@ read_started() {
 }
 
 # Flip the status line to needs_review in place (macOS sed lacks /I, so awk).
+# A malformed header (e.g. YAML frontmatter) has no bullet to flip — append a
+# canonical one so the cap/spin-guard exits below always leave a terminal
+# status that /dispatch status and the resume path can parse, instead of
+# releasing the session with an unreadable state.
 finalize_needs_review() {
   awk '
     !done && tolower($0) ~ /^[[:space:]]*-[[:space:]]*\*\*status\*\*[[:space:]]*:/ {
@@ -97,6 +101,7 @@ finalize_needs_review() {
       done = 1
     }
     { print }
+    END { if (!done) print "- **status**: needs_review" }
   ' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
 }
 
