@@ -3,27 +3,40 @@
   "repos": {
     "amparo": {
       "team": "Amparo",
-      "projects": ["Amparo v1"],
-      "description": "CRM + case management + document engine for the ANCLA/FRAPE church insurance program in PR. Captures/routes/stores/outputs only — never rates, quotes, binds, or collects (regulatory guardrail). RR v7 + Drizzle/Postgres + Tailwind 4 + Better Auth; AWS ECS Fargate/RDS/S3 via Terraform later. Solo project. NOTE: lives in the dedicated amparo-app workspace — use the linear-amparo MCP for Linear calls, not the default workspace."
+      "projects": [
+        "Amparo v1"
+      ],
+      "description": "CRM + case management + document engine for the ANCLA/FRAPE church insurance program in PR. Captures/routes/stores/outputs only \u2014 never rates, quotes, binds, or collects (regulatory guardrail). RR v7 + Drizzle/Postgres + Tailwind 4 + Better Auth; AWS ECS Fargate/RDS/S3 via Terraform later. Solo project. NOTE: lives in the dedicated amparo-app workspace \u2014 use the linear-amparo MCP for Linear calls, not the default workspace."
     },
     "cyberdeck": {
       "team": "Cyber Deck",
-      "projects": ["cyberdeck"],
-      "description": "Persistent control plane for your agent fleet that happens to have a first-class full terminal in it — tmux in the browser over Tailscale. Bun end-to-end (Bun.serve + native PTY) + React/Vite/xterm.js. Built bit-by-bit, terminal-hardening pillar first. NOTE: lives in the dedicated cyber-deck workspace — use the linear-cyberdeck MCP for Linear calls, not the default workspace."
+      "projects": [
+        "cyberdeck"
+      ],
+      "description": "Persistent control plane for your agent fleet that happens to have a first-class full terminal in it \u2014 tmux in the browser over Tailscale. Bun end-to-end (Bun.serve + native PTY) + React/Vite/xterm.js. Built bit-by-bit, terminal-hardening pillar first. NOTE: lives in the dedicated cyber-deck workspace \u2014 use the linear-cyberdeck MCP for Linear calls, not the default workspace."
     },
     ".dotfiles": {
       "team": "Cyber Deck",
-      "projects": ["toolkit"],
-      "description": "Dotfiles + the Claude Code agent toolchain (~/.dotfiles/claude): dispatch/issue/spec skills, enforcement hooks, runner + pr-reviewer agents, shared scripts, plus tmux/bash/kitty config. NOTE: lives in the cyber-deck workspace — use the linear-cyberdeck MCP for Linear calls, not the default workspace."
+      "projects": [
+        "toolkit"
+      ],
+      "description": "Dotfiles + the Claude Code agent toolchain (~/.dotfiles/claude): dispatch/issue/spec skills, enforcement hooks, runner + pr-reviewer agents, shared scripts, plus tmux/bash/kitty config. NOTE: lives in the cyber-deck workspace \u2014 use the linear-cyberdeck MCP for Linear calls, not the default workspace."
     },
     "rimas-infrastructure": {
       "team": "Rimas",
-      "projects": ["Infrastructure"],
-      "description": "Rimas cloud platform & Tailscale zero-trust (SOW-2026-002). OpenTofu IaC: multi-account AWS org (management/staging/production), VPC, ECS Fargate, ECR, Secrets/KMS, CloudTrail/GuardDuty/Config/SCPs, Tailscale subnet router. NOTE: lives in the Rimas Entertainment Linear workspace — use the linear-rimas MCP for Linear calls, not the default workspace."
+      "projects": [
+        "Infrastructure"
+      ],
+      "description": "Rimas cloud platform & Tailscale zero-trust (SOW-2026-002). OpenTofu IaC: multi-account AWS org (management/staging/production), VPC, ECS Fargate, ECR, Secrets/KMS, CloudTrail/GuardDuty/Config/SCPs, Tailscale subnet router. NOTE: lives in the Rimas Entertainment Linear workspace \u2014 use the linear-rimas MCP for Linear calls, not the default workspace."
     },
     "aws-infrastructure": {
       "team": "Engineering",
-      "projects": ["AWS Infrastructure", "Pulse", "Helm", "Magic Inbox"],
+      "projects": [
+        "AWS Infrastructure",
+        "Pulse",
+        "Helm",
+        "Magic Inbox"
+      ],
       "description": "Terragrunt/Terraform IaC: ECS, ECR, RDS, S3, Route53, IAM for all workloads"
     },
     "crm": {
@@ -44,58 +57,90 @@
     },
     "claude": {
       "team": "Data",
-      "projects": ["Claude Code Plugin"],
+      "projects": [
+        "Claude Code Plugin"
+      ],
       "description": "Claude Code plugin: shared skills, hooks, practices for Augment Risk engineering"
     },
     "semantic-layer": {
       "team": "Data",
-      "projects": ["Semantic Layer Platform"],
+      "projects": [
+        "Semantic Layer Platform"
+      ],
       "description": "Malloy semantic models + publisher infra"
     },
     "data-manager": {
       "team": "Data",
-      "projects": ["Data Manager Next", "Productionize Data Manager"],
+      "projects": [
+        "Data Manager Next",
+        "Productionize Data Manager"
+      ],
       "description": "Data manager application"
     },
     "pulse-backend": {
       "team": "Engineering",
-      "projects": ["Pulse"],
+      "projects": [
+        "Pulse"
+      ],
       "description": "Pulse backend API"
     },
     "pulse-frontend": {
       "team": "Engineering",
-      "projects": ["Pulse"],
+      "projects": [
+        "Pulse"
+      ],
       "description": "Pulse frontend application"
     },
     "helm": {
       "team": "Engineering",
-      "projects": ["Helm"],
+      "projects": [
+        "Helm"
+      ],
       "description": "Helm: strategic initiative portfolio tool (React 19 + Vite + Tailwind CSS 4, Express 5)"
     },
     "tf-modules": {
       "team": "Data",
-      "projects": ["AWS Infrastructure"],
+      "projects": [
+        "AWS Infrastructure"
+      ],
       "description": "Reusable Terraform modules (compute, data-stores, networking, etc.)"
     },
     "windmill": {
       "team": "Data",
-      "projects": ["Windmill Platform", "FP&A Integration", "Broker Performance Phase 1"],
+      "projects": [
+        "Windmill Platform",
+        "FP&A Integration",
+        "Broker Performance Phase 1"
+      ],
       "description": "Windmill platform: ELT pipelines, apps (lakeviewer), helm, infra"
     },
     "nullbreaker": {
       "team": "Nullbreaker",
-      "projects": ["Nullbreaker"],
-      "description": "Cyberpunk turn-based tactical RPG (Phaser + React client, Colyseus server). Solo project. NOTE: lives in the dedicated Nullbreaker workspace — use the linear-nullbreaker MCP for Linear calls, not the default workspace."
+      "projects": [
+        "Nullbreaker"
+      ],
+      "description": "Cyberpunk turn-based tactical RPG (Phaser + React client, Colyseus server). Solo project. NOTE: lives in the dedicated Nullbreaker workspace \u2014 use the linear-nullbreaker MCP for Linear calls, not the default workspace."
     },
     "parcha": {
       "team": "Parcha",
-      "projects": ["Parcha"],
-      "description": "Browser-hosted live-coding DAW with MCP-first architecture (Preact + CodeMirror + Strudel). Solo project. NOTE: lives in the dedicated parchamusic workspace — use the linear-parchamusic MCP for Linear calls, not the default workspace."
+      "projects": [
+        "Parcha"
+      ],
+      "description": "Browser-hosted live-coding DAW with MCP-first architecture (Preact + CodeMirror + Strudel). Solo project. NOTE: lives in the dedicated parchamusic workspace \u2014 use the linear-parchamusic MCP for Linear calls, not the default workspace."
     },
     "mesa": {
       "team": "Mesa",
-      "projects": ["Mesa"],
-      "description": "QR pay-at-table split-pay for PR restaurants (ATH Móvil + Clover). Hono on Cloudflare Workers + Durable Objects + D1/Drizzle + RR v7. Solo project. NOTE: lives in the dedicated mesa-pr workspace — use the linear-mesa MCP for Linear calls, not the default workspace."
+      "projects": [
+        "Mesa"
+      ],
+      "description": "QR pay-at-table split-pay for PR restaurants (ATH M\u00f3vil + Clover). Hono on Cloudflare Workers + Durable Objects + D1/Drizzle + RR v7. Solo project. NOTE: lives in the dedicated mesa-pr workspace \u2014 use the linear-mesa MCP for Linear calls, not the default workspace."
+    },
+    "stackbreaker": {
+      "team": "Stackbreaker",
+      "projects": [
+        "Stackbreaker"
+      ],
+      "description": "Cyberpunk ASCII dungeon crawler where real websites are dungeons (Rust + ratatui). Shares universe with nullbreaker (net-diving facet). Solo project. NOTE: lives in the dedicated Stackbreaker workspace \u2014 use the linear-stackbreaker MCP for Linear calls, not the default workspace."
     }
   }
 }
