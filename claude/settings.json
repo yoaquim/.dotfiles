@@ -3,6 +3,7 @@
     "commit": "",
     "pr": ""
   },
+  "model": "fable",
   "hooks": {
     "PreToolUse": [
       {
@@ -94,6 +95,5 @@
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true,
-  "model": "claude-fable-5[1m]"
+  "voiceEnabled": true
 }

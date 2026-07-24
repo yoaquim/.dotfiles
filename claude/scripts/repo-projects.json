@@ -141,6 +141,13 @@
         "Stackbreaker"
       ],
       "description": "Cyberpunk ASCII dungeon crawler where real websites are dungeons (Rust + ratatui). Shares universe with nullbreaker (net-diving facet). Solo project. NOTE: lives in the dedicated Stackbreaker workspace \u2014 use the linear-stackbreaker MCP for Linear calls, not the default workspace."
+    },
+    "infrastructure": {
+      "team": "Rimas",
+      "projects": [
+        "Infrastructure"
+      ],
+      "description": "Rimas cloud platform & Tailscale zero-trust (SOW-2026-002). OpenTofu IaC: multi-account AWS org (management/staging/production), VPC, ECS Fargate, ECR, Secrets/KMS, CloudTrail/GuardDuty/Config/SCPs, Tailscale subnet router. NOTE: lives in the Rimas Entertainment Linear workspace \u2014 use the linear-rimas MCP for Linear calls, not the default workspace."
     }
   }
 }
