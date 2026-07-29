@@ -15,6 +15,10 @@
 
 set -uo pipefail
 
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/hooklog.sh" 2>/dev/null || true
+hook_log_init "check-playwright-routes"
+
 # Never break editing because of a bug in this hook.
 trap 'exit 0' ERR
 

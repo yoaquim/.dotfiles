@@ -55,6 +55,10 @@
 
 set -uo pipefail
 
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/hooklog.sh" 2>/dev/null || true
+hook_log_init "enforce-worktree"
+
 # Fail open on hook bugs — never trap the agent because of us.
 trap 'exit 0' ERR
 

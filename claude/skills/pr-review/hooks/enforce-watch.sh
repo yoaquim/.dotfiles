@@ -20,6 +20,10 @@
 
 set -uo pipefail
 
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/hooklog.sh" 2>/dev/null || true
+hook_log_init "enforce-watch"
+
 # --- Identification phase ---
 # Until we've confirmed this is a live reviewer for an open PR, an error means
 # "I can't tell whose session this is" → let the stop happen (fail-open).

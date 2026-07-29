@@ -13,6 +13,11 @@
             "type": "command",
             "command": "\"$HOME\"/.claude/hooks/check-playwright-routes.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"$HOME\"/.claude/hooks/guard-test-edits.sh",
+            "timeout": 10
           }
         ]
       }

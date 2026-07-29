@@ -7,6 +7,7 @@ Coding practices and preferences. Used by `inject-practices.sh` to auto-detect a
 | TDD | `tdd.md` | **MANDATORY** for all implementation tasks | always |
 | DRY | `dry.md` | **MANDATORY** — reuse before build; one system per thing; search for existing implementations before writing new ones | always |
 | No Comments | `no-comments.md` | **MANDATORY** — default to zero comments | always |
+| Test Suite Integrity | `test-integrity.md` | **MANDATORY** — never edit a test because it is failing; classify, declare, and keep rewrites falsifiable | always |
 | Receiving Review | `receiving-review.md` | **MANDATORY** — evaluate review feedback technically | always |
 | Verification | `verification.md` | **MANDATORY** — show command output before claiming done | always |
 | Django | `django.md` | Django projects: views, models, templates, forms | manage.py |

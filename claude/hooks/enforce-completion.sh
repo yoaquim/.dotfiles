@@ -27,6 +27,10 @@
 
 set -uo pipefail
 
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/hooklog.sh" 2>/dev/null || true
+hook_log_init "enforce-completion"
+
 # Always allow stop if anything in here misbehaves — never trap the agent
 # because of a bug in the hook itself.
 trap 'exit 0' ERR
@@ -236,7 +240,11 @@ if [[ -z "$TICKET_ID" && "$BRANCH" != sketch-* && "$BRANCH" =~ ([A-Za-z]+-[0-9]+
   TICKET_ID=$(echo "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')
 fi
 
-B_RESULT=$("$HOME/.claude/scripts/validate-pr-body.sh" "$PR_BODY" "$TICKET_ID" 2>/dev/null || true)
+# Authoritative: classify the PR's real diff, not a local branch guess.
+DIFF_FACTS=$(gh pr diff "$PR_NUMBER" 2>/dev/null \
+  | "$HOME/.claude/scripts/classify-diff.sh" 2>/dev/null || true)
+
+B_RESULT=$("$HOME/.claude/scripts/validate-pr-body.sh" "$PR_BODY" "$TICKET_ID" "$DIFF_FACTS" 2>/dev/null || true)
 B_VALID=$(jq -r 'if .valid == false then "false" else "true" end' <<<"$B_RESULT" 2>/dev/null || echo true)
 if [[ "$B_VALID" == "false" ]]; then
   while IFS= read -r ERR; do

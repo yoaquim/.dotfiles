@@ -9,6 +9,10 @@
 
 set -euo pipefail
 
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/hooklog.sh" 2>/dev/null || true
+hook_log_init "validate-pr"
+
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // ""')
 
@@ -58,7 +62,18 @@ if grep -qE -- '--body' <<<"$COMMAND"; then
       TICKET_ID=$(echo "${BASH_REMATCH[1]}" | tr '[:lower:]' '[:upper:]')
     fi
 
-    BODY_RESULT=$("$HOME/.claude/scripts/validate-pr-body.sh" "$BODY" "$TICKET_ID" 2>/dev/null || true)
+    # Best-effort: classify the local diff against the default branch. The Stop
+    # hook re-checks against the real `gh pr diff`, which is authoritative.
+    FACTS=""
+    BASE_REF=$(git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null || true)
+    [[ -z "$BASE_REF" ]] && BASE_REF="origin/main"
+    MERGE_BASE=$(git merge-base HEAD "$BASE_REF" 2>/dev/null || true)
+    if [[ -n "$MERGE_BASE" ]]; then
+      FACTS=$(git diff "$MERGE_BASE" HEAD 2>/dev/null \
+        | "$HOME/.claude/scripts/classify-diff.sh" 2>/dev/null || true)
+    fi
+
+    BODY_RESULT=$("$HOME/.claude/scripts/validate-pr-body.sh" "$BODY" "$TICKET_ID" "$FACTS" 2>/dev/null || true)
     BODY_VALID=$(jq -r 'if .valid == false then "false" else "true" end' <<<"$BODY_RESULT" 2>/dev/null || echo true)
     if [[ "$BODY_VALID" == "false" ]]; then
       while IFS= read -r ERR; do

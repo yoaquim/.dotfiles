@@ -64,8 +64,23 @@ Explain **WHY** — business context, user impact. The diff shows what; the desc
 **Testing:**
 - How tested
 - Edge cases covered
+
+Test changes: <contract moved | code fixed | flake fixed | test was wrong | new coverage only>
+<one line: why — e.g. "retries now cap at 3 per ENG-142">
 ```
 
+Three disclosure lines, each required only when the diff calls for it.
+`classify-diff.sh` reads the real diff and `validate-pr-body.sh` enforces them:
+
+- `Test changes: <one of the five, verbatim>` — when the diff touches test
+  files (`~/.claude/practices/test-integrity.md`).
+- `No new tests: <why>` — when the diff changes source but no test file. One
+  line, free text, enough of it to be a real reason (`~/.claude/practices/tdd.md`).
+- Any escape-hatch token the diff ADDS (`test-weakening-ok`, `route-scope-ok`)
+  must appear in the body with its justification. The hatch stays available;
+  it just stops being invisible.
+
+Omit each line when it doesn't apply — they're gates, not boilerplate.
 - Link ticket if found (e.g., `Closes ENG-142`)
 - No checklists, no implementation details
 

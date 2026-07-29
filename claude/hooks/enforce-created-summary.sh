@@ -24,6 +24,10 @@
 # because of a bug in the hook itself.
 
 set -uo pipefail
+
+# shellcheck disable=SC1091
+. "$HOME/.claude/scripts/lib/hooklog.sh" 2>/dev/null || true
+hook_log_init "enforce-created-summary"
 trap 'exit 0' ERR
 
 # Skip dispatch runner sessions. A runner has its own Stop hook
@@ -57,6 +61,8 @@ TRANSCRIPT=$(jq -r '.transcript_path // ""' <<<"$INPUT" 2>/dev/null) || exit 0
 #             .input.id → a create not an update, not answered by an is_error)
 #   - $text = the closing prose: text blocks AFTER the turn's last tool_use,
 #             which is where the summary lands (after the create + the `open`)
+#   - $ntext = how many of those blocks are non-blank; 0 means the transcript
+#             hasn't been flushed yet, not that the summary is missing
 # Bound the slurp: only the current turn matters, and it lives at the end of
 # the transcript. 2000 JSONL lines is far more than any /issue//spec turn; on a
 # very long session this keeps the most expensive always-on hook cheap.
@@ -84,22 +90,39 @@ RESULT=$(tail -n 2000 "$TRANSCRIPT" 2>/dev/null | jq -s '
       then [ $ablocks[] | select(.type == "text") | .text ]
       else [ $ablocks[ ($lastTU + 1): ][] | select(.type == "text") | .text ]
       end ) as $tail
-  | { ok: $ok, start: $start, text: ( $tail | join("\n") ) }
+  | { ok: $ok, start: $start,
+      ntext: ( [ $tail[] | select(test("\\S")) ] | length ),
+      text: ( $tail | join("\n") ) }
 ' 2>/dev/null) || exit 0
 
 OK=$(jq -r '.ok // 0' <<<"$RESULT" 2>/dev/null) || exit 0
 TEXT=$(jq -r '.text // ""' <<<"$RESULT" 2>/dev/null) || exit 0
+NTEXT=$(jq -r '.ntext // 0' <<<"$RESULT" 2>/dev/null) || exit 0
 START=$(jq -r '.start // 0' <<<"$RESULT" 2>/dev/null) || exit 0
 
 # Nothing created this turn → not our business.
 [[ "$OK" =~ ^[0-9]+$ ]] || exit 0
 (( OK > 0 )) || exit 0
 
+# No closing prose AT ALL after the turn's last tool call. That is the signature
+# of an unflushed transcript, not of a missing summary: Stop fires before the
+# final assistant text block is guaranteed to have landed in the JSONL, so the
+# copy we just read ends at the last tool_use. Blocking here re-prompts for a
+# summary the user has already seen on screen — the double-output bug. A real
+# contract violation always leaves *some* closing prose (wrong shape, wrong
+# headers), which still reaches the check below. Fail open.
+hook_reason "create seen, no closing prose yet (unflushed transcript)"
+[[ "$NTEXT" =~ ^[0-9]+$ ]] || exit 0
+(( NTEXT > 0 )) || exit 0
+
 # Closing block already present → allow stop.
 if grep -qiE 'what it does' <<<"$TEXT" \
    && grep -qiE 'what was (issued|specced|created)' <<<"$TEXT"; then
+  hook_reason "summary present"
   exit 0
 fi
+
+hook_reason "create with non-conforming closing prose"
 
 # One-shot per turn: block at most once per turn, then let the stop through. A
 # transcript flush/rotation race can hide the just-written summary from the copy

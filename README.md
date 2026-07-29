@@ -156,6 +156,7 @@ Linear:  /spec → /dispatch ENG-142 → runner → /pr
 | `validate-commit.sh` | Bash (`git commit`) | Commit message style |
 | `validate-pr.sh` | Bash (`gh pr create`) | Block non-conforming PR creation |
 | `check-comment-slop.sh` | Runner Edit/Write | Block AI-slop code comments |
+| `guard-test-edits.sh` | Edit/Write on test files | Block silencing/weakening an existing test |
 | `enforce-worktree.sh` | Runner Edit/Write | Block writes outside the runner's worktree |
 | `enforce-completion.sh` | Runner Stop | Gate exit on PR + terminal status |
 | `lint-shell.sh` | Edit/Write on shell files | shellcheck findings fed back to the agent |
@@ -163,6 +164,28 @@ Linear:  /spec → /dispatch ENG-142 → runner → /pr
 | `enforce-created-summary.sh` | Stop | Require the standardized closing block after Linear creates |
 | `auto-spawn-reviewer.sh` | Runner PostToolUse | Auto-spawn the PR watcher after `gh pr create` |
 | `enforce-watch.sh` | Stop (pr-reviewer only) | Keep the PR watch loop alive until approved + CI green |
+
+#### Testing the hooks
+
+```bash
+claude/tests/run.sh          # all
+claude/tests/run.sh guard    # one file
+```
+
+Hooks fail open by design — a bug disables enforcement silently instead of
+erroring, so nothing but these tests will tell you they stopped working. They
+also parse Claude Code's transcript and tool-input shapes, which aren't a stable
+API: **run the suite after a CC upgrade.**
+
+To see what a hook actually decided:
+
+```bash
+CLAUDE_HOOK_DEBUG=1 claude          # log to $TMPDIR/claude-hooks.log
+tail -f "$TMPDIR/claude-hooks.log"
+```
+
+Each decision hook logs one line — name, allow/BLOCK, and why — including the
+fail-open paths that otherwise look identical to "nothing to do."
 
 ### Agent & Practices
 

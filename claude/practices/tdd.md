@@ -11,15 +11,19 @@ Write tests FIRST, then implement code to pass them. Mandatory for all implement
 5. **REFACTOR**: Clean up while keeping tests green
 6. **Repeat**
 
+## Shipping without tests
+
+Sometimes legitimate — config, a pure rename, generated code. It is never legitimate *silently*. A PR that changes source and touches no test file must carry one line saying why:
+
+```
+No new tests: <reason>
+```
+
+`validate-pr-body.sh` requires it. The line is the point: it turns an omission nobody would notice into a claim someone can disagree with.
+
 ## On Violation
 
 Wrote production code without a failing test first? **Delete it. All of it.** Don't keep it as scratch, in a comment, or in a side file — it biases the test you write next. Restart from RED.
-
-## Test Types
-
-- **Unit**: Individual functions/methods in isolation. Pure functions, business logic, edge cases.
-- **Integration**: How components work together. API endpoints, database operations, service interactions.
-- **E2E**: Complete user workflows. Critical paths, multi-step processes. Separate task, runs after implementation.
 
 ## Test Quality
 
@@ -51,4 +55,4 @@ src/hooks/useAuth.ts  →  tests/hooks/useAuth.test.ts
 
 - Pure setup tasks (installing deps, config changes)
 - Prototyping/exploration
-- E2E test tasks (they ARE the tests)
+- E2E tasks — they ARE the tests, and they run as separate work after implementation
