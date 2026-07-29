@@ -41,18 +41,20 @@ the target is the current repo or a sibling under the same parent.
 
 ## Model (`--model`, optional)
 
-By default the runner inherits the CLI default model (`~/.claude.json`) —
-`ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker. If
-`--model <model>` is in the arguments (e.g. `opus`, `sonnet`, `claude-opus-4-8`),
-strip it first, then:
+Runners default to **Opus 5 at medium effort** (`claude-opus-5`, set in
+`spawn.sh`). `ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker,
+so `DISPATCH_MODEL` is the only lever. If `--model <model>` is in the arguments
+(e.g. `opus`, `sonnet`, `claude-fable-5`), strip it first, then:
 
 - Prefix the spawn call with the env var: `DISPATCH_MODEL=<model> bash ~/.claude/skills/dispatch/spawn.sh ...`
 - Record it in the status file header as `- **model**: <model>` (omit the line when not set).
 
-Note: the global default model is pinned to the 1M-context variant
-(`claude-fable-5[1m]`), which long-running review loops pay for on every poll.
+Recording matters on resume: the watchdog re-dispatches without
+`DISPATCH_MODEL`, and `spawn.sh` reads the recorded model so an overridden
+runner comes back on the model it started with, not the fleet default.
+
 For routine tickets that don't need a huge context, `--model claude-fable-5`
-(standard context) is the cheaper choice.
+is the cheaper choice.
 
 ## Argument Detection
 

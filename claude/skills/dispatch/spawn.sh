@@ -7,8 +7,12 @@
 # (the /dispatch skill resolves --repo before calling).
 #
 # DISPATCH_MODEL (env, optional): model for the runner session (e.g. opus,
-# sonnet, claude-opus-4-8). Defaults to the CLI default — the only other lever,
-# since ANTHROPIC_MODEL does not propagate to a --bg daemon's worker.
+# sonnet, claude-fable-5). Defaults to claude-opus-5 — the fleet default —
+# falling back first to the model this runner recorded at first dispatch.
+# This env var is the only lever: ANTHROPIC_MODEL does not propagate to a
+# --bg daemon's worker.
+#
+# DISPATCH_EFFORT (env, optional): reasoning effort. Defaults to medium.
 #
 # Output (key:value on stdout):
 #   worktree_status:reused|created-existing-branch|created-new-branch
@@ -27,7 +31,10 @@ BRANCH="$2"
 ROOT="$3"
 PROMPT_FILE="$4"
 TARGET_REPO="$ROOT"
-MODEL="${DISPATCH_MODEL:-claude-opus-5}"
+# Explicit override only. The fleet default is applied AFTER the resume lookup
+# further down, so a runner dispatched on another model resumes on THAT model
+# rather than being silently pulled back to the default.
+MODEL="${DISPATCH_MODEL:-}"
 EFFORT="${DISPATCH_EFFORT:-medium}"
 
 if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$PROMPT_FILE" ]]; then
@@ -121,14 +128,20 @@ STATUS_FILE="$TARGET_REPO/.dispatch/status/$NAME.md"
 RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
 
 # Resume path (watchdog / manual re-dispatch) doesn't set DISPATCH_MODEL — fall
-# back to the model the status file recorded at first dispatch, so an
-# `--model opus` runner doesn't silently resume on the default model.
-if [[ "$MODEL" == "default" ]]; then
+# back to the model the status file recorded at first dispatch, so a runner
+# dispatched with `--model claude-fable-5` doesn't silently resume on the fleet
+# default. `default` in an older status file means "whatever the CLI picks",
+# which is exactly what the fleet default now replaces.
+if [[ -z "$MODEL" ]]; then
     RECORDED_MODEL=$(dispatch_status_field model "$STATUS_FILE" || true)
     if [[ -n "$RECORDED_MODEL" && "$RECORDED_MODEL" != "default" ]]; then
         MODEL="$RECORDED_MODEL"
     fi
 fi
+
+# Fleet default: Opus 5 at medium effort, for every runner that didn't ask for
+# something else.
+MODEL="${MODEL:-claude-opus-5}"
 # shellcheck disable=SC2016  # backticked code spans in prose, not expansions
 {
     printf '## WORKTREE ISOLATION — read first, non-negotiable\n\n'
