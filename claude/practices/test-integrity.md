@@ -1,6 +1,6 @@
 # Test Suite Integrity
 
-TDD covers writing a test. This covers editing one later — refactors, contract changes, bug fixes.
+TDD covers writing a test. This covers keeping the suite honest afterwards — editing tests through refactors, contract changes, and bug fixes, and building test infrastructure that can still fail.
 
 ## The core rule
 
@@ -56,9 +56,15 @@ Revert the production change or mutate the code, watch the test go red for the r
 
 One bounded commit, no drive-by cleanups, old and new contract named once, count honest. Reviewers pattern-match after the tenth identical diff — that is where a weakened assertion hides.
 
-## What this can't catch
+## Green-and-wrong
 
-Green-and-wrong: a test asserting against the same drifted fixture or duplicated definition as the code, so both agree and both are wrong. That needs a conformance check against ground truth (`dry.md`), not editing discipline. Periodically ask of a suspicious test — *what code change would make this fail?* If nothing would, it isn't testing anything.
+Everything above guards a test that went red. It cannot catch one that is green and wrong — asserting against the same drifted fixture, stub, or duplicated definition as the code, so both sides agree and both are wrong. Editing discipline doesn't reach that; construction does:
+
+- Test setup calls the real production functions — the real builders, validators, and setup paths. Hand-built state is for the specific thing under test, and the divergence is stated at the site.
+- "Mirrors X" in a test is a confession, not documentation. Replace the mirror with a call to X, or gate it (`dry.md`).
+- A simulation, bot, or benchmark is a measurement instrument: it may hold its own *policy*, but every *rule* it touches is imported from production. An instrument that re-states the rules measures itself.
+
+Periodically ask of a suspicious test — *what code change would make this fail?* If nothing plausible would, it isn't testing anything, whatever its color.
 
 ## On violation
 
