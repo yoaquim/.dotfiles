@@ -3,7 +3,6 @@
     "commit": "",
     "pr": ""
   },
-  "model": "fable",
   "hooks": {
     "PreToolUse": [
       {
