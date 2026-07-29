@@ -27,7 +27,8 @@ BRANCH="$2"
 ROOT="$3"
 PROMPT_FILE="$4"
 TARGET_REPO="$ROOT"
-MODEL="${DISPATCH_MODEL:-default}"
+MODEL="${DISPATCH_MODEL:-claude-opus-5}"
+EFFORT="${DISPATCH_EFFORT:-medium}"
 
 if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$PROMPT_FILE" ]]; then
     echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file>" >&2
@@ -161,6 +162,7 @@ SESSION_OUTPUT=$(cd "$WORKTREE" && \
     claude --bg \
     --agent runner \
     --model "$MODEL" \
+    --effort "$EFFORT" \
     --name "$RUNNER_NAME" \
     --permission-mode bypassPermissions \
     --brief \
