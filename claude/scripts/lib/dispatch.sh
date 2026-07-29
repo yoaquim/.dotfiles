@@ -58,6 +58,31 @@ dispatch_status_field() {
   printf '%s\n' "$out"
 }
 
+# Write `- **<field>**: <value>` into a status file header: replace the bullet in
+# place when it exists, otherwise insert it after the last header bullet so it
+# stays inside the block dispatch_status_field parses. Used by spawn.sh to record
+# the resolved model/effort, so a watchdog resume reproduces the same session
+# instead of falling back to the fleet default.
+dispatch_upsert_status_field() {
+  local field="$1" value="$2" file="$3" tmp
+  [[ -f "$file" && -w "$file" ]] || return 1
+  tmp="${file}.tmp.$$"
+  awk -v f="$field" -v v="$value" '
+    { lines[NR] = $0; if ($0 ~ /^- \*\*[a-z_]+\*\*:/) last = NR }
+    END {
+      done = 0
+      for (i = 1; i <= NR; i++) {
+        if (!done && lines[i] ~ "^- \\*\\*" f "\\*\\*:") {
+          print "- **" f "**: " v; done = 1; continue
+        }
+        print lines[i]
+        if (!done && last > 0 && i == last) { print "- **" f "**: " v; done = 1 }
+      }
+      if (!done) print "- **" f "**: " v
+    }
+  ' "$file" > "$tmp" && mv "$tmp" "$file"
+}
+
 # ── Time ──────────────────────────────────────────────────────────────────────
 # ISO-8601 (optional fractional/Z/offset) → epoch seconds; 0 when unparseable.
 # The offset MUST be honored: status files and jobs/state.json write UTC (`Z`),

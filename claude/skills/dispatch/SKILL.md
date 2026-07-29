@@ -1,7 +1,7 @@
 ---
 name: dispatch
 description: Dispatch work to autonomous runners in isolated worktrees. Accepts Linear tickets or sketch specs. Use when assigning work to background Claude runners or checking runner status.
-argument-hint: <ticket-id|sketch-name|search-query|status> [name] [--repo <name|path>] [--model <model>]
+argument-hint: <ticket-id|sketch-name|search-query|status> [name] [--repo <name|path>] [--model <model>] [--effort <level>]
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls*), Bash(mkdir*), Bash(date*), Bash(git*), Bash(*dispatch/spawn.sh*), Bash(*dispatch/status.sh*), Bash(*dispatch/resolve-repo.sh*), AskUserQuestion, Task, EnterPlanMode, ExitPlanMode, mcp__linear-work__*, mcp__linear-personal__*, mcp__linear-simpliruta__*, mcp__linear-mesa__*, mcp__linear-nullbreaker__*, mcp__linear-parchamusic__*, mcp__linear-lul__*, mcp__linear-rimas__*
 ---
 
@@ -43,15 +43,19 @@ the target is the current repo or a sibling under the same parent.
 
 Runners default to **Opus 5 at medium effort** (`claude-opus-5`, set in
 `spawn.sh`). `ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker,
-so `DISPATCH_MODEL` is the only lever. If `--model <model>` is in the arguments
-(e.g. `opus`, `sonnet`, `claude-fable-5`), strip it first, then:
+so the env vars are the only lever. If `--model <model>` or `--effort <level>`
+is in the arguments, strip them first, then prefix the spawn call:
 
-- Prefix the spawn call with the env var: `DISPATCH_MODEL=<model> bash ~/.claude/skills/dispatch/spawn.sh ...`
-- Record it in the status file header as `- **model**: <model>` (omit the line when not set).
+```
+DISPATCH_MODEL=<model> DISPATCH_EFFORT=<level> bash ~/.claude/skills/dispatch/spawn.sh ...
+```
 
-Recording matters on resume: the watchdog re-dispatches without
-`DISPATCH_MODEL`, and `spawn.sh` reads the recorded model so an overridden
-runner comes back on the model it started with, not the fleet default.
+Do **not** write `- **model**:` or `- **effort**:` into the status file
+yourself. `spawn.sh` records the resolved pair after it applies the defaults —
+it is the only place that knows what actually got used, and a second writer
+would drift. On resume the watchdog re-dispatches with neither env var set, and
+`spawn.sh` reads those recorded values back, so an overridden runner returns on
+the model and effort it started with rather than the fleet default.
 
 For routine tickets that don't need a huge context, `--model claude-fable-5`
 is the cheaper choice.
@@ -308,7 +312,9 @@ Flags:
   --repo <name|path>               Dispatch into another repo (name resolved under
                                    ~/Projects, or an explicit path). Default: current repo.
   --model <model>                  Model for this runner (opus, sonnet, full id).
-                                   Default: the CLI default in ~/.claude.json.
+                                   Default: claude-opus-5.
+  --effort <level>                 Reasoning effort (low, medium, high, xhigh, max).
+                                   Default: medium.
 
 Attach/inspect runners natively:
   claude agents                    TUI of all background sessions

@@ -35,7 +35,7 @@ TARGET_REPO="$ROOT"
 # further down, so a runner dispatched on another model resumes on THAT model
 # rather than being silently pulled back to the default.
 MODEL="${DISPATCH_MODEL:-}"
-EFFORT="${DISPATCH_EFFORT:-medium}"
+EFFORT="${DISPATCH_EFFORT:-}"
 
 if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$PROMPT_FILE" ]]; then
     echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file>" >&2
@@ -138,10 +138,21 @@ if [[ -z "$MODEL" ]]; then
         MODEL="$RECORDED_MODEL"
     fi
 fi
+if [[ -z "$EFFORT" ]]; then
+    RECORDED_EFFORT=$(dispatch_status_field effort "$STATUS_FILE" || true)
+    [[ -n "$RECORDED_EFFORT" ]] && EFFORT="$RECORDED_EFFORT"
+fi
 
 # Fleet default: Opus 5 at medium effort, for every runner that didn't ask for
 # something else.
 MODEL="${MODEL:-claude-opus-5}"
+EFFORT="${EFFORT:-medium}"
+
+# Record the RESOLVED pair. spawn.sh is the only place that knows what actually
+# got used, so it owns the record rather than asking the skill to remember —
+# and a resume then reproduces this session instead of the fleet default.
+dispatch_upsert_status_field model "$MODEL" "$STATUS_FILE" || true
+dispatch_upsert_status_field effort "$EFFORT" "$STATUS_FILE" || true
 # shellcheck disable=SC2016  # backticked code spans in prose, not expansions
 {
     printf '## WORKTREE ISOLATION — read first, non-negotiable\n\n'

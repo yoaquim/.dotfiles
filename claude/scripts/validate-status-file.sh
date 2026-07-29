@@ -48,6 +48,16 @@ if [[ -n "$STATUS" ]] && ! dispatch_is_known_status "$STATUS"; then
   errors+=("unknown status '$STATUS' (known: $DISPATCH_KNOWN_STATUSES)")
 fi
 
+# Optional, written by spawn.sh. A bad value here resurfaces as a failed spawn
+# on the next resume, long after the file was written — catch it at the source.
+EFFORT=$(dispatch_status_field effort "$FILE")
+if [[ -n "$EFFORT" ]]; then
+  case "$EFFORT" in
+    low|medium|high|xhigh|max) ;;
+    *) errors+=("unknown effort '$EFFORT' (known: low, medium, high, xhigh, max)") ;;
+  esac
+fi
+
 for tsfield in started updated; do
   ts=$(dispatch_status_field "$tsfield" "$FILE")
   if [[ -n "$ts" && "$(iso_to_epoch "$ts")" == "0" ]]; then
