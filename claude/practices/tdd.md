@@ -28,7 +28,7 @@ Wrote production code without a failing test first? **Delete it. All of it.** Do
 ## Test Quality
 
 - One behavior per test
-- Descriptive names: `test_calculateDamage_withModifiers_returnsSumOfBaseAndModifiers`
+- Descriptive names: `test_parseDate_withTimezone_returnsUTC`
 - Arrange-Act-Assert pattern
 - Tests run independently — no shared mutable state
 - Mock external dependencies (APIs, databases, file system)
@@ -42,14 +42,7 @@ Wrote production code without a failing test first? **Delete it. All of it.** Do
 
 ## File Placement
 
-Follow the framework/repo convention first — Rails uses `spec/`, Django puts
-tests in-app, an existing repo's layout always wins. Absent a convention,
-default to a dedicated `tests/` directory mirroring `src/`:
-
-```
-src/utils/jwt.ts      →  tests/utils/jwt.test.ts
-src/hooks/useAuth.ts  →  tests/hooks/useAuth.test.ts
-```
+Follow the framework/repo convention first — Rails uses `spec/`, Django puts tests in-app, an existing repo's layout always wins. Absent a convention, default to a `tests/` directory mirroring `src/` (`src/utils/jwt.ts` → `tests/utils/jwt.test.ts`).
 
 ## When TDD is Optional
 
