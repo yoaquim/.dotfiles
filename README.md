@@ -191,6 +191,8 @@ fail-open paths that otherwise look identical to "nothing to do."
 
 One unified **runner** agent handles all dispatched work. On completion it pushes, creates a PR via `/pr`, spawns a `/pr-review` session, then loops — addressing review threads and pushing fixes until the PR is approved with green CI (or a cap is hit).
 
+Runners default to `claude-opus-5` at **medium** effort; the PR reviewer runs the same model at **high** effort, since it exists to catch what the runner missed. Override per-dispatch with `--model`, or via `DISPATCH_MODEL` / `DISPATCH_EFFORT` and `REVIEWER_MODEL` / `REVIEWER_EFFORT`.
+
 Practices auto-inject at runner startup. TDD, no-comments, verification, and receiving-review are always active; stack practices (Django, Rails, React, Tailwind, Docker, npm pinning, Terraform, Cloudflare Workers, Shell) activate on project files — see `claude/practices/INDEX.md`.
 
 ---

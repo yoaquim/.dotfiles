@@ -21,6 +21,10 @@
 #     spawn-reviewer.sh https://github.com/owner/repo/pull/42
 #     spawn-reviewer.sh 42 -R owner/repo
 #
+# REVIEWER_MODEL / REVIEWER_EFFORT (env, optional): default claude-opus-5 at
+# high effort — one notch above the runner's medium, since the reviewer's job is
+# catching what the runner missed.
+#
 # Output (key:value on stdout):
 #   reviewer_status:already-reviewed|already-running|spawned
 #   session_id:<short id>          # omitted for already-reviewed (no live session)
@@ -231,7 +235,13 @@ SPAWN_DIR="${CHECKOUT:-$PWD}"
 #   2. a PLAIN prompt (NOT a leading "/pr-review …") → a slash-command as the
 #      initial prompt makes the harness treat it as a skill session, which does
 #      not apply the agent's hooks. The agent's body invokes /pr-review --inline.
-SPAWN_OUT=$(cd "$SPAWN_DIR" && claude --bg --agent pr-reviewer --model default --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL${CHECKOUT:+ (review checkout, already synced to HEAD: $CHECKOUT)}" 2>&1)
+# Opus 5 at HIGH effort, deliberately above the runner's medium: a reviewer's
+# whole job is catching what the runner missed, and it runs once per push rather
+# than continuously, so the extra reasoning is cheap where it matters most.
+REVIEW_MODEL="${REVIEWER_MODEL:-claude-opus-5}"
+REVIEW_EFFORT="${REVIEWER_EFFORT:-high}"
+
+SPAWN_OUT=$(cd "$SPAWN_DIR" && claude --bg --agent pr-reviewer --model "$REVIEW_MODEL" --effort "$REVIEW_EFFORT" --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL${CHECKOUT:+ (review checkout, already synced to HEAD: $CHECKOUT)}" 2>&1)
 
 # Resolve the id by the NAME we set (robust to --bg stdout wording). The lib
 # retries for agent-list latency; then fall back to scraping --bg stdout.
