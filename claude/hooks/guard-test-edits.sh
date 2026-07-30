@@ -106,7 +106,11 @@ VIOLATIONS=()
 # `pending` and `.only` are matched in call/marker position only — bare words
 # appear in ordinary identifiers ("pendingWrites", "onlyDigits") and this hook
 # blocks, so a false positive costs a real edit.
-SKIP_RE='\.skip\b|\.todo\b|\bxit\(|\bxdescribe\(|\bxcontext\(|@pytest\.mark\.(skip|xfail)|@unittest\.(skip|expectedFailure)|\bt\.Skip\(|@Ignore\b|#\[ignore\]|\bpending[[:space:]]*[("'"'"']|\.only\b|\bfit\(|\bfdescribe\('
+# RSpec's `pending` is a statement: `pending(` or `pending "reason"`. A quote
+# IMMEDIATELY after it with no space is a string-literal boundary — `'pending'`
+# in a test's own assertions is data, not a marker. Requiring the paren, or a
+# space before the quote, keeps the marker and drops that false positive.
+SKIP_RE='\.skip\b|\.todo\b|\bxit\(|\bxdescribe\(|\bxcontext\(|@pytest\.mark\.(skip|xfail)|@unittest\.(skip|expectedFailure)|\bt\.Skip\(|@Ignore\b|#\[ignore\]|\bpending\(|\bpending[[:space:]]+["'"'"']|\.only\b|\bfit\(|\bfdescribe\('
 OLD_SKIP=$(count "$OLD_FLAT" "$SKIP_RE")
 NEW_SKIP=$(count "$NEW_FLAT" "$SKIP_RE")
 if (( NEW_SKIP > OLD_SKIP )); then

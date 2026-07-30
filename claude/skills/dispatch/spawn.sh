@@ -127,20 +127,29 @@ echo "worktree:$WORKTREE"
 STATUS_FILE="$TARGET_REPO/.dispatch/status/$NAME.md"
 RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
 
-# Resume path (watchdog / manual re-dispatch) doesn't set DISPATCH_MODEL — fall
-# back to the model the status file recorded at first dispatch, so a runner
-# dispatched with `--model claude-fable-5` doesn't silently resume on the fleet
-# default. `default` in an older status file means "whatever the CLI picks",
-# which is exactly what the fleet default now replaces.
-if [[ -z "$MODEL" ]]; then
-    RECORDED_MODEL=$(dispatch_status_field model "$STATUS_FILE" || true)
-    if [[ -n "$RECORDED_MODEL" && "$RECORDED_MODEL" != "default" ]]; then
-        MODEL="$RECORDED_MODEL"
+# Only a RESUME may inherit recorded values, and `session_id` is the discriminator:
+# the /dispatch template writes `pending`, and spawn.sh replaces it with the real
+# id after a successful spawn. On a FIRST dispatch the status file was written
+# moments ago by the skill agent, which sometimes fills in a `model`/`effort` it
+# invented — reading that back pinned runners to a model nobody chose, then wrote
+# it out again as though spawn.sh had resolved it. A guess is not a record.
+#
+# On resume the values are ours, so a runner dispatched with
+# `--model claude-fable-5` comes back on fable rather than the fleet default.
+# `default` in an older status file means "whatever the CLI picks", which is
+# exactly what the fleet default now replaces.
+RECORDED_SESSION=$(dispatch_status_field session_id "$STATUS_FILE" || true)
+if [[ -n "$RECORDED_SESSION" && "$RECORDED_SESSION" != "pending" ]]; then
+    if [[ -z "$MODEL" ]]; then
+        RECORDED_MODEL=$(dispatch_status_field model "$STATUS_FILE" || true)
+        if [[ -n "$RECORDED_MODEL" && "$RECORDED_MODEL" != "default" ]]; then
+            MODEL="$RECORDED_MODEL"
+        fi
     fi
-fi
-if [[ -z "$EFFORT" ]]; then
-    RECORDED_EFFORT=$(dispatch_status_field effort "$STATUS_FILE" || true)
-    [[ -n "$RECORDED_EFFORT" ]] && EFFORT="$RECORDED_EFFORT"
+    if [[ -z "$EFFORT" ]]; then
+        RECORDED_EFFORT=$(dispatch_status_field effort "$STATUS_FILE" || true)
+        [[ -n "$RECORDED_EFFORT" ]] && EFFORT="$RECORDED_EFFORT"
+    fi
 fi
 
 # Fleet default: Opus 4.6 (1M-context variant) at max effort, for every runner
