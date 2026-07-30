@@ -6,16 +6,13 @@
 # Cross-repo dispatch passes the resolved target repo AS project-root
 # (the /dispatch skill resolves --repo before calling).
 #
-# DISPATCH_MODEL (env, optional): model for the runner session (e.g. opus,
-# sonnet, claude-fable-5). Defaults to claude-opus-4-6[1m] — the fleet default —
-# falling back first to the model this runner recorded at first dispatch.
-# This env var is the only lever: ANTHROPIC_MODEL does not propagate to a
-# --bg daemon's worker.
-#
-# DISPATCH_EFFORT (env, optional): reasoning effort. Defaults to max, the top of
-# Opus 4.6's ladder (low/medium/high/max — no xhigh; that arrived with 4.7).
-# The CLI accepts xhigh for any model, so a passing spawn does not mean 4.6
-# honors it; max is the higher setting regardless.
+# DISPATCH_MODEL / DISPATCH_EFFORT (env, optional): override the model and
+# reasoning effort for this runner. Unset falls back first to whatever this
+# runner recorded at first dispatch, then to the fleet default — both defined
+# once, at the resolution block below; this comment deliberately does not
+# restate the values, because it drifted from them within a day of being
+# written. These env vars are the only lever: ANTHROPIC_MODEL does not
+# propagate to a --bg daemon's worker.
 #
 # Output (key:value on stdout):
 #   worktree_status:reused|created-existing-branch|created-new-branch

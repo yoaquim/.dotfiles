@@ -41,11 +41,16 @@ the target is the current repo or a sibling under the same parent.
 
 ## Model (`--model`, optional)
 
-Runners default to **Opus 4.6 (1M context) at max effort** (`claude-opus-4-6[1m]`,
-set in `spawn.sh`). `max` is the top of 4.6's ladder — it has no `xhigh`, which
-arrived with 4.7. `ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker,
-so the env vars are the only lever. If `--model <model>` or `--effort <level>`
-is in the arguments, strip them first, then prefix the spawn call:
+**Never set `DISPATCH_MODEL` or `DISPATCH_EFFORT` unless the user explicitly
+passed `--model` / `--effort` in this invocation.** The fleet default lives in
+`spawn.sh` and nowhere else — this file deliberately does not name it. Passing
+the value you *believe* is the default overrides the real one, and a session
+holding a stale copy of this skill will then dispatch on a model that changed
+hours ago. Omit the env vars and the current default applies by itself.
+
+`ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker, so these env
+vars are the only lever. When the user *did* pass a flag, strip it from the
+arguments and prefix the spawn call — only with the keys they actually gave:
 
 ```
 DISPATCH_MODEL=<model> DISPATCH_EFFORT=<level> bash ~/.claude/skills/dispatch/spawn.sh ...
@@ -313,9 +318,9 @@ Flags:
   --repo <name|path>               Dispatch into another repo (name resolved under
                                    ~/Projects, or an explicit path). Default: current repo.
   --model <model>                  Model for this runner (opus, sonnet, full id).
-                                   Default: claude-opus-4-6[1m].
+                                   Default: the fleet default set in spawn.sh.
   --effort <level>                 Reasoning effort (low, medium, high, xhigh, max).
-                                   Default: max. Opus 4.6 has no xhigh.
+                                   Default: the fleet default set in spawn.sh.
 
 Attach/inspect runners natively:
   claude agents                    TUI of all background sessions
