@@ -191,7 +191,7 @@ fail-open paths that otherwise look identical to "nothing to do."
 
 One unified **runner** agent handles all dispatched work. On completion it pushes, creates a PR via `/pr`, spawns a `/pr-review` session, then loops — addressing review threads and pushing fixes until the PR is approved with green CI (or a cap is hit).
 
-Runners and the PR reviewer both default to `claude-opus-4-6[1m]` (1M context) at **max** effort — the top of 4.6's ladder, which has no `xhigh`. The authoritative values live in `spawn.sh` and `spawn-reviewer.sh`; nothing else restates them, because a skill file holding a stale copy will silently dispatch on it. Override per-dispatch with `--model` / `--effort`, or via `DISPATCH_MODEL` / `DISPATCH_EFFORT` and `REVIEWER_MODEL` / `REVIEWER_EFFORT`.
+Runners default to `claude-opus-4-6[1m]` (1M context) at **max** effort; the PR reviewer runs `claude-opus-5` at **medium** — a different model on purpose, since a second pair of eyes is worth more when it isn't the same eyes, and the reviewer's cost recurs on every push. The authoritative values live in `spawn.sh` and `spawn-reviewer.sh`; nothing else restates them, because a skill file holding a stale copy will silently dispatch on it. Override per-dispatch with `--model` / `--effort`, or via `DISPATCH_MODEL` / `DISPATCH_EFFORT` and `REVIEWER_MODEL` / `REVIEWER_EFFORT`.
 
 Practices auto-inject at runner startup. TDD, no-comments, verification, and receiving-review are always active; stack practices (Django, Rails, React, Tailwind, Docker, npm pinning, Terraform, Cloudflare Workers, Shell) activate on project files — see `claude/practices/INDEX.md`.
 

@@ -235,12 +235,12 @@ SPAWN_DIR="${CHECKOUT:-$PWD}"
 #   2. a PLAIN prompt (NOT a leading "/pr-review …") → a slash-command as the
 #      initial prompt makes the harness treat it as a skill session, which does
 #      not apply the agent's hooks. The agent's body invokes /pr-review --inline.
-# Same model and effort as the runners. A reviewer's job is catching what the
-# runner missed, so it gets at least the runner's capability — and since the
-# runners now sit at the top of this model's effort ladder, there is no level
-# above to give it. Matching is the ceiling, not a compromise.
-REVIEW_MODEL="${REVIEWER_MODEL:-claude-opus-4-6[1m]}"
-REVIEW_EFFORT="${REVIEWER_EFFORT:-max}"
+# Deliberately a different model from the runners: a second pair of eyes is
+# worth more when it isn't the same eyes. Medium effort because the reviewer
+# runs once per push across a whole watch loop, so its cost is recurring where
+# the runner's is one-shot.
+REVIEW_MODEL="${REVIEWER_MODEL:-claude-opus-5}"
+REVIEW_EFFORT="${REVIEWER_EFFORT:-medium}"
 
 SPAWN_OUT=$(cd "$SPAWN_DIR" && claude --bg --agent pr-reviewer --model "$REVIEW_MODEL" --effort "$REVIEW_EFFORT" --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL${CHECKOUT:+ (review checkout, already synced to HEAD: $CHECKOUT)}" 2>&1)
 
