@@ -66,9 +66,9 @@ the model and effort it started with rather than the fleet default.
 For routine tickets that don't need a huge context, `--model claude-fable-5`
 is the cheaper choice.
 
-The PR reviewer spawned at Completion runs `claude-opus-5` at **high** effort
-(`spawn-reviewer.sh`, overridable via `REVIEWER_MODEL` / `REVIEWER_EFFORT`) —
-one notch above the runner, because it exists to catch what the runner missed.
+The PR reviewer spawned at Completion has its own default, set in
+`spawn-reviewer.sh` and overridable via `REVIEWER_MODEL` / `REVIEWER_EFFORT`.
+As above, that value is not restated here — read it from the script.
 
 ## Argument Detection
 
