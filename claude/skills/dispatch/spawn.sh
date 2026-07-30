@@ -6,6 +6,11 @@
 # Cross-repo dispatch passes the resolved target repo AS project-root
 # (the /dispatch skill resolves --repo before calling).
 #
+# DISPATCH_TICKET / DISPATCH_TITLE (env, optional): the only two status-file
+# fields spawn.sh cannot compute. Everything else in that file is generated
+# here — the /dispatch skill no longer writes it. Both may be unset (a sketch
+# dispatch has neither); their bullets are then omitted.
+#
 # DISPATCH_MODEL / DISPATCH_EFFORT (env, optional): override the model and
 # reasoning effort for this runner. Unset falls back first to whatever this
 # runner recorded at first dispatch, then to the fleet default — both defined
@@ -139,7 +144,10 @@ RUNTIME_PROMPT="$TARGET_REPO/.dispatch/prompts/$NAME.runtime.md"
 # `default` in an older status file means "whatever the CLI picks", which is
 # exactly what the fleet default now replaces.
 RECORDED_SESSION=$(dispatch_status_field session_id "$STATUS_FILE" || true)
-if [[ -n "$RECORDED_SESSION" && "$RECORDED_SESSION" != "pending" ]]; then
+IS_RESUME=false
+[[ -n "$RECORDED_SESSION" && "$RECORDED_SESSION" != "pending" ]] && IS_RESUME=true
+
+if [[ "$IS_RESUME" == true ]]; then
     if [[ -z "$MODEL" ]]; then
         RECORDED_MODEL=$(dispatch_status_field model "$STATUS_FILE" || true)
         if [[ -n "$RECORDED_MODEL" && "$RECORDED_MODEL" != "default" ]]; then
@@ -158,11 +166,28 @@ fi
 MODEL="${MODEL:-claude-opus-4-6[1m]}"
 EFFORT="${EFFORT:-max}"
 
-# Record the RESOLVED pair. spawn.sh is the only place that knows what actually
-# got used, so it owns the record rather than asking the skill to remember —
-# and a resume then reproduces this session instead of the fleet default.
-dispatch_upsert_status_field model "$MODEL" "$STATUS_FILE" || true
-dispatch_upsert_status_field effort "$EFFORT" "$STATUS_FILE" || true
+# --- Status file: code owns it, not the skill ---
+# Every field here is one spawn.sh computes or resolves. The /dispatch skill
+# knows only the ticket and title, which it passes in as env vars. Hand-written
+# status files drifted with whoever wrote them — extra fields, invented models,
+# start times ahead of the file's own mtime — and the 8hr cap in
+# enforce-completion.sh is measured from `started`, so a fabricated timestamp
+# moved a real deadline.
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+dispatch_init_status_file "$STATUS_FILE" "$NAME" \
+  "${DISPATCH_TICKET:-}" "${DISPATCH_TITLE:-}" "$BRANCH" "$WORKTREE" "$NOW" || true
+
+# On a FIRST dispatch, overwrite the fields spawn.sh owns — this is what corrects
+# a hand-written file that guessed them. On a resume these are already ours and
+# `started` must survive, or the wall-clock cap restarts every time.
+if [[ "$IS_RESUME" != true ]]; then
+    dispatch_upsert_status_field branch   "$BRANCH"   "$STATUS_FILE" || true
+    dispatch_upsert_status_field worktree "$WORKTREE" "$STATUS_FILE" || true
+    dispatch_upsert_status_field started  "$NOW"      "$STATUS_FILE" || true
+fi
+dispatch_upsert_status_field updated "$NOW"    "$STATUS_FILE" || true
+dispatch_upsert_status_field model   "$MODEL"  "$STATUS_FILE" || true
+dispatch_upsert_status_field effort  "$EFFORT" "$STATUS_FILE" || true
 # shellcheck disable=SC2016  # backticked code spans in prose, not expansions
 {
     printf '## WORKTREE ISOLATION — read first, non-negotiable\n\n'

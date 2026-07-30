@@ -122,4 +122,49 @@ dispatch_upsert_status_field effort high "$F"
 expect_resolve "claude-fable-5 / high" \
   "resolved session_id → recorded pair is honored" "$F"
 
+# --- dispatch_init_status_file: code owns the shape ---
+NOW=2026-07-30T18:00:00Z
+G="$FIX/gen.md"
+dispatch_init_status_file "$G" nul-999 NUL-999 "One Response Shape" feat/x /w/nul-999 "$NOW"
+expect_cmd 0 "generated file passes the validator" "$SCRIPTS/validate-status-file.sh" "$G"
+expect_cmd 0 "generates exactly the 8 canonical header bullets" \
+  bash -c "[ \"\$(grep -cE '^- \*\*' '$G')\" = 8 ]"
+expect_cmd 0 "carries the ticket and title it was given" \
+  bash -c "grep -q '^- \*\*ticket\*\*: NUL-999$' '$G' && grep -q '^- \*\*title\*\*: One Response Shape$' '$G'"
+expect_cmd 1 "adds no section the template doesn't define" \
+  bash -c "grep -E '^## ' '$G' | grep -qvE '^## (Progress|Commits)$'"
+
+# Sketch dispatches have neither ticket nor title — those bullets drop out and
+# the file is still valid, since the validator treats both as optional.
+K="$FIX/sketch.md"
+dispatch_init_status_file "$K" sk "" "" sketch-x /w/sk "$NOW"
+expect_cmd 0 "sketch form (no ticket/title) still validates" "$SCRIPTS/validate-status-file.sh" "$K"
+expect_cmd 1 "omits the ticket bullet when empty" bash -c "grep -q 'ticket' '$K'"
+
+# A live runner's prose lives in this file — regenerating over it would erase
+# the Progress and Commits it has been writing.
+printf 'RUNNER WROTE THIS\n' >> "$G"
+dispatch_init_status_file "$G" nul-999 OTHER "Other" other /w/other "$NOW"
+expect_cmd 0 "never clobbers an existing file" bash -c "grep -q 'RUNNER WROTE THIS' '$G'"
+expect_cmd 0 "and leaves its original fields intact" \
+  bash -c "[ \"\$(sed -n 's/^- \*\*branch\*\*: //p' '$G' | head -1)\" = 'feat/x' ]"
+
+# --- a fabricated `started` is corrected on first dispatch, kept on resume ---
+# The 8hr wall-clock cap is measured from `started`, so an invented value moves
+# a real deadline. spawn.sh overwrites it while session_id is unresolved, then
+# must leave it alone forever after — otherwise the cap restarts every resume.
+T="$FIX/fabricated.md"; make_status "$T"
+dispatch_upsert_status_field started 2026-07-30T23:59:00Z "$T"   # agent's invention
+REAL=2026-07-30T18:00:00Z
+sid=$(dispatch_status_field session_id "$T")
+[[ "$sid" == "$UNRESOLVED" ]] && dispatch_upsert_status_field started "$REAL" "$T"
+expect_cmd 0 "first dispatch overwrites a fabricated started" \
+  bash -c "[ \"\$(sed -n 's/^- \*\*started\*\*: //p' '$T' | head -1)\" = '$REAL' ]"
+
+dispatch_upsert_status_field session_id c38f3fc0 "$T"
+sid=$(dispatch_status_field session_id "$T")
+[[ "$sid" == "$UNRESOLVED" ]] && dispatch_upsert_status_field started 2026-07-31T06:00:00Z "$T"
+expect_cmd 0 "resume preserves started (cap does not restart)" \
+  bash -c "[ \"\$(sed -n 's/^- \*\*started\*\*: //p' '$T' | head -1)\" = '$REAL' ]"
+
 summarize

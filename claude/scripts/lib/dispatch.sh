@@ -63,6 +63,34 @@ dispatch_status_field() {
 # stays inside the block dispatch_status_field parses. Used by spawn.sh to record
 # the resolved model/effort, so a watchdog resume reproduces the same session
 # instead of falling back to the fleet default.
+# Write a canonical status file. Code owns the shape so it can't drift: a
+# hand-written file varies with whoever wrote it, which is how runners ended up
+# carrying invented models and start times 20 minutes in the future.
+#
+# Usage: dispatch_init_status_file <file> <name> <ticket> <title> <branch> <worktree> <iso-now>
+# `ticket` and `title` may be empty (sketch dispatches have neither) — their
+# bullets are then omitted, matching what validate-status-file.sh treats as
+# optional. Never overwrites an existing file: a resumed runner's Progress and
+# Commits sections live there.
+dispatch_init_status_file() {
+  local file="$1" name="$2" ticket="$3" title="$4" branch="$5" worktree="$6" now="$7"
+  [[ -n "$file" ]] || return 1
+  [[ -e "$file" ]] && return 0
+  mkdir -p "$(dirname "$file")" 2>/dev/null || return 1
+  {
+    printf '# %s\n\n' "$name"
+    [[ -n "$ticket" ]] && printf -- '- **ticket**: %s\n' "$ticket"
+    [[ -n "$title" ]] && printf -- '- **title**: %s\n' "$title"
+    printf -- '- **session_id**: pending\n'
+    printf -- '- **branch**: %s\n' "$branch"
+    printf -- '- **worktree**: %s\n' "$worktree"
+    printf -- '- **status**: in_progress\n'
+    printf -- '- **started**: %s\n' "$now"
+    printf -- '- **updated**: %s\n' "$now"
+    printf '\n## Progress\nRunner starting...\n\n## Commits\n'
+  } > "$file"
+}
+
 dispatch_upsert_status_field() {
   local field="$1" value="$2" file="$3" tmp
   [[ -f "$file" && -w "$file" ]] || return 1

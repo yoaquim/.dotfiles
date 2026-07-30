@@ -140,29 +140,26 @@ Branch: Linear issue's branch name if set, else `dispatch/<name>`.
 
 ### 6. Status File
 
-Write `<TARGET_ROOT>/.dispatch/status/<name>.md` (`mkdir -p`):
+**Do not write the status file.** `spawn.sh` generates it, and every field in it
+is one the script computes — branch, worktree, session id, timestamps, model,
+effort. You know exactly two things it can't: the ticket and the title. Pass
+those as env vars on the spawn call and it does the rest:
 
-```markdown
-# <name>
-
-- **ticket**: <TICKET-ID>
-- **title**: <issue title>
-- **session_id**: pending
-- **branch**: <branch>
-- **worktree**: <worktree-path>
-- **status**: in_progress
-- **started**: <ISO timestamp>
-- **updated**: <ISO timestamp>
-
-## Progress
-Runner starting...
-
-## Commits
-(none yet)
-
-## Notes
-Dispatched.
 ```
+DISPATCH_TICKET=<TICKET-ID> DISPATCH_TITLE=<issue title> bash ~/.claude/skills/dispatch/spawn.sh ...
+```
+
+Both are optional — a sketch dispatch has neither, and their bullets are simply
+omitted. Combine with `DISPATCH_MODEL` / `DISPATCH_EFFORT` on the same line when
+the user passed `--model` / `--effort`.
+
+This used to be a template you copied by hand, and copying by hand is
+interpretation: files came out with extra sections, invented models, and
+`started` timestamps ahead of the file's own mtime — which matters because the
+8hr runner cap is measured from `started`. One writer, one shape.
+
+Once the runner is live it owns the file's prose sections (Progress, Commits,
+Notes) and the `status` bullet. Leave the header fields alone.
 
 ### 7. Spawn
 
@@ -230,25 +227,9 @@ On stop: commit WIP with `WIP: <one-line reason>`, set the status file's header 
 
 ### 5. Status File
 
-```markdown
-# <name>
-
-- **session_id**: pending
-- **branch**: sketch-<name>
-- **worktree**: <worktree-path>
-- **status**: in_progress
-- **started**: <ISO timestamp>
-- **updated**: <ISO timestamp>
-
-## Progress
-Runner starting...
-
-## Commits
-(none yet)
-
-## Notes
-Dispatched from sketch.
-```
+**Do not write it** — `spawn.sh` generates it, same as the ticket flow. A sketch
+dispatch has no ticket or title, so pass neither: leave `DISPATCH_TICKET` and
+`DISPATCH_TITLE` unset and those two bullets are simply omitted.
 
 ### 6. Spawn + Update
 
