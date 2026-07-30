@@ -3,7 +3,7 @@
     "commit": "",
     "pr": ""
   },
-  "model": "claude-opus-4-6[1m]",
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "PreToolUse": [
       {
