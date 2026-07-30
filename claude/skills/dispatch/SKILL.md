@@ -41,25 +41,30 @@ the target is the current repo or a sibling under the same parent.
 
 ## Model (`--model`, optional)
 
-**Never set `DISPATCH_MODEL` or `DISPATCH_EFFORT` unless the user explicitly
-passed `--model` / `--effort` in this invocation.** The fleet default lives in
-`spawn.sh` and nowhere else — this file deliberately does not name it. Passing
-the value you *believe* is the default overrides the real one, and a session
-holding a stale copy of this skill will then dispatch on a model that changed
-hours ago. Omit the env vars and the current default applies by itself.
+**Never pass `--model` / `--effort` to `spawn.sh` unless the user explicitly
+gave them in this invocation.** The fleet default lives in `spawn.sh` and
+nowhere else — this file deliberately does not name it. Passing the value you
+*believe* is the default overrides the real one, and a session holding a stale
+copy of this skill will then dispatch on a model that changed hours ago. Omit
+the flags and the current default applies by itself.
 
-`ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker, so these env
-vars are the only lever. When the user *did* pass a flag, strip it from the
-arguments and prefix the spawn call — only with the keys they actually gave:
+The old `DISPATCH_MODEL` / `DISPATCH_EFFORT` env vars are dead: `spawn.sh`
+ignores them. Env travels invisibly — a stale export or a settings.local.json
+`env` block pinned runners to a model nobody chose, and no restart flushed it.
+When the user *did* pass a flag, forward it verbatim on the spawn call — only
+the flags they actually gave:
 
 ```
-DISPATCH_MODEL=<model> DISPATCH_EFFORT=<level> bash ~/.claude/skills/dispatch/spawn.sh ...
+bash ~/.claude/skills/dispatch/spawn.sh <name> <branch> <root> <prompt> --model <model> --effort <level>
 ```
+
+`spawn.sh` prints `model override: <model>` / `effort override: <level>` to
+stderr whenever an explicit override applies — an override is never silent.
 
 Do **not** write `- **model**:` or `- **effort**:` into the status file
 yourself. `spawn.sh` records the resolved pair after it applies the defaults —
 it is the only place that knows what actually got used, and a second writer
-would drift. On resume the watchdog re-dispatches with neither env var set, and
+would drift. On resume the watchdog re-dispatches with neither flag, and
 `spawn.sh` reads those recorded values back, so an overridden runner returns on
 the model and effort it started with rather than the fleet default.
 
@@ -143,15 +148,14 @@ Branch: Linear issue's branch name if set, else `dispatch/<name>`.
 **Do not write the status file.** `spawn.sh` generates it, and every field in it
 is one the script computes — branch, worktree, session id, timestamps, model,
 effort. You know exactly two things it can't: the ticket and the title. Pass
-those as env vars on the spawn call and it does the rest:
+those as flags on the spawn call and it does the rest:
 
 ```
-DISPATCH_TICKET=<TICKET-ID> DISPATCH_TITLE=<issue title> bash ~/.claude/skills/dispatch/spawn.sh ...
+bash ~/.claude/skills/dispatch/spawn.sh ... --ticket <TICKET-ID> --title "<issue title>"
 ```
 
 Both are optional — a sketch dispatch has neither, and their bullets are simply
-omitted. Combine with `DISPATCH_MODEL` / `DISPATCH_EFFORT` on the same line when
-the user passed `--model` / `--effort`.
+omitted. Add `--model` / `--effort` on the same line when the user passed them.
 
 This used to be a template you copied by hand, and copying by hand is
 interpretation: files came out with extra sections, invented models, and
@@ -164,7 +168,7 @@ Notes) and the `status` bullet. Leave the header fields alone.
 ### 7. Spawn
 
 ```bash
-bash ~/.claude/skills/dispatch/spawn.sh <name> <branch> <project-root> <project-root>/.dispatch/prompts/<name>.md
+bash ~/.claude/skills/dispatch/spawn.sh <name> <branch> <project-root> <project-root>/.dispatch/prompts/<name>.md --ticket <TICKET-ID> --title "<issue title>"
 ```
 
 Output is key:value lines:
@@ -228,8 +232,8 @@ On stop: commit WIP with `WIP: <one-line reason>`, set the status file's header 
 ### 5. Status File
 
 **Do not write it** — `spawn.sh` generates it, same as the ticket flow. A sketch
-dispatch has no ticket or title, so pass neither: leave `DISPATCH_TICKET` and
-`DISPATCH_TITLE` unset and those two bullets are simply omitted.
+dispatch has no ticket or title, so pass neither `--ticket` nor `--title` and
+those two bullets are simply omitted.
 
 ### 6. Spawn + Update
 

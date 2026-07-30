@@ -2,22 +2,30 @@
 # spawn.sh — Create worktree (if needed) and spawn runner agent
 #
 # Usage: spawn.sh <name> <branch> <project-root> <prompt-file>
+#                 [--ticket <id>] [--title <title>] [--model <model>] [--effort <level>]
 #
 # Cross-repo dispatch passes the resolved target repo AS project-root
 # (the /dispatch skill resolves --repo before calling).
 #
-# DISPATCH_TICKET / DISPATCH_TITLE (env, optional): the only two status-file
-# fields spawn.sh cannot compute. Everything else in that file is generated
-# here — the /dispatch skill no longer writes it. Both may be unset (a sketch
-# dispatch has neither); their bullets are then omitted.
+# --ticket / --title (optional): the only two status-file fields spawn.sh
+# cannot compute. Everything else in that file is generated here — the
+# /dispatch skill no longer writes it. Both may be omitted (a sketch dispatch
+# has neither); their bullets are then omitted.
 #
-# DISPATCH_MODEL / DISPATCH_EFFORT (env, optional): override the model and
-# reasoning effort for this runner. Unset falls back first to whatever this
-# runner recorded at first dispatch, then to the fleet default — both defined
-# once, at the resolution block below; this comment deliberately does not
-# restate the values, because it drifted from them within a day of being
-# written. These env vars are the only lever: ANTHROPIC_MODEL does not
-# propagate to a --bg daemon's worker.
+# --model / --effort (optional): override the model and reasoning effort for
+# this runner. Omitted falls back first to whatever this runner recorded at
+# first dispatch, then to the fleet default — both defined once, at the
+# resolution block below; this comment deliberately does not restate the
+# values, because it drifted from them within a day of being written.
+#
+# Flags are the ONLY override channel. The old DISPATCH_MODEL/DISPATCH_EFFORT
+# (and DISPATCH_TICKET/DISPATCH_TITLE) env vars are deliberately ignored: env
+# travels invisibly — a stale session's export or a forgotten `env` block in a
+# settings.local.json kept pinning runners to a model nobody chose, and no
+# restart could flush it. An override must be visible on the command line, and
+# it is echoed to stderr when applied. (ANTHROPIC_MODEL still does not
+# propagate to a --bg daemon's worker, so flags are also the only lever that
+# works at all.)
 #
 # Output (key:value on stdout):
 #   worktree_status:reused|created-existing-branch|created-new-branch
@@ -31,21 +39,56 @@ set -eo pipefail
 # shellcheck disable=SC1091
 . "$HOME/.claude/scripts/lib/dispatch.sh"
 
-NAME="$1"
-BRANCH="$2"
-ROOT="$3"
-PROMPT_FILE="$4"
+# Explicit override via flags only — the DISPATCH_* env vars are dead here (see
+# header). The fleet default is applied AFTER the resume lookup further down, so
+# a runner dispatched on another model resumes on THAT model rather than being
+# silently pulled back to the default.
+MODEL=""
+EFFORT=""
+TICKET=""
+TITLE=""
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --model|--effort|--ticket|--title)
+            if [[ -z "${2:-}" ]]; then
+                echo "error: $1 requires a value" >&2
+                exit 1
+            fi
+            case "$1" in
+                --model)  MODEL="$2" ;;
+                --effort) EFFORT="$2" ;;
+                --ticket) TICKET="$2" ;;
+                --title)  TITLE="$2" ;;
+            esac
+            shift 2
+            ;;
+        --*)
+            echo "error: unknown flag: $1" >&2
+            exit 1
+            ;;
+        *)
+            POSITIONAL+=("$1")
+            shift
+            ;;
+    esac
+done
+
+NAME="${POSITIONAL[0]:-}"
+BRANCH="${POSITIONAL[1]:-}"
+ROOT="${POSITIONAL[2]:-}"
+PROMPT_FILE="${POSITIONAL[3]:-}"
 TARGET_REPO="$ROOT"
-# Explicit override only. The fleet default is applied AFTER the resume lookup
-# further down, so a runner dispatched on another model resumes on THAT model
-# rather than being silently pulled back to the default.
-MODEL="${DISPATCH_MODEL:-}"
-EFFORT="${DISPATCH_EFFORT:-}"
 
 if [[ -z "$NAME" || -z "$BRANCH" || -z "$ROOT" || -z "$PROMPT_FILE" ]]; then
-    echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file>" >&2
+    echo "Usage: spawn.sh <name> <branch> <project-root> <prompt-file> [--ticket <id>] [--title <title>] [--model <model>] [--effort <level>]" >&2
     exit 1
 fi
+
+# An override is never silent — the log shows exactly when and how the fleet
+# default (or a resume's recorded pair) was bypassed.
+[[ -n "$MODEL" ]] && echo "model override: $MODEL" >&2
+[[ -n "$EFFORT" ]] && echo "effort override: $EFFORT" >&2
 
 # Resolve target repo to absolute path
 if [[ "$TARGET_REPO" != /* ]]; then
@@ -168,14 +211,14 @@ EFFORT="${EFFORT:-max}"
 
 # --- Status file: code owns it, not the skill ---
 # Every field here is one spawn.sh computes or resolves. The /dispatch skill
-# knows only the ticket and title, which it passes in as env vars. Hand-written
+# knows only the ticket and title, which it passes in as flags. Hand-written
 # status files drifted with whoever wrote them — extra fields, invented models,
 # start times ahead of the file's own mtime — and the 8hr cap in
 # enforce-completion.sh is measured from `started`, so a fabricated timestamp
 # moved a real deadline.
 NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 dispatch_init_status_file "$STATUS_FILE" "$NAME" \
-  "${DISPATCH_TICKET:-}" "${DISPATCH_TITLE:-}" "$BRANCH" "$WORKTREE" "$NOW" || true
+  "$TICKET" "$TITLE" "$BRANCH" "$WORKTREE" "$NOW" || true
 
 # On a FIRST dispatch, overwrite the fields spawn.sh owns — this is what corrects
 # a hand-written file that guessed them. On a resume these are already ours and
