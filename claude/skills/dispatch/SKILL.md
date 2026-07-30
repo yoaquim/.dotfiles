@@ -41,8 +41,9 @@ the target is the current repo or a sibling under the same parent.
 
 ## Model (`--model`, optional)
 
-Runners default to **Opus 5 at medium effort** (`claude-opus-5`, set in
-`spawn.sh`). `ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker,
+Runners default to **Opus 4.6 (1M context) at max effort** (`claude-opus-4-6[1m]`,
+set in `spawn.sh`). `max` is the top of 4.6's ladder — it has no `xhigh`, which
+arrived with 4.7. `ANTHROPIC_MODEL` does NOT propagate to a `--bg` daemon's worker,
 so the env vars are the only lever. If `--model <model>` or `--effort <level>`
 is in the arguments, strip them first, then prefix the spawn call:
 
@@ -312,9 +313,9 @@ Flags:
   --repo <name|path>               Dispatch into another repo (name resolved under
                                    ~/Projects, or an explicit path). Default: current repo.
   --model <model>                  Model for this runner (opus, sonnet, full id).
-                                   Default: claude-opus-5.
+                                   Default: claude-opus-4-6[1m].
   --effort <level>                 Reasoning effort (low, medium, high, xhigh, max).
-                                   Default: medium.
+                                   Default: max. Opus 4.6 has no xhigh.
 
 Attach/inspect runners natively:
   claude agents                    TUI of all background sessions

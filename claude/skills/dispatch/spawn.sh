@@ -7,12 +7,15 @@
 # (the /dispatch skill resolves --repo before calling).
 #
 # DISPATCH_MODEL (env, optional): model for the runner session (e.g. opus,
-# sonnet, claude-fable-5). Defaults to claude-opus-5 — the fleet default —
+# sonnet, claude-fable-5). Defaults to claude-opus-4-6[1m] — the fleet default —
 # falling back first to the model this runner recorded at first dispatch.
 # This env var is the only lever: ANTHROPIC_MODEL does not propagate to a
 # --bg daemon's worker.
 #
-# DISPATCH_EFFORT (env, optional): reasoning effort. Defaults to medium.
+# DISPATCH_EFFORT (env, optional): reasoning effort. Defaults to max, the top of
+# Opus 4.6's ladder (low/medium/high/max — no xhigh; that arrived with 4.7).
+# The CLI accepts xhigh for any model, so a passing spawn does not mean 4.6
+# honors it; max is the higher setting regardless.
 #
 # Output (key:value on stdout):
 #   worktree_status:reused|created-existing-branch|created-new-branch
@@ -143,10 +146,11 @@ if [[ -z "$EFFORT" ]]; then
     [[ -n "$RECORDED_EFFORT" ]] && EFFORT="$RECORDED_EFFORT"
 fi
 
-# Fleet default: Opus 5 at medium effort, for every runner that didn't ask for
-# something else.
-MODEL="${MODEL:-claude-opus-5}"
-EFFORT="${EFFORT:-medium}"
+# Fleet default: Opus 4.6 (1M-context variant) at max effort, for every runner
+# that didn't ask for something else. `max` is the top of 4.6's ladder — it has
+# no `xhigh` (that arrived with 4.7).
+MODEL="${MODEL:-claude-opus-4-6[1m]}"
+EFFORT="${EFFORT:-max}"
 
 # Record the RESOLVED pair. spawn.sh is the only place that knows what actually
 # got used, so it owns the record rather than asking the skill to remember —
