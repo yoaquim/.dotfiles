@@ -235,11 +235,11 @@ SPAWN_DIR="${CHECKOUT:-$PWD}"
 #   2. a PLAIN prompt (NOT a leading "/pr-review …") → a slash-command as the
 #      initial prompt makes the harness treat it as a skill session, which does
 #      not apply the agent's hooks. The agent's body invokes /pr-review --inline.
-# Deliberately a different model from the runners: a second pair of eyes is
-# worth more when it isn't the same eyes. Medium effort because the reviewer
-# runs once per push across a whole watch loop, so its cost is recurring where
-# the runner's is one-shot.
-REVIEW_MODEL="${REVIEWER_MODEL:-claude-opus-5}"
+# Same model as the runners by operator directive (2026-07-31: "opus 4.8 on
+# everything") — supersedes the earlier deliberate different-model-for-reviewers
+# split. Medium effort because the reviewer runs once per push across a whole
+# watch loop, so its cost is recurring where the runner's is one-shot.
+REVIEW_MODEL="${REVIEWER_MODEL:-claude-opus-4-8}"
 REVIEW_EFFORT="${REVIEWER_EFFORT:-medium}"
 
 SPAWN_OUT=$(cd "$SPAWN_DIR" && claude --bg --agent pr-reviewer --model "$REVIEW_MODEL" --effort "$REVIEW_EFFORT" --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL${CHECKOUT:+ (review checkout, already synced to HEAD: $CHECKOUT)}" 2>&1)

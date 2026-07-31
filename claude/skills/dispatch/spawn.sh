@@ -203,10 +203,10 @@ if [[ "$IS_RESUME" == true ]]; then
     fi
 fi
 
-# Fleet default: Opus 4.6 (1M-context variant) at max effort, for every runner
-# that didn't ask for something else. `max` is the top of 4.6's ladder — it has
-# no `xhigh` (that arrived with 4.7).
-MODEL="${MODEL:-claude-opus-4-6[1m]}"
+# Fleet default: Opus 4.8 at max effort, for every runner that didn't ask for
+# something else. 4.8's context is natively 1M — no [1m] variant suffix exists
+# for it — and `max` is the top of its effort ladder (above `xhigh`).
+MODEL="${MODEL:-claude-opus-4-8}"
 EFFORT="${EFFORT:-max}"
 
 # --- Status file: code owns it, not the skill ---
