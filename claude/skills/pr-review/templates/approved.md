@@ -1,9 +1,11 @@
-# 👾 Reviewed by Claude via the `/pr-review` skill 👾
+<sub>Reviewed by **Claude <img src="https://cdn.simpleicons.org/claude" height="14">** via the `/pr-review` skill</sub>
 
-# ✅ APPROVED ✅
+### ✅ APPROVED
 
-> 🚀 **Ready to merge.**
+> [!TIP]
+> **Ready to merge** — no bug-class findings. Diff reviewed line by line.
 
-✅ _No bug-class findings — diff reviewed line by line._
-
-🔎 **Bug pass clean:** correctness · null/undefined · async/race · error handling · security · resource leaks · test rigor.
+<table>
+  <tr><td>🔎 <b>Bug pass</b></td><td>✅ clean — applied to every changed file</td></tr>
+  <tr><td>🧪 <b>Checks</b></td><td>correctness · null/undefined · async/race · error handling · security · resource leaks · test rigor</td></tr>
+</table>

@@ -19,17 +19,18 @@ PR_REVIEW_TEMPLATES="${PR_REVIEW_TEMPLATES:-$HOME/.claude/skills/pr-review/templ
 
 # Shared header — present on BOTH approved.md and changes-requested.md. Proves a
 # Claude review was posted; says NOTHING about the verdict. Do not use it to
-# detect approval.
+# detect approval. (The header is a `<sub>Reviewed by …` fine-print line, not a
+# markdown heading.)
 pr_review_header() {
-  grep -m1 '^# .*Reviewed by Claude' "$PR_REVIEW_TEMPLATES/approved.md" 2>/dev/null
+  grep -m1 '^<sub>Reviewed by' "$PR_REVIEW_TEMPLATES/approved.md" 2>/dev/null
 }
 
 # Approval sentinel — the headline that exists ONLY in approved.md
-# (`# ✅ APPROVED ✅`). Anchored on the ASCII word APPROVED so the pattern itself
+# (`### ✅ APPROVED`). Anchored on the ASCII word APPROVED so the pattern itself
 # carries no emoji/locale baggage; the returned line keeps the template's exact
 # bytes for a fixed-string (-F / jq contains) match against a posted body.
 pr_review_approved_marker() {
-  grep -m1 '^# .*APPROVED' "$PR_REVIEW_TEMPLATES/approved.md" 2>/dev/null
+  grep -m1 '^### .*APPROVED' "$PR_REVIEW_TEMPLATES/approved.md" 2>/dev/null
 }
 
 # True iff $1 (a review body) carries the approval sentinel. Fails safe: if the

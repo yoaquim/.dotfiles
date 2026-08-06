@@ -30,9 +30,9 @@ COMMAND=$(jq -r '.tool_input.command // ""' <<<"$INPUT" 2>/dev/null || echo "")
 # shellcheck disable=SC1091  # installed at runtime; not resolvable at lint time
 if ! source "$HOME/.claude/scripts/lib/pr-review-markers.sh" 2>/dev/null; then
   # shellcheck disable=SC2016,SC2329  # literal fallbacks, invoked indirectly below
-  pr_review_header() { printf '%s' '# 👾 Reviewed by Claude via the `/pr-review` skill 👾'; }
+  pr_review_header() { printf '%s' '<sub>Reviewed by **Claude <img src="https://cdn.simpleicons.org/claude" height="14">** via the `/pr-review` skill</sub>'; }
   # shellcheck disable=SC2329
-  pr_review_is_approved_body() { grep -qF '# ✅ APPROVED ✅' <<<"$1"; }
+  pr_review_is_approved_body() { grep -qF '### ✅ APPROVED' <<<"$1"; }
 fi
 HEADER=$(pr_review_header)
 FILELINE_RE='[A-Za-z_][A-Za-z0-9_./-]*\.(ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cc|cpp|h|hpp|cs|sh|sql|css|scss|html|md|json|ya?ml|toml|tf|hcl)(:[0-9]+(-[0-9]+)?)?'

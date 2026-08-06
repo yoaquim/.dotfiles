@@ -1,6 +1,7 @@
 ### {sev_emoji} {title}
 
-**Severity:** {severity} · **Confidence:** {confidence} · **Criterion:** {criterion}
+> [!{sev_alert}]
+> **Severity:** `{severity}` · **Confidence:** `{confidence}` · **Criterion:** `{criterion}`
 
 **🐛 Issue:** {issue}
 

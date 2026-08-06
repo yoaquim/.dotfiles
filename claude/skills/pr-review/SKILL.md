@@ -132,6 +132,9 @@ Every surface is a fixed template in `templates/`. Fill the placeholders; never 
 Severity emoji — use the SAME ones everywhere (body breakdown and finding titles):
 🔴 Blocker · 🟡 Concern · 🔵 Nit
 
+Severity → alert flavor (for `{sev_alert}` in finding.md — colors the callout to match the dot):
+🔴 Blocker → `CAUTION` · 🟡 Concern → `WARNING` · 🔵 Nit → `NOTE`
+
 **(a) Top-level review body** — the single review comment every finding threads under.
 - **Zero findings → `templates/approved.md`.** Post it byte-for-byte. No substitutions, no extra prose. The point: the approved review is identical every time.
 - **Findings exist → `templates/changes-requested.md`.** Substitute only:
@@ -141,6 +144,7 @@ Severity emoji — use the SAME ones everywhere (body breakdown and finding titl
 
 **(b) Inline comment per finding** — one resolvable thread on the cited `file:line`, from `templates/finding.md`. Substitute:
   - `{sev_emoji}` — 🔴 / 🟡 / 🔵 matching severity
+  - `{sev_alert}` — CAUTION / WARNING / NOTE matching severity (see mapping above)
   - `{title}` — see Title rules below
   - `{severity}` — Blocker | Concern | Nit
   - `{confidence}` — High | Med | Low
@@ -162,7 +166,7 @@ Bad: `Fix null check on user.email`, `PER-83: Null Check`, `Update error handlin
 
 Findings without a usable `file:line` (rare — cross-cutting issues) → fold into the top-level body under a `## Cross-cutting` section instead of the comments array.
 
-Zero findings → post `templates/approved.md` verbatim. It carries the `👾 Reviewed by Claude` header and the `# ✅ APPROVED ✅` headline. **Keep that headline intact** — it's the approval sentinel: on a self-authored PR GitHub's `reviewDecision` can never become `APPROVED`, so both this watcher (`enforce-watch.sh`) and the dispatch runner detect approval by finding that exact line in a review whose `commit_id` is the current HEAD. The single source of truth is `scripts/lib/pr-review-markers.sh`, which reads the line back from this template — so don't reword it.
+Zero findings → post `templates/approved.md` verbatim. It carries the `<sub>Reviewed by **Claude …` header and the `### ✅ APPROVED` headline. **Keep that headline intact** — it's the approval sentinel: on a self-authored PR GitHub's `reviewDecision` can never become `APPROVED`, so both this watcher (`enforce-watch.sh`) and the dispatch runner detect approval by finding that exact line in a review whose `commit_id` is the current HEAD. The single source of truth is `scripts/lib/pr-review-markers.sh`, which reads the line back from this template — so don't reword it.
 
 Sort findings: Blockers → Concerns → Nits. Within tier, `general` first, then criteria.
 
@@ -267,4 +271,4 @@ So the loop is: review → try to end → do what the hook says → try to end. 
 - Broaden the primary pass → add to `bug-checklist.md`.
 - New optional gate → drop a file at `criteria/<slug>.md` (What / How to spot / When NOT / Severity) AND add a row to `criteria/INDEX.md` — Detect `always` for house rules, or a detect rule (file / `file:string` / glob) for stack criteria. A criteria file without an INDEX row is never loaded.
 - New mechanical check on the posted output → extend `hooks/check-post.sh`.
-- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Two lines in `approved.md` are load-bearing — keep both: the `# 👾 Reviewed by Claude …` header (matched by `^# .*Reviewed by Claude`) and the `# ✅ APPROVED ✅` headline (matched by `^# .*APPROVED`). `scripts/lib/pr-review-markers.sh` reads them back from the template as the single source of truth for `check-post.sh` and `check-pr-state.sh`; reword either line and approval detection silently breaks. (`spawn-reviewer.sh`'s reviewed-at-HEAD gate counts any review at HEAD via REST and doesn't use the sentinel.)
+- Change review wording/emoji/layout → edit `templates/` (`approved.md`, `changes-requested.md`, `finding.md`). Two lines in `approved.md` are load-bearing — keep both: the `<sub>Reviewed by **Claude …` header (matched by `^<sub>Reviewed by`) and the `### ✅ APPROVED` headline (matched by `^### .*APPROVED`). `scripts/lib/pr-review-markers.sh` reads them back from the template as the single source of truth for `check-post.sh` and `check-pr-state.sh`; reword either line and approval detection silently breaks. (`spawn-reviewer.sh`'s reviewed-at-HEAD gate counts any review at HEAD via REST and doesn't use the sentinel.)
