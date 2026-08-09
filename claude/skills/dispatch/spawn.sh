@@ -242,6 +242,7 @@ dispatch_upsert_status_field effort  "$EFFORT" "$STATUS_FILE" || true
     printf -- '- The ONLY path you may write outside the worktree is your status file: `%s`.\n' "$STATUS_FILE"
     printf -- '- Do NOT create Linear issues/tickets (no `save_issue`, no `/issue`). If you discover follow-up work, document it in your status file + PR description as a proposed follow-up; the operator files it via `/issue`. Reference it as "proposed follow-up", never a created ticket id.\n'
     printf -- '- Before every commit run `git rev-parse --show-toplevel` and confirm it prints `%s`; if it prints anything else, STOP and cd into the worktree first.\n\n' "$WORKTREE"
+    printf 'Write all prose (PR descriptions, commit messages, comments, status summaries) in ASD-STE100 Simplified Technical English: short active-voice sentences, simple approved words. Keep code, quoted text, and required markers exact.\n\n'
     printf -- '---\n\n'
     cat "$PROMPT_FILE"
 } > "$RUNTIME_PROMPT"

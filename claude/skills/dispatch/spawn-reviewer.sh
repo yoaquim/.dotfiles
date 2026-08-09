@@ -242,7 +242,8 @@ SPAWN_DIR="${CHECKOUT:-$PWD}"
 REVIEW_MODEL="${REVIEWER_MODEL:-claude-opus-5}"
 REVIEW_EFFORT="${REVIEWER_EFFORT:-medium}"
 
-SPAWN_OUT=$(cd "$SPAWN_DIR" && claude --bg --agent pr-reviewer --model "$REVIEW_MODEL" --effort "$REVIEW_EFFORT" --permission-mode bypassPermissions --name "$REVIEW_NAME" "Review and watch pull request: $PR_URL${CHECKOUT:+ (review checkout, already synced to HEAD: $CHECKOUT)}" 2>&1)
+STE_PROMPT='Write all prose (review comments, summaries, verdicts) in ASD-STE100 Simplified Technical English: short active-voice sentences, simple approved words. Keep code, quoted text, and required markers exact.'
+SPAWN_OUT=$(cd "$SPAWN_DIR" && claude --bg --agent pr-reviewer --model "$REVIEW_MODEL" --effort "$REVIEW_EFFORT" --permission-mode bypassPermissions --name "$REVIEW_NAME" --append-system-prompt "$STE_PROMPT" "Review and watch pull request: $PR_URL${CHECKOUT:+ (review checkout, already synced to HEAD: $CHECKOUT)}" 2>&1)
 
 # Resolve the id by the NAME we set (robust to --bg stdout wording). The lib
 # retries for agent-list latency; then fall back to scraping --bg stdout.
