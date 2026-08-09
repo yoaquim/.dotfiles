@@ -203,10 +203,11 @@ if [[ "$IS_RESUME" == true ]]; then
     fi
 fi
 
-# Fleet default: Opus 4.8 at max effort, for every runner that didn't ask for
-# something else. 4.8's context is natively 1M — no [1m] variant suffix exists
-# for it — and `max` is the top of its effort ladder (above `xhigh`).
-MODEL="${MODEL:-claude-opus-4-8}"
+# Fleet default: latest Opus at max effort, for every runner that didn't ask
+# for something else. The bare `opus` alias tracks whatever Opus is current
+# (claude-opus-5 today) so a model launch doesn't need a dotfiles edit; Opus 5
+# runs a full low→max effort ladder and a native 1M context.
+MODEL="${MODEL:-opus}"
 EFFORT="${EFFORT:-max}"
 
 # --- Status file: code owns it, not the skill ---

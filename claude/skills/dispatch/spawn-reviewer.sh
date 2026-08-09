@@ -235,11 +235,12 @@ SPAWN_DIR="${CHECKOUT:-$PWD}"
 #   2. a PLAIN prompt (NOT a leading "/pr-review …") → a slash-command as the
 #      initial prompt makes the harness treat it as a skill session, which does
 #      not apply the agent's hooks. The agent's body invokes /pr-review --inline.
-# Deliberately a different model from the runners: a second pair of eyes is
-# worth more when it isn't the same eyes. Medium effort because the reviewer
-# runs once per push across a whole watch loop, so its cost is recurring where
-# the runner's is one-shot.
-REVIEW_MODEL="${REVIEWER_MODEL:-claude-opus-5}"
+# Same default as the runners now (operator ruling 2026-08-08): latest Opus via
+# the bare `opus` alias, so reviewers track model launches without edits. This
+# drops the old different-eyes-than-the-runner rule. Medium effort because the
+# reviewer runs once per push across a whole watch loop, so its cost is
+# recurring where the runner's is one-shot.
+REVIEW_MODEL="${REVIEWER_MODEL:-opus}"
 REVIEW_EFFORT="${REVIEWER_EFFORT:-medium}"
 
 STE_PROMPT='Write all prose (review comments, summaries, verdicts) in ASD-STE100 Simplified Technical English: short active-voice sentences, simple approved words. Keep code, quoted text, and required markers exact.'
