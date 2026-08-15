@@ -2,6 +2,8 @@
 # Stop hook for the pr-reviewer watch loop. Allows Stop only when:
 #   - the current HEAD is approved (a review at HEAD carries the approved.md
 #     sentinel, or an external reviewDecision==APPROVED) AND CI is green
+#     AND Codex is settled (codex_state clean|absent — same terminal test the
+#     runner uses; pending/waiting means more commits are coming)
 #   - PR is MERGED or CLOSED
 #   - 8hr cap reached (state.json .createdAt)
 #   - --once was in args
@@ -209,19 +211,39 @@ CI_GREEN=$(jq -r 'if .ci_green == true then "true" else "false" end' <<<"$STATE_
 CUR_SHA=$(jq -r '.head_sha // ""' <<<"$STATE_JSON")
 REVIEWED_AT_HEAD=$(jq -r 'if .reviewed_at_head == true then "true" else "false" end' <<<"$STATE_JSON")
 APPROVED_AT_HEAD=$(jq -r 'if .approved_at_head == true then "true" else "false" end' <<<"$STATE_JSON")
+CODEX_STATE=$(jq -r '.codex_state // "absent"' <<<"$STATE_JSON")
 
-# The reviewer's job is done once it has signed off on THIS HEAD AND CI is green —
-# then there's nothing left to review and nothing left to fail. "Signed off" is
-# read from GitHub (check-pr-state: a review at the current HEAD carrying the
-# approved.md sentinel), NOT a local stamp. Self-authored PRs can't move GitHub's
+# The reviewer's job is done once it has signed off on THIS HEAD AND CI is green
+# AND Codex is settled — the SAME terminal test the runner uses (dispatch
+# SKILL.md "Review feedback loop"). "Signed off" is read from GitHub
+# (check-pr-state: a review at the current HEAD carrying the approved.md
+# sentinel), NOT a local stamp. Self-authored PRs can't move GitHub's
 # reviewDecision, so the sentinel is the signal; a real reviewDecision==APPROVED
-# (external/bot reviewer) counts too. CI is the gate: approved but CI pending/red
+# (external/bot reviewer) counts too. CI is a gate: approved but CI pending/red
 # → keep watching (ci_green counts running/queued checks as not-green; a failing
-# check may push a fix to re-review).
+# check may push a fix to re-review). Codex is a gate too: pending/waiting means
+# the runner is still ping-ponging with Codex and WILL push more commits —
+# exiting here orphans those pushes with no watcher, and the watchdog then mints
+# a fresh reviewer agent per approve→exit→push cycle (the duplicate-reviewer
+# bug, PR nullbreaker#539 2026-08-12). clean/absent means no more Codex-driven
+# commits are coming, so approved+green really is terminal. The 8hr cap above
+# bounds the wait if Codex stays pending with no pushes.
 APPROVED_HEAD=no
 [[ "$APPROVED_AT_HEAD" == "true" ]] && APPROVED_HEAD=yes
 [[ "$REVIEW_DECISION" == "APPROVED" ]] && APPROVED_HEAD=yes
-if [[ "$APPROVED_HEAD" == "yes" && "$CI_GREEN" == "true" ]]; then DECISION="allow-stop(approved+ci-green)"; exit 0; fi
+if [[ "$APPROVED_HEAD" == "yes" && "$CI_GREEN" == "true" ]]; then
+  if [[ "$CODEX_STATE" == "clean" || "$CODEX_STATE" == "absent" ]]; then
+    DECISION="allow-stop(approved+ci-green+codex-$CODEX_STATE)"
+    exit 0
+  fi
+  DECISION="keep-watching(approved,codex-$CODEX_STATE)"
+  {
+    echo "Do NOT stop — you've approved PR #$PR HEAD ($CUR_SHA) and CI is green, but Codex is still engaged (codex_state=$CODEX_STATE)."
+    echo "The author is addressing Codex findings and may push more commits; each new HEAD needs your re-review."
+    echo "sleep 60, then try to end again. You'll be released once Codex settles (clean/absent) or the PR merges/closes."
+  } >&2
+  exit 2
+fi
 
 # Approved this exact HEAD, but CI isn't green yet → wait specifically on CI.
 if [[ "$APPROVED_HEAD" == "yes" ]]; then
