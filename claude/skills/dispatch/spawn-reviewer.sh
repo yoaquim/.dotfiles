@@ -29,6 +29,8 @@
 #   reviewer_status:already-reviewed|already-running|spawned
 #   session_id:<short id>          # omitted for already-reviewed (no live session)
 #   name:<review session name>
+#   reclaimed_wedged:<short id>    # only when a blocked (wedged) reviewer was
+#                                  # killed to make room for this spawn
 #
 # already-reviewed = the PR's current HEAD already has a review (approve or
 # findings); this code is covered, so nothing is spawned. A new reviewer spawns
@@ -207,6 +209,38 @@ done
 # `claude agents` yet; a single missed check would re-introduce the double-review
 # bug. Retry briefly — the same latency tolerance the id-resolution below uses.
 EXISTING=$(dispatch_session_id_by_name "$REVIEW_NAME" 3) || EXISTING=""
+
+# Wedged-reviewer reclaim (operator ruling 2026-08-15). A reviewer session in
+# state `blocked` is not parked on an operator decision — reviewers have no
+# operator gate; blocked means it wedged on an error and is waiting for input
+# nobody will give (observed: API ENOTFOUND → "needs input" for 26+ min on
+# infrastructure#9). A wedged session is WORSE than a dead one: dead frees the
+# name and the watchdog revives, but blocked squats on the deterministic name,
+# the guard reports already-running, and the PR silently loses all review
+# coverage. We only reach this point when the current HEAD is genuinely
+# unreviewed (the reviewed-at-HEAD gate above), so there is real work the
+# wedged session isn't doing: kill it and spawn a replacement. Scoped to
+# reviewers by construction — this lookup is by REVIEW_NAME, so a runner's
+# legitimate blocked-park can never match. If the kill doesn't take, fall
+# through to already-running rather than double-spawn.
+if [[ -n "$EXISTING" ]]; then
+  EX_JSON=$(claude agents --json 2>/dev/null | jq -c --arg id "$EXISTING" \
+    '[ .[]? | select((.id // .sessionId // "") == $id) ] | first // empty' 2>/dev/null) || EX_JSON=""
+  EX_STATE=$(jq -r '.state // ""' <<<"$EX_JSON" 2>/dev/null)
+  EX_PID=$(jq -r '.pid // empty' <<<"$EX_JSON" 2>/dev/null)
+  if [[ "$EX_STATE" == "blocked" && "$EX_PID" =~ ^[0-9]+$ ]]; then
+    kill "$EX_PID" 2>/dev/null
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      sleep 1
+      if ! dispatch_session_id_by_name "$REVIEW_NAME" 1 >/dev/null 2>&1; then
+        echo "reclaimed_wedged:$EXISTING"
+        EXISTING=""
+        break
+      fi
+    done
+  fi
+fi
+
 if [[ -n "$EXISTING" ]]; then
   echo "reviewer_status:already-running"
   echo "session_id:$EXISTING"
