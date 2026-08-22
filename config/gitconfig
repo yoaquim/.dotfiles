@@ -53,3 +53,5 @@
 	path = ~/.config/git/config.local
 [coderabbit]
 	machineId = cli/7ebe776679814f5e8b4c281c0530b353
+[credential]
+	helper = osxkeychain

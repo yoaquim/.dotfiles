@@ -3,10 +3,15 @@ return {
 
   -- Treesitter Configuration
   -- ───────────────────────────────────────────────────
+  -- AstroNvim v6: nvim-treesitter `main` is just a parser installer;
+  -- highlight/indent/ensure_installed are configured through AstroCore.
   {
-    "nvim-treesitter/nvim-treesitter",
+    "AstroNvim/astrocore",
+    ---@type AstroCoreOpts
     opts = {
-      ensure_installed = { "sql" },
+      treesitter = {
+        ensure_installed = { "sql" },
+      },
     },
   },
 
@@ -23,9 +28,9 @@ return {
 
   -- mini.vim Plugins
   -- ───────────────────────────────────────────────────
-  { "echasnovski/mini.snippets" },
+  { "nvim-mini/mini.snippets" },
   {
-    "echasnovski/mini.splitjoin",
+    "nvim-mini/mini.splitjoin",
     keys = {
       { "gS", "<cmd>lua require('mini.splitjoin').toggle()<cr>", desc = "Toggle splitjoin" },
     },
@@ -34,7 +39,7 @@ return {
     end,
   },
   {
-    "echasnovski/mini.surround",
+    "nvim-mini/mini.surround",
     keys = {
       { "sa", desc = "Add surrounding", mode = { "n", "v" } },
       { "sd", desc = "Delete surrounding" },
@@ -49,7 +54,7 @@ return {
     end,
   },
   {
-    "echasnovski/mini.move",
+    "nvim-mini/mini.move",
     event = "VeryLazy",
     config = function()
       require("mini.move").setup({
@@ -70,7 +75,7 @@ return {
   -- LSP and Language Support
   -- ───────────────────────────────────────────────────
   {
-    "williamboman/mason-lspconfig.nvim",
+    "mason-org/mason-lspconfig.nvim",
     opts = {
       ensure_installed = {
         -- Frontend
