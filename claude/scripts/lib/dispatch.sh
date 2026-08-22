@@ -22,8 +22,8 @@ DISPATCH_RESUMABLE_STATUSES="in_progress"
 # PARK: not terminal (the runner resumes once the operator answers) and not
 # auto-resumable (operator-owned — the watchdog leaves it alone). enforce-completion
 # ALLOWS the Stop on it so the --bg session parks ALIVE and attachable
-# (`claude agents`) rather than dying; the runner asks its question via
-# SendUserMessage (spawned with `--brief`). Distinct from a terminal exit, which
+# (`claude agents`) rather than dying; the runner writes its question into the
+# status file's Notes (there is no SendUserMessage tool). Distinct from a terminal exit, which
 # yields a `done` session the operator cannot tab into.
 DISPATCH_KNOWN_STATUSES="$DISPATCH_RESUMABLE_STATUSES blocked $DISPATCH_TERMINAL_STATUSES"
 
@@ -215,6 +215,24 @@ dispatch_name_alive() {
       and (((.state // .status // "") | ascii_downcase) as $s | ($t | index($s) | not)))
   ' >/dev/null 2>&1 && return 0
   dispatch_job_session_by_name "$1" >/dev/null
+}
+
+# dispatch_operator_session_name — the peer name of the Claude session THIS
+# script runs inside, from the session registry (`~/.claude/sessions/*.json`,
+# matched on CLAUDE_CODE_SESSION_ID). That is the address a runner can
+# `SendMessage` to reach the operator. Empty + exit 1 outside a Claude session
+# (watchdog resume, plain shell). Reading the caller's OWN session id from env
+# is fine: spawn.sh resolves it once and writes the NAME into the runtime
+# prompt file — hooks never read it, and it never describes a runner.
+dispatch_operator_session_name() {
+  local sid="${CLAUDE_CODE_SESSION_ID:-}" f name
+  [[ -n "$sid" ]] || return 1
+  for f in "$HOME"/.claude/sessions/*.json; do
+    [[ -f "$f" ]] || continue
+    name=$(jq -r --arg s "$sid" 'select(.sessionId == $s) | .name // empty' "$f" 2>/dev/null) || continue
+    if [[ -n "$name" ]]; then printf '%s\n' "$name"; return 0; fi
+  done
+  return 1
 }
 
 # dispatch_session_id_by_name <name> [retries] — short id of the live session

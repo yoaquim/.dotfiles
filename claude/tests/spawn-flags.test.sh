@@ -88,6 +88,14 @@ expect_cmd 0 "resume reuses the recorded model" grep -q -- "--model claude-fable
 expect_cmd 0 "resume reuses the recorded effort" grep -q -- "--effort high" "$ARGS"
 expect_cmd 1 "an inherited pair is not logged as an override" grep -q override "$ERR"
 
+# --- operator session reaches the runtime prompt via the FILE, never env ---
+RUNTIME="$REPO/.dispatch/prompts/op-none.runtime.md"
+CLAUDE_CODE_SESSION_ID= run_spawn op-none
+expect_cmd 0 "no operator session → prompt says none" \
+  grep -q '^Operator session: none' "$RUNTIME"
+expect_cmd 1 "runner is not spawned with an operator env var" \
+  grep -q 'OPERATOR' "$ARGS"
+
 # --- bad invocations fail fast ---
 expect_cmd 1 "unknown flag is rejected" run_spawn nb-bad --frobnicate yes
 expect_cmd 1 "--model without a value is rejected" run_spawn nb-bad --model

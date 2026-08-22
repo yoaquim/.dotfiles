@@ -100,5 +100,9 @@
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "env": {
+    "CLAUDE_CODE_HARBOR_KITE": "1"
+  },
+  "crossSessionInbound": "accept"
 }

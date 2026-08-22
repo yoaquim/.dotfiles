@@ -97,8 +97,17 @@ for s in completed needs_review closed-without-merge failed; do
   own_status "$s"
   run_gate 0 "terminal status releases: $s"
 done
-own_status blocked
-run_gate 0 "blocked parks the session alive" "parking session alive"
+NUDGE="$REPO/.dispatch/state/test-run.operator-nudged"
+own_status blocked; rm -f "$NUDGE"
+run_gate 2 "blocked without an operator push is nudged" "Operator notified"
+run_gate 0 "blocked parks after the single nudge (no loop)" "parking session alive"
+own_status blocked; rm -f "$NUDGE"
+printf '\n## Notes\nAwaiting operator: which colour?\nOperator notified: sent 06f78118\n' >> "$STATUS_MD"
+run_gate 0 "blocked with an operator push parks immediately" "parking session alive"
+own_status blocked; rm -f "$NUDGE"
+printf '\n## Notes\nOperator notified: skipped (no operator session)\n' >> "$STATUS_MD"
+run_gate 0 "blocked with a skipped push parks immediately" "parking session alive"
+rm -f "$NUDGE"
 
 # ── Release: safety caps, which must also finalize the status ────────────────
 own_status in_progress "$(date -u -v-9H +%Y-%m-%dT%H:%M:%SZ)"

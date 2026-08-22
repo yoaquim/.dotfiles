@@ -281,21 +281,32 @@ one of these. A terminal exit ends this background session (`done`), and the
 operator can no longer tab into you to answer — the decision is stranded and your
 context is lost. Instead **park alive**:
 
-1. Set the status file's header line to `- **status**: blocked`, with a Notes line:
-   `Awaiting operator: <the exact decision you need>`.
-2. Use the **SendUserMessage** tool to ask the operator that one specific,
-   self-contained question (include the PR link and what each answer will make you
-   do). This is the whole point of the gate — hand the decision back.
+1. Set the status file's header line to `- **status**: blocked`, and write the
+   question into Notes as `Awaiting operator: <the exact decision you need>` — one
+   specific, self-contained question (include the PR link and what each answer will
+   make you do). The status file IS the source of truth: the watchdog surfaces
+   `blocked` to the operator. There is no SendUserMessage tool — do not search for one.
+2. Push the question to the operator. Your prompt has an `Operator session:` line.
+   If it names a session, call `SendMessage` with `to:` that exact name and the same
+   question (PR link, status file path, what each answer makes you do). Then append
+   ONE line to Notes, whichever applies:
+   - `Operator notified: sent <msg_id>`
+   - `Operator notified: failed — <error text>` (do not retry)
+   - `Operator notified: skipped (no operator session)`
+   `success: true` means the transport accepted it, not that the operator read it.
+   If a later `[Cross-session delivery notice]` says held/expired, append
+   `Operator notified: held/expired — <notice>` and do NOT resend. The Stop hook
+   requires an `Operator notified:` line before it parks you.
 3. End your turn. The Stop hook allows the stop on `blocked`, so this session parks
-   as "waiting on you" — alive and attachable. The operator opens `claude agents`,
-   selects this runner, and replies. `blocked` is exempt from the 8hr cap and the
-   spin guard, so parking costs nothing and can wait as long as it needs.
+   as "waiting on you" — alive and attachable. A parked session does not receive
+   messages, so the operator answers by `claude agents` → this runner. `blocked` is
+   exempt from the 8hr cap and the spin guard, so parking costs nothing.
 4. When the operator answers, set status back to `in_progress` and act on the
    ruling. Then continue to the normal terminal conditions.
 
 `needs_review` is NOT the "awaiting human decision" state — it is what the hook
 writes on its own when the 8hr cap or spin guard trips. Never hand-write it to
-escape a gate; that strands the work. `blocked` + SendUserMessage is the gate.
+escape a gate; that strands the work. `blocked` + Notes question + operator push is the gate.
 
 ## Failure
 
@@ -316,5 +327,5 @@ escape a gate; that strands the work. `blocked` + SendUserMessage is the gate.
 - Absolute paths for status/spec files — worktree relative paths won't reach main tree
 - Ambiguity → make a reasonable choice, document in Notes. Only a decision with real
   product consequences that you genuinely cannot make is an operator gate → park
-  (`blocked` + SendUserMessage), never a terminal exit. See "Operator gate".
+  (`blocked` + Notes question), never a terminal exit. See "Operator gate".
 - Reviewers come ONLY from `spawn-reviewer.sh`. Never spawn an ad-hoc `claude --bg`/`-p` agent to review or to nudge a re-review — push and let the watcher handle it.

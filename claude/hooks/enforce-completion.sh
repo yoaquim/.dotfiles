@@ -123,10 +123,23 @@ fi
 # ratification, an ambiguous-spec choice. This is NOT a terminal exit: writing a
 # terminal status here would leave a `done` --bg session the operator can't tab
 # into. Allow the Stop so the session PARKS (idle / needs_input) and stays
-# attachable via `claude agents`; the runner asks its question with SendUserMessage
-# (runner.md) so it surfaces as "waiting on you". Exempt from the 8hr cap and the
+# attachable via `claude agents`; the runner writes its question into the status
+# file's Notes (runner.md) and the watchdog surfaces it. Exempt from the 8hr cap and the
 # spin guard below — an operator gate may sit for days, and that is not a runaway.
 if [[ "$STATUS" == "blocked" ]]; then
+  # Operator push (runner.md gate step 2): Notes must carry an `Operator notified:`
+  # line — sent / failed / skipped / held — before the park. Nudge ONCE; the
+  # marker file bounds it, so a runner that cannot write the line still parks on
+  # its next stop instead of looping.
+  NUDGE="$DISPATCH_ROOT/.dispatch/state/$NAME.operator-nudged"
+  if ! grep -qiE '^[[:space:]]*Operator notified:' "$STATUS_FILE" 2>/dev/null \
+     && [[ ! -f "$NUDGE" ]]; then
+    mkdir -p "$(dirname "$NUDGE")" 2>/dev/null && : > "$NUDGE"
+    cat >&2 <<'EOF'
+enforce-completion: status=blocked, but Notes has no "Operator notified:" line. Before you park, push the question to the operator: if your prompt's "Operator session:" line names a session, call SendMessage to that exact name with your Awaiting-operator question (PR link, status file path, what each answer makes you do). Then append ONE line to Notes — "Operator notified: sent <msg_id>" or "Operator notified: failed — <error>" or "Operator notified: skipped (no operator session)" — and stop again.
+EOF
+    exit 2
+  fi
   echo "enforce-completion: status=blocked — parking session alive for an operator decision; attach via \`claude agents\`. Not counted against the 8hr cap / spin guard." >&2
   exit 0
 fi

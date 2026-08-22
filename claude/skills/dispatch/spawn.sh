@@ -232,6 +232,10 @@ fi
 dispatch_upsert_status_field updated "$NOW"    "$STATUS_FILE" || true
 dispatch_upsert_status_field model   "$MODEL"  "$STATUS_FILE" || true
 dispatch_upsert_status_field effort  "$EFFORT" "$STATUS_FILE" || true
+# The operator's session name goes into the PROMPT FILE, never env (env leaks
+# through the daemon to every later runner — see the CLAUDE_DISPATCH_* note
+# below). Empty when spawned outside a Claude session (watchdog resume).
+OPERATOR=$(dispatch_operator_session_name 2>/dev/null) || OPERATOR=""
 # shellcheck disable=SC2016  # backticked code spans in prose, not expansions
 {
     printf '## WORKTREE ISOLATION — read first, non-negotiable\n\n'
@@ -244,6 +248,11 @@ dispatch_upsert_status_field effort  "$EFFORT" "$STATUS_FILE" || true
     printf -- '- Do NOT create Linear issues/tickets (no `save_issue`, no `/issue`). If you discover follow-up work, document it in your status file + PR description as a proposed follow-up; the operator files it via `/issue`. Reference it as "proposed follow-up", never a created ticket id.\n'
     printf -- '- Before every commit run `git rev-parse --show-toplevel` and confirm it prints `%s`; if it prints anything else, STOP and cd into the worktree first.\n\n' "$WORKTREE"
     printf 'Write all prose (PR descriptions, commit messages, comments, status summaries) in ASD-STE100 Simplified Technical English: short active-voice sentences, simple approved words. Keep code, quoted text, and required markers exact.\n\n'
+    if [[ -n "$OPERATOR" ]]; then
+        printf 'Operator session: `%s` — the Claude session that dispatched you. While it runs, `SendMessage` with `to: "%s"` reaches it. Use it ONLY for the operator gate (runner.md "Operator gate"): push your question there, then park. The status file stays the source of truth.\n\n' "$OPERATOR" "$OPERATOR"
+    else
+        printf 'Operator session: none — you were spawned outside a Claude session (watchdog resume or shell). At the operator gate, write `Operator notified: skipped (no operator session)` in Notes and park.\n\n'
+    fi
     printf -- '---\n\n'
     cat "$PROMPT_FILE"
 } > "$RUNTIME_PROMPT"
@@ -256,11 +265,10 @@ dispatch_upsert_status_field effort  "$EFFORT" "$STATUS_FILE" || true
 # every later runner's Stop hook once rim-64 completed). Runner identity comes
 # exclusively from the job state file (`template`, `cwd`), which is
 # per-session and cannot leak; hooks resolve it via scripts/lib/dispatch.sh.
-# `--brief` enables the SendUserMessage tool: the ONLY way a --bg runner can hand
-# an operator-decision back and PARK alive. Without it a runner that hits a gate it
-# can't resolve (a ruling, a visual ratification) has no way to ask — it writes a
-# terminal status and exits, leaving a `done` session the operator can't tab into.
-# With it, the runner asks and parks in `blocked` (attachable via `claude agents`).
+# No `--brief`: it advertises a SendUserMessage tool that is never actually exposed
+# to --bg sessions (verified 2.1.212–2.1.239, 2026-08-21 — 31 runners searched for it,
+# none found it). Operator gates surface through the status file (`blocked` + Notes),
+# which the watchdog and `claude agents` already read.
 PROJECT_NAME="$(basename "$TARGET_REPO")"
 RUNNER_NAME="dispatch-$PROJECT_NAME-$NAME"
 SESSION_OUTPUT=$(cd "$WORKTREE" && \
@@ -270,7 +278,6 @@ SESSION_OUTPUT=$(cd "$WORKTREE" && \
     --effort "$EFFORT" \
     --name "$RUNNER_NAME" \
     --permission-mode bypassPermissions \
-    --brief \
     --append-system-prompt-file "$RUNTIME_PROMPT" \
     "Execute the task described in the system prompt." 2>&1)
 

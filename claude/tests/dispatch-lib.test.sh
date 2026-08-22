@@ -217,6 +217,21 @@ lib_do "fail_open exits 0 (never wedges the agent)" 0 "(dispatch_fail_open t 1)"
 lib_do "fail_open names the failure on stderr" 0 \
   "( (dispatch_fail_open label 42) 2>&1 | grep -q 'label.*fail-open.*42' )"
 
+# ── Operator session name (registry lookup by the caller's own session id) ──
+OPHOME="$FIX/ophome"
+mkdir -p "$OPHOME/.claude/sessions"
+printf '{"sessionId":"1111-aaaa","name":"dotfiles-78","kind":"interactive"}' \
+  > "$OPHOME/.claude/sessions/100.json"
+printf '{"sessionId":"2222-bbbb","kind":"bg"}' > "$OPHOME/.claude/sessions/200.json"
+lib_out "operator name resolves from the registry" "dotfiles-78" \
+  "CLAUDE_CODE_SESSION_ID=1111-aaaa dispatch_operator_session_name" "$OPHOME"
+lib_do "operator name fails outside a Claude session" 1 \
+  "CLAUDE_CODE_SESSION_ID= dispatch_operator_session_name" "$OPHOME"
+lib_do "operator name fails for an unknown session id" 1 \
+  "CLAUDE_CODE_SESSION_ID=9999-zzzz dispatch_operator_session_name" "$OPHOME"
+lib_do "operator name fails for a registered session with no name" 1 \
+  "CLAUDE_CODE_SESSION_ID=2222-bbbb dispatch_operator_session_name" "$OPHOME"
+
 rm -f "$FIX/bin/claude"
 
 summarize
