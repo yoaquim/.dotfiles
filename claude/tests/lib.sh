@@ -15,7 +15,18 @@ FAILED_NAMES=()
 # earlier case would silently turn a real block into an allow.
 TEST_TMP=$(mktemp -d "${TMPDIR:-/tmp}/claude-hook-tests.XXXXXX")
 export TMPDIR="$TEST_TMP"
-trap 'rm -rf "$TEST_TMP"' EXIT
+
+# The EXIT trap also summarizes when the test file forgot to: a file that ends
+# without calling `summarize` would otherwise exit 0 regardless of failures,
+# and run.sh would report a green suite over red cases (observed 2026-08-21).
+SUMMARIZED=0
+_lib_finish() {
+  local rc=$?
+  rm -rf "$TEST_TMP"
+  if (( ! SUMMARIZED )); then summarize; fi
+  exit "$rc"
+}
+trap '_lib_finish' EXIT
 
 # Consumed by the sourcing test files, which shellcheck can't see from here.
 export HOOKS="$HOME/.claude/hooks"
@@ -58,6 +69,7 @@ edit_json() {
 }
 
 summarize() {
+  SUMMARIZED=1
   echo
   if (( FAIL == 0 )); then
     echo "$PASS passed, 0 failed"
