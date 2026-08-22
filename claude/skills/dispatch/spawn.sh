@@ -249,9 +249,13 @@ dispatch_upsert_status_field effort  "$EFFORT" "$STATUS_FILE" || true
 } > "$RUNTIME_PROMPT"
 
 # Pass prompt via file to avoid shell argument length limits.
-# The CLAUDE_DISPATCH_* vars give the worktree-isolation hook an IMMUTABLE
-# runner identity — it enforces against these, not the session cwd, so a runner
-# that cd's into the main checkout still can't write there.
+# No CLAUDE_DISPATCH_* env vars: if this `claude --bg` call is the one that
+# BIRTHS the daemon, the daemon inherits them and serves them to every later
+# bg session — hooks that trusted the stale values then resolved ALL runners
+# to THIS dispatch's identity (observed 2026-08-21: rim-64's env released
+# every later runner's Stop hook once rim-64 completed). Runner identity comes
+# exclusively from the job state file (`template`, `cwd`), which is
+# per-session and cannot leak; hooks resolve it via scripts/lib/dispatch.sh.
 # `--brief` enables the SendUserMessage tool: the ONLY way a --bg runner can hand
 # an operator-decision back and PARK alive. Without it a runner that hits a gate it
 # can't resolve (a ruling, a visual ratification) has no way to ask — it writes a
@@ -260,9 +264,6 @@ dispatch_upsert_status_field effort  "$EFFORT" "$STATUS_FILE" || true
 PROJECT_NAME="$(basename "$TARGET_REPO")"
 RUNNER_NAME="dispatch-$PROJECT_NAME-$NAME"
 SESSION_OUTPUT=$(cd "$WORKTREE" && \
-    CLAUDE_DISPATCH_WORKTREE="$WORKTREE" \
-    CLAUDE_DISPATCH_ROOT="$TARGET_REPO" \
-    CLAUDE_DISPATCH_STATUS_FILE="$STATUS_FILE" \
     claude --bg \
     --agent runner \
     --model "$MODEL" \

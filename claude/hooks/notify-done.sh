@@ -16,14 +16,12 @@ if [[ "$(echo "$INPUT" | jq -r '.stop_hook_active // false')" == "true" ]]; then
   exit 0
 fi
 
-# Dispatch runner sessions carry this marker (spawn.sh sets it).
-if [[ -n "${CLAUDE_DISPATCH_WORKTREE:-}" ]]; then
-  exit 0
-fi
-
 # Background agent sessions (runner / pr-reviewer): same jobs-dir template gate
 # enforce-watch.sh uses (bg sessions name the job dir by the SHORT session id,
-# hence the fallback). Catches runners even if the env marker didn't propagate.
+# hence the fallback). Deliberately NOT the CLAUDE_DISPATCH_* env marker: a
+# daemon born from a dispatch serves that dispatch's env to every later bg
+# session, and the stale marker muted notifications for ALL sessions
+# (observed 2026-08-21). The jobs-dir template is per-session and cannot leak.
 SID=$(echo "$INPUT" | jq -r '.session_id // ""')
 if [[ -n "$SID" ]]; then
   JOBDIR="$HOME/.claude/jobs/$SID"

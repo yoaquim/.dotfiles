@@ -34,13 +34,15 @@
 #      daemon-written, immutable to the runner, PER-SESSION, and holds regardless
 #      of where the runner has cd'd. AUTHORITATIVE, tried first: it is the only
 #      source that can't be wrong for a real dispatched runner;
-#   2. CLAUDE_DISPATCH_* env vars — a fallback for env-based dispatch, but NOT
-#      trusted over tier 1. A reused `claude --bg` daemon leaks the FIRST
-#      dispatch's CLAUDE_DISPATCH_WORKTREE to every later worker via inherited
-#      process env (observed 2026-07-07: amp-16/amp-17 both resolved to amp-15),
-#      so trusting env first locked concurrent runners out of their own worktrees;
-#   3. cwd-derived detection (best effort: cannot see a runner that has cd'd
+#   2. cwd-derived detection (best effort: cannot see a runner that has cd'd
 #      away from its worktree).
+#
+# There is NO env tier. CLAUDE_DISPATCH_* is a stale leak in every observed
+# delivery: a reused daemon served the FIRST dispatch's vars to every later
+# worker (2026-07-07: amp-16/amp-17 both resolved to amp-15), and a
+# dispatch-born daemon served its founder's vars to every bg session
+# (2026-08-21: rim-64's vars reached the nullbreaker runners). spawn.sh no
+# longer exports them; a value seen here can only be the leak.
 #
 # The Bash check covers: the main checkout's absolute path (raw and canonical
 # spellings, so /tmp vs /private/tmp or a symlinked checkout doesn't slip past),
@@ -67,26 +69,24 @@ TOOL=$(jq -r '.tool_name // ""' <<<"$INPUT")
 CWD=$(jq -r '.cwd // ""' <<<"$INPUT")
 
 # Shared lib for the job-derived identity tier. Missing lib → the resolver
-# stays empty and the env/cwd tiers still work.
+# stays empty and the cwd tier still works.
 # shellcheck disable=SC1091
 . "$HOME/.claude/scripts/lib/dispatch.sh" 2>/dev/null || true
 
 # Per-session identity from the bg job state (session_id-keyed, daemon-written,
-# immutable to the runner). Computed FIRST and preferred over the env tier below.
-# Rationale: CLAUDE_DISPATCH_WORKTREE can be a STALE LEAK. A reused `claude --bg`
-# daemon keeps the FIRST dispatch's CLAUDE_DISPATCH_* in its process env, so every
-# later worker inherits it — the env then resolves ALL concurrent runners to the
-# first one's worktree, locking them out of their own (observed 2026-07-07:
-# amp-16 and amp-17 both resolved to amp-15). Job state is per-session and cannot
-# leak, and it is the same source enforce-completion.sh trusts — so preferring it
-# both fixes the lockout and keeps the two hooks agreeing on runner identity.
+# immutable to the runner). Job state is per-session and cannot leak, and it is
+# the same source enforce-completion.sh trusts — the two hooks agree on runner
+# identity. See the header for why there is no CLAUDE_DISPATCH_* env tier.
 JOB_WORKTREE=""
 if command -v dispatch_runner_worktree >/dev/null 2>&1; then
     SID=$(jq -r '.session_id // ""' <<<"$INPUT")
     JOB_WORKTREE=$(dispatch_runner_worktree "$SID" 2>/dev/null) || JOB_WORKTREE=""
 fi
 
-# --- Resolve runner identity (job state, else env, else cwd fallback) ---
+# --- Resolve runner identity (job state, else cwd fallback) ---
+# No env tier: spawn.sh no longer exports CLAUDE_DISPATCH_* (a dispatch-born
+# daemon leaked them to every later bg session — see the stale-leak note
+# above), so an env value here can ONLY be the stale leak. Job state, else cwd.
 if [[ -n "$JOB_WORKTREE" ]]; then
     WORKTREE="$JOB_WORKTREE"
     # Worktrees live at <root>/.claude/worktrees/<name> — derive the root
@@ -102,10 +102,6 @@ if [[ -n "$JOB_WORKTREE" ]]; then
         [[ -n "$COMMON_GIT_DIR" ]] && DISPATCH_ROOT=$(dirname "$COMMON_GIT_DIR")
     fi
     STATUS_FILE="$DISPATCH_ROOT/.dispatch/status/$(basename "$WORKTREE").md"
-elif [[ -n "${CLAUDE_DISPATCH_WORKTREE:-}" ]]; then
-    WORKTREE="$CLAUDE_DISPATCH_WORKTREE"
-    DISPATCH_ROOT="${CLAUDE_DISPATCH_ROOT:-$(dirname "$(dirname "$(dirname "$WORKTREE")")")}"
-    STATUS_FILE="${CLAUDE_DISPATCH_STATUS_FILE:-$DISPATCH_ROOT/.dispatch/status/$(basename "$WORKTREE").md}"
 else
     # Legacy fallback: derive from cwd (same detection as enforce-completion.sh).
     [[ -z "$CWD" ]] && exit 0

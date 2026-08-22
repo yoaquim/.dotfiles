@@ -33,10 +33,10 @@ trap 'exit 0' ERR
 # Skip dispatch runner sessions. A runner has its own Stop hook
 # (enforce-completion.sh) and its own completion summary — two blocking Stop
 # hooks must not fight — and a runner that files an incidental follow-up ticket
-# via /issue shouldn't be forced into the created-summary format. Env vars when
-# present, else the bg job's template (env doesn't survive the --bg daemon hop).
-[[ -n "${CLAUDE_DISPATCH_WORKTREE:-}${CLAUDE_DISPATCH_STATUS_FILE:-}" ]] && exit 0
-
+# via /issue shouldn't be forced into the created-summary format. Identified by
+# the bg job's template ONLY — never the CLAUDE_DISPATCH_* env, which a
+# dispatch-born daemon leaks to every later bg session; the stale marker
+# disabled this hook for ALL sessions (observed 2026-08-21).
 INPUT=$(cat)
 
 # shellcheck disable=SC1091

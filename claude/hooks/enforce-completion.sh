@@ -48,13 +48,17 @@ trap 'dispatch_fail_open enforce-completion $LINENO' ERR
 
 # Pin to the runner's worktree so a cwd that has drifted into the shared
 # checkout can't make this look like a non-dispatch session and skip the
-# completion gates. Env vars when present (they don't survive the --bg daemon
-# hop), else the job state file's cwd — the worktree spawn.sh submitted from.
-PIN="${CLAUDE_DISPATCH_WORKTREE:-}"
-if [[ -z "$PIN" ]]; then
-  SID=$(jq -r '.session_id // ""' <<<"$INPUT" 2>/dev/null) || SID=""
-  PIN=$(dispatch_runner_worktree "$SID" 2>/dev/null) || PIN=""
-fi
+# completion gates. Job state ONLY — NEVER the CLAUDE_DISPATCH_* env tier: a
+# daemon born from a dispatch keeps that dispatch's env and serves it to every
+# later bg session, so the env pinned EVERY runner to the daemon-founding
+# runner's worktree; once that founder completed, every Stop read its terminal
+# status and was waved through (observed 2026-08-21: rim-64's `completed`
+# released nul-537/539/540 mid-review-loop, silently, in ~40ms). This is the
+# same stale leak enforce-worktree.sh documents (2026-07-07, amp-15 lockout).
+# Job state is per-session and cannot leak; falling through to the session cwd
+# is safe because the daemon runs Stop hooks in the session's own cwd.
+SID=$(jq -r '.session_id // ""' <<<"$INPUT" 2>/dev/null) || SID=""
+PIN=$(dispatch_runner_worktree "$SID" 2>/dev/null) || PIN=""
 if [[ -n "$PIN" ]]; then
   cd "$PIN" 2>/dev/null || true
 fi
