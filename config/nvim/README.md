@@ -1,6 +1,6 @@
 # 🚀 AstroNvim Configuration
 
-Customized AstroNvim setup. `<leader>` is `Space`. Theme: `base16-darkmoss`.
+Customized [AstroNvim](https://astronvim.com/) **v6** setup (requires Neovim ≥ 0.11; tested on 0.12). `<leader>` is `Space`. Theme: `base16-helios`.
 
 ## Quick Start
 
@@ -10,7 +10,13 @@ cd ~/.dotfiles && bash ./setup-astronvim.sh   # needs SSH keys (see main README)
 
 Manual: clone the AstroNvim template into `~/.config/nvim`, then symlink `polish.lua` → `lua/polish.lua` and `user.lua` → `lua/plugins/user.lua`. Plugins auto-install on first `nvim`; `:Mason` verifies LSPs.
 
-`polish.lua` holds settings/keymaps/commands; `user.lua` holds plugin specs (LSP, DAP, testing).
+`polish.lua` holds settings/keymaps/commands; `user.lua` holds plugin specs (LSP, DAP, testing). Everything else under `~/.config/nvim` is the stock AstroNvim template (the `lua/plugins/*.lua` examples are inactive guard-returned files).
+
+## Updating
+
+- **Plugins:** `:Lazy update` — run it **twice**. AstroNvim pins plugin versions in its `lazy_snapshot`; the first pass updates AstroNvim itself (and the snapshot), the second applies the new pins.
+- **AstroNvim major:** bump `version = "^N"` in `~/.config/nvim/lua/lazy_setup.lua` (not tracked in dotfiles — it comes from the template clone), then `:Lazy update` twice and check the [AstroNvim changelog](https://github.com/AstroNvim/AstroNvim/blob/main/CHANGELOG.md) for breaking changes. Last bump: v5 → v6 (2026-08-22).
+- **Mason tools:** `:MasonToolsUpdate` (or `<leader>pM`).
 
 ## Keymaps
 
@@ -75,11 +81,13 @@ Manual: clone the AstroNvim template into `~/.config/nvim`, then symlink `polish
 
 ## Plugins
 
-Mason auto-installs LSPs for TS/JS, HTML/CSS/Tailwind, Python, Ruby, Bash, Docker, Terraform, YAML, Markdown, JSON. Categories: mini (surround/move/splitjoin), Treesitter, nvim-dap (+ dap-ui, dap-python), neotest (python/jest), nvim-dev-container, nvim-dbee, themes (base16/material/minimal).
+Mason auto-installs LSPs for TS/JS, HTML/CSS/Tailwind, Python, Ruby, Bash, Docker, Terraform, YAML, Markdown, JSON — via `mason-tool-installer` `ensure_installed` in `user.lua` (AstroNvim ignores `mason-lspconfig.ensure_installed`; use Mason package names as shown in `:Mason`). AstroLSP auto-enables whatever Mason installs. Treesitter parsers (`ensure_installed`, highlight, indent) are configured through `AstroNvim/astrocore` `opts.treesitter` — nvim-treesitter `main` is only the parser installer. Categories: mini (surround/move/splitjoin/snippets, `nvim-mini/*`), nvim-dap (+ dap-ui, dap-python), neotest (python/jest/vitest), nvim-dev-container, nvim-dbee, spectre, themes (base16/material/minimal).
 
 ## Troubleshooting
 
 - **Clipboard:** use `<leader>y` / `<leader>p` (system clipboard is intentionally off).
-- **LSP not starting:** `:Mason` to verify, `:LspRestart`, `:checkhealth`.
+- **LSP not starting:** `:Mason` to verify, `:LspRestart`, `:checkhealth`. If a server is missing, `:MasonToolsInstall`.
+- **Red Lua traceback when opening a file** (e.g. aerial `attempt to call method 'start'`): a pinned plugin fell behind Neovim. Check `:Lazy` for the plugin's version pin and the AstroNvim `version` in `lazy_setup.lua` — a new AstroNvim major usually carries the fix (see Updating).
+- **Keymaps "not working"** (e.g. `sa` surround): often a side-effect of the above — the `Press ENTER` error prompt eats keystrokes. Fix the error first.
 - **Debugging:** Python needs `debugpy`; JS needs Node. `:checkhealth` for diagnostics.
 - Press `<leader>` for the which-key menu of all bindings.

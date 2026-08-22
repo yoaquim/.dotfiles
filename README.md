@@ -42,7 +42,7 @@ cd ~/.dotfiles/claude && ./setup.sh
 |------|-------|
 | **Shell** | Modern Bash — vim editing, 50+ aliases, directory bookmarking, eternal history, Base16 themes |
 | **Terminal** | Kitty (GPU-accelerated, ligatures), Tmux + Powerline, JetBrains Mono Nerd Font |
-| **Editor** | AstroNvim (Neovim distribution) |
+| **Editor** | AstroNvim v6 (Neovim ≥ 0.11) — see [config/nvim](config/nvim/README.md) |
 | **Dev** | Git + git-delta, Node via nvm, Python via pyenv, Go, Claude Code |
 | **Package managers** | Homebrew, nvm, pyenv, pipx, TPM (tmux plugins) |
 | **CLI utils** | ripgrep, fd, lazygit, bottom, tldr, gdu, tree-sitter |

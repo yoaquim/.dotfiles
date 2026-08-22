@@ -74,27 +74,31 @@ return {
 
   -- LSP and Language Support
   -- ───────────────────────────────────────────────────
+  -- AstroNvim drops `mason-lspconfig.ensure_installed` in favour of
+  -- mason-tool-installer, so the list lives here. Use Mason package names
+  -- (as shown in `:Mason`), not lspconfig names; AstroLSP auto-enables
+  -- whatever Mason installs.
   {
-    "mason-org/mason-lspconfig.nvim",
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
     opts = {
       ensure_installed = {
         -- Frontend
-        "ts_ls",           -- TypeScript/JavaScript
-        "tailwindcss",     -- Tailwind CSS
-        "cssls",           -- CSS
-        "html",            -- HTML
+        "typescript-language-server",  -- TypeScript/JavaScript (ts_ls)
+        "tailwindcss-language-server", -- Tailwind CSS
+        "css-lsp",                     -- CSS
+        "html-lsp",                    -- HTML
         -- Backend
-        "sqlls",           -- SQL
-        "pyright",         -- Python
-        "ruby_lsp",        -- Ruby
-        "bashls",          -- Bash
+        "sqlls",                       -- SQL
+        "pyright",                     -- Python
+        "ruby-lsp",                    -- Ruby
+        "bash-language-server",        -- Bash
         -- DevOps
-        "dockerls",        -- Docker
-        "terraformls",     -- Terraform
-        "yamlls",          -- YAML
+        "dockerfile-language-server",  -- Docker
+        "terraform-ls",                -- Terraform
+        "yaml-language-server",        -- YAML
         -- Documentation
-        "jsonls",          -- JSON
-        "marksman",        -- Markdown
+        "json-lsp",                    -- JSON
+        "marksman",                    -- Markdown
       },
     },
   },
