@@ -102,7 +102,7 @@ discover_roots() {
   local base
   while IFS= read -r -d: base || [[ -n "$base" ]]; do
     [[ -d "$base" ]] || continue
-    find "$base" -maxdepth 3 -type d -path '*/.dispatch/status' 2>/dev/null \
+    find "$base" -maxdepth 4 -type d -path '*/.dispatch/status' 2>/dev/null \
       | sed 's#/.dispatch/status$##'
   done <<<"$ROOTS_BASE:"
 }
