@@ -512,17 +512,33 @@ setup_mountainduck() {
 
 install_brew_list() {
     print_info "Installing Homebrew packages"
-    
+
+    # Third-party taps required by packages below
+    local taps=(
+        "plaid/plaid-cli"   # plaid
+    )
+
+    for tap in "${taps[@]}"; do
+        if brew tap | grep -qx "${tap}"; then
+            print_debug "Tap '${tap}' already added"
+        else
+            print_info "Adding tap '${tap}'"
+            brew tap "${tap}" || print_warning "Failed to add tap '${tap}' - continuing"
+        fi
+    done
+
     local packages=(
         "act"
         "awscli"
         "bash"
         "bash-completion@2"
-        "codex"
+        "bun"
+        "cloudflare-wrangler"
         "coreutils"
         "direnv"
         "gh"
         "git"
+        "git-crypt"
         "git-delta"
         "htop"
         "jj"
@@ -533,11 +549,16 @@ install_brew_list() {
         "node"
         "pandoc"
         "pipx"
+        "plaid"
+        "rust"
+        "shellcheck"
+        "tailscale"         # CLI; the app is the tailscale-app cask
         "tldr"
         "tmux"
+        "tofuenv"
         "vim"
     )
-    
+
     for package in "${packages[@]}"; do
         brew_install_if_missing "${package}" "formula"
     done
@@ -578,6 +599,7 @@ install_brew_casks() {
         "alfred"
         "calibre"
         "claude"
+        "codex"
         "codex-app"
         "covalent"
         "cyberduck"
