@@ -136,11 +136,15 @@ iso_to_epoch() {
 }
 
 # ── Job-derived runner identity ───────────────────────────────────────────────
-# Client env does NOT reach a `claude --bg` daemon worker (verified 2026-07-04:
-# two concurrent workers both saw CLAUDE_DISPATCH_WORKTREE unset), so hooks can
-# never rely on the CLAUDE_DISPATCH_* vars alone. The channel that DOES survive
-# is the job state file: `template` records the --agent, and `cwd` records the
-# submission cwd — which spawn.sh guarantees is the runner's worktree.
+# The CLAUDE_DISPATCH_* env vars are UNTRUSTWORTHY in both directions: a normal
+# daemon submit drops them (verified 2026-07-04: two concurrent workers both
+# saw CLAUDE_DISPATCH_WORKTREE unset), and a `claude --bg` call that BIRTHS the
+# daemon bakes them into the daemon's env, which every later bg session then
+# inherits as stale values (observed 2026-08-21: rim-64's vars reached every
+# nullbreaker runner and probe session). spawn.sh no longer exports them, and
+# hooks must never read them. The one channel that is per-session and cannot
+# leak is the job state file: `template` records the --agent, and `cwd` records
+# the submission cwd — which spawn.sh guarantees is the runner's worktree.
 
 # dispatch_job_state_file <session_id> — path to the bg job's state.json.
 # `claude --bg` names the job dir by the SHORT id (first UUID segment); hooks
@@ -169,13 +173,48 @@ dispatch_runner_worktree() {
 # dispatch_name_alive <name> — a live (non-terminal) background session with
 # this exact --name exists. Liveness by NAME, never by stored session_id, which
 # goes stale the moment a runner is re-dispatched.
+#
+# Two sources, either one suffices. `claude agents --json` LOSES live sessions
+# (observed 2026-08-21 on CC 2.1.234: a working runner absent from the list
+# while its job-state heartbeat was seconds old — the watchdog then spawned a
+# duplicate onto the live session). The jobs dir is the fallback: the daemon
+# deletes a job dir the instant its session is killed, so a non-terminal
+# state.json with a FRESH updatedAt (the daemon heartbeats it while the session
+# runs) means alive. The freshness window guards against dirs orphaned by a
+# daemon hard-crash; parked sessions that legitimately idle past it are safe —
+# their status is `blocked`, which no resume path touches.
+DISPATCH_JOB_HEARTBEAT_MAX_S=1800
+
+# dispatch_job_session_by_name <name> — short session id (the job dir's name)
+# of a live session found via the jobs-dir heartbeat. The registry-independent
+# lookup spawn guards use so they never double-spawn onto a lost session.
+dispatch_job_session_by_name() {
+  local name="$1" sf upd now
+  now=$(date +%s)
+  for sf in "$HOME"/.claude/jobs/*/state.json; do
+    [[ -f "$sf" ]] || continue
+    jq -e --arg n "$name" --argjson t "$DISPATCH_TERMINAL_SESSION_STATES" '
+      select((.name // "") == $n)
+      | ((.state // "") | ascii_downcase) as $s
+      | select($t | index($s) | not)
+    ' "$sf" >/dev/null 2>&1 || continue
+    upd=$(iso_to_epoch "$(jq -r '.updatedAt // ""' "$sf" 2>/dev/null)")
+    if (( upd > 0 && now - upd < DISPATCH_JOB_HEARTBEAT_MAX_S )); then
+      basename "$(dirname "$sf")"
+      return 0
+    fi
+  done
+  return 1
+}
+
 dispatch_name_alive() {
   claude agents --json 2>/dev/null | jq -e --arg n "$1" \
     --argjson t "$DISPATCH_TERMINAL_SESSION_STATES" '
     any(.[]?;
       ((.name // "") == $n)
       and (((.state // .status // "") | ascii_downcase) as $s | ($t | index($s) | not)))
-  ' >/dev/null 2>&1
+  ' >/dev/null 2>&1 && return 0
+  dispatch_job_session_by_name "$1" >/dev/null
 }
 
 # dispatch_session_id_by_name <name> [retries] — short id of the live session

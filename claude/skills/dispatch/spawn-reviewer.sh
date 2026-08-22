@@ -208,7 +208,11 @@ done
 # A reviewer spawned moments ago (e.g. by a prior Completion turn) may not be in
 # `claude agents` yet; a single missed check would re-introduce the double-review
 # bug. Retry briefly — the same latency tolerance the id-resolution below uses.
+# Then the jobs-dir heartbeat as a second source: the agents registry LOSES live
+# sessions (2026-08-21, CC 2.1.234), and a lost-but-live reviewer must read as
+# already-running, not as room to spawn a duplicate.
 EXISTING=$(dispatch_session_id_by_name "$REVIEW_NAME" 3) || EXISTING=""
+[[ -z "$EXISTING" ]] && { EXISTING=$(dispatch_job_session_by_name "$REVIEW_NAME") || EXISTING=""; }
 
 # Wedged-reviewer reclaim (operator ruling 2026-08-15). A reviewer session in
 # state `blocked` is not parked on an operator decision — reviewers have no
