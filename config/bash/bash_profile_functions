@@ -155,3 +155,29 @@ _completeproj() {
 }
 complete -F _completeproj proj p
 
+
+
+# b16
+# ───────────────────────────────────────────────────
+
+# apply a base16 theme to the current terminal window only.
+# sources the raw script (escape sequences) instead of calling
+# base16_<theme>, so ~/.base16_theme is untouched and new
+# windows keep the default theme
+b16() {
+    local script="$HOME/.config/base16-shell/scripts/base16-$1.sh"
+    [ -f "$script" ] || { echo "b16: no such theme: $1" >&2; return 1; }
+    . "$script"
+}
+
+
+# tab completion: b16
+# ───────────────────────────────────────────────────
+
+_completeb16() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local themes=$(command ls -1 "$HOME/.config/base16-shell/scripts" | sed 's/^base16-//; s/\.sh$//')
+    COMPREPLY=($(compgen -W "$themes" -- "$cur"))
+    return 0
+}
+complete -F _completeb16 b16
